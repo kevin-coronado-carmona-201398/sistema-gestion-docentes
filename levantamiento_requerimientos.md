@@ -678,22 +678,42 @@ La implementación de políticas institucionales específicas de protección de 
 
 ### 7.2 Entidades identificadas
 
-| Entidad | Propósito | Atributos principales (preliminares) | Clave primaria propuesta | Relaciones importantes |
+| Entidad | Propósito | Atributos principales | Clave primaria propuesta | Relaciones importantes |
 |---|---|---|---|---|
-| Docente | Representa al profesor | id_docente, numero_empleado, nombre_completo, especialidad_id | id_docente | GradoAcademico, Certificacion, Curso, Academia, Proyecto |
-| GradoAcademico | Registra licenciatura/maestría/doctorado del docente | id_grado, tipo_grado, institucion, area, docente_id | id_grado | Docente (N:1) |
-| Certificacion | Catálogo/registro de certificaciones | id_certificacion, nombre, institucion_emisora, vigencia (**por definir**) | id_certificacion | Docente (N:M) |
+| Docente | Representa al profesor | id_docente, numero_empleado, nombre_completo, especialidad_id, SNI/SNII, PRODEP | id_docente | GradoAcadémico, Certificación, Competencia, Curso, Academia, Proyecto |
+| GradoAcademico | Registra los grados académicos | id_grado, tipo_grado, institucion, area, anio, docente_id | id_grado | Docente (N:1) |
 | Especialidad | Catálogo de especialidades | id_especialidad, nombre | id_especialidad | Docente (1:N) |
-| Competencia/Capacidad | Habilidades asociadas al perfil docente | id_competencia, nombre, descripcion | id_competencia | Docente (N:M), Curso (N:M) |
-| Curso | Asignatura o materia | id_curso, nombre, clave | id_curso | Competencia, Secuencia, Proyecto, Academia, Aula |
-| SecuenciaAcademica | Agrupación ordenada de cursos | id_secuencia, nombre | id_secuencia | Curso (N:M mediante relación con orden) |
-| Proyecto | Proyecto académico | id_proyecto, nombre, descripcion, curso_id (opcional) | id_proyecto | Curso, Docente, Aula/Laboratorio, Recurso |
-| Academia | Agrupación de docentes por área | id_academia, nombre | id_academia | Docente (N:M), Curso (N:M, opcional) |
-| Aula | Espacio físico para docencia | id_aula, nombre, capacidad, tipo, equipamiento | id_aula | Curso, Proyecto |
-| Laboratorio | Espacio físico especializado | id_laboratorio, nombre, capacidad, equipamiento | id_laboratorio | Curso, Proyecto |
-| Recurso/Equipamiento | Recursos asociados a espacios o proyectos | id_recurso, nombre, tipo | id_recurso | Aula, Laboratorio, Proyecto |
+| Certificacion | Catálogo de certificaciones | id_certificacion, nombre, organismo_emisor, descripcion | id_certificacion | Docente (N:M) |
+| DocenteCertificacion | Relaciona docentes y certificaciones | docente_id, certificacion_id, fecha_emision, fecha_vencimiento | Clave compuesta | Docente, Certificacion |
+| Competencia | Representa habilidades o capacidades | id_competencia, nombre, descripcion | id_competencia | Docente (N:M), Curso (N:M) |
+| DocenteCompetencia | Relaciona docentes y competencias | docente_id, competencia_id | Clave compuesta | Docente, Competencia |
+| Curso | Representa una asignatura | id_curso, clave, nombre, descripcion, nivel_minimo_dominio | id_curso | Docente, Competencia, Secuencia, Proyecto, Academia, Espacio |
+| DocenteCurso | Registra dominio del docente sobre un curso | docente_id, curso_id, nivel_dominio | Clave compuesta | Docente, Curso |
+| CursoRequisito | Define competencias requeridas por curso | curso_id, competencia_id, tipo_requisito | Clave compuesta | Curso, Competencia |
+| Academia | Agrupación académica | id_academia, clave, nombre, descripcion | id_academia | Docente (N:M), Curso (N:M) |
+| DocenteAcademia | Relaciona docentes y academias | docente_id, academia_id | Clave compuesta | Docente, Academia |
+| CursoAcademia | Relaciona cursos y academias | curso_id, academia_id | Clave compuesta | Curso, Academia |
+| SecuenciaAcademica | Agrupación ordenada de cursos | id_secuencia, nombre, descripcion | id_secuencia | Curso (N:M) |
+| SecuenciaCurso | Relaciona cursos con secuencias | secuencia_id, curso_id, orden | Clave compuesta | Secuencia, Curso |
+| Proyecto | Proyecto académico | id_proyecto, nombre, descripcion, curso_id, estado | id_proyecto | Curso, Docente, Espacio, Recurso |
+| DocenteProyecto | Relaciona docentes y proyectos | docente_id, proyecto_id, rol | Clave compuesta | Docente, Proyecto |
+| EspacioAcademico | Representa aula o laboratorio | id_espacio, nombre, tipo, capacidad, estado | id_espacio | Curso, Proyecto, Recurso |
+| CursoEspacio | Relaciona cursos y espacios | curso_id, espacio_id | Clave compuesta | Curso, Espacio |
+| ProyectoEspacio | Relaciona proyectos y espacios | proyecto_id, espacio_id | Clave compuesta | Proyecto, Espacio |
+| Recurso | Representa recurso o equipamiento | id_recurso, nombre, tipo, cantidad, estado | id_recurso | Espacio, Proyecto |
+| EspacioRecurso | Relaciona recursos con espacios | espacio_id, recurso_id, cantidad | Clave compuesta | Espacio, Recurso |
+| ProyectoRecurso | Relaciona recursos con proyectos | proyecto_id, recurso_id, cantidad | Clave compuesta | Proyecto, Recurso |
 
-**Nota:** Se recomienda modelar `Aula` y `Laboratorio` como una entidad genérica `EspacioAcademico` con un atributo `tipo` (aula/laboratorio) para reducir duplicación, aunque las notas los mencionan por separado — **decisión de diseño pendiente de confirmación**.
+### Nota de diseño
+
+Se utilizará una entidad genérica `EspacioAcademico` en lugar de mantener entidades independientes `Aula` y `Laboratorio`.
+
+El atributo `tipo` permitirá distinguir entre:
+
+- Aula.
+- Laboratorio.
+
+Esto evita duplicación estructural y permite que ambas clases de espacio sean utilizadas de la misma manera por cursos y proyectos.
 
 ---
 
@@ -701,280 +721,661 @@ La implementación de políticas institucionales específicas de protección de 
 
 | Relación | Cardinalidad | Justificación |
 |---|---|---|
-| Docente — GradoAcademico | 1:N | Un docente puede tener varios grados (licenciatura, maestría, doctorado); cada grado pertenece a un solo docente |
-| Docente — Certificación | N:M | Un docente puede tener varias certificaciones y una certificación (tipo) puede ser obtenida por varios docentes |
-| Docente — Competencia | N:M | Un docente puede tener varias competencias; una competencia puede aplicar a varios docentes |
-| Docente — Academia | N:M (propuesta) | Las notas no confirman exclusividad; se asume N:M salvo que se defina lo contrario — **por confirmar (ver RN-004)** |
-| Curso — Competencia | N:M | Un curso puede requerir varias competencias; una competencia puede ser requisito de varios cursos |
-| Curso — Secuencia | N:M | Un curso puede pertenecer a más de una secuencia (p. ej. como electivo en distintas trayectorias); una secuencia agrupa varios cursos |
-| Curso — Proyecto | 1:N (propuesta) | Un curso puede tener varios proyectos asociados; un proyecto normalmente deriva de un solo curso — **por confirmar si un proyecto puede ser multi-curso** |
-| Curso — Academia | N:M | Un curso puede pertenecer a más de una academia y una academia agrupa varios cursos |
-| Proyecto — Docente | N:M | Un proyecto puede tener varios docentes participantes; un docente puede participar en varios proyectos |
-| Curso — Aula/Laboratorio | N:M | Un curso puede impartirse en distintos espacios según el grupo/horario; un espacio puede usarse para varios cursos |
-| Proyecto — Laboratorio | N:1 o N:M | Depende de si un proyecto usa un solo espacio o varios — **por definir** |
+| Docente — GradoAcademico | 1:N | Un docente puede tener cero o varios grados académicos; cada grado pertenece a un solo docente. |
+| Docente — Certificación | N:M | Un docente puede tener varias certificaciones y una certificación puede estar asociada a varios docentes. Se utiliza `DocenteCertificacion`. |
+| Docente — Competencia | N:M | Un docente puede tener varias competencias y una competencia puede corresponder a varios docentes. Se utiliza `DocenteCompetencia`. |
+| Docente — Curso | N:M | Un docente puede tener dominio registrado sobre varios cursos y un curso puede tener varios docentes con nivel de dominio registrado. Se utiliza `DocenteCurso`. |
+| Docente — Academia | N:M | Un docente puede pertenecer a varias academias y una academia puede tener varios docentes. Se utiliza `DocenteAcademia`. |
+| Curso — Competencia | N:M | Un curso puede requerir varias competencias y una competencia puede ser requisito de varios cursos. Se utiliza `CursoRequisito`. |
+| Curso — Secuencia | N:M | Un curso puede pertenecer a diferentes secuencias y una secuencia contiene varios cursos. Se utiliza `SecuenciaCurso`, que registra el orden. |
+| Curso — Proyecto | 1:N | Un curso puede tener cero o varios proyectos y cada proyecto pertenece a un único curso. |
+| Curso — Academia | N:M | Un curso puede estar asociado a varias academias y una academia puede agrupar varios cursos. Se utiliza `CursoAcademia`. |
+| Proyecto — Docente | N:M | Un proyecto puede tener varios docentes y un docente puede participar en varios proyectos. Se utiliza `DocenteProyecto`. |
+| Curso — EspacioAcademico | N:M | Un curso puede estar asociado a diferentes espacios y un espacio puede estar asociado a diferentes cursos. Se utiliza `CursoEspacio`. |
+| Proyecto — EspacioAcademico | N:M | Un proyecto puede utilizar uno o varios espacios y un espacio puede estar asociado a diferentes proyectos. Se utiliza `ProyectoEspacio`. |
+| EspacioAcademico — Recurso | N:M | Un espacio puede disponer de varios recursos y un recurso puede encontrarse asociado a diferentes espacios. Se utiliza `EspacioRecurso`. |
+| Proyecto — Recurso | N:M | Un proyecto puede requerir varios recursos y un recurso puede ser utilizado por varios proyectos. Se utiliza `ProyectoRecurso`. |
+
+### Aclaración sobre cardinalidades
+
+Las relaciones N:M se implementarán mediante entidades asociativas. Esto permite almacenar información adicional de la relación.
+
+Por ejemplo:
+
+```text
+Docente ───< DocenteCurso >─── Curso
+                    │
+                    └── nivel_dominio
+```
+
+El nivel de dominio no pertenece exclusivamente al docente ni exclusivamente al curso; pertenece a la relación entre ambos.
+
+De manera similar:
+
+```text
+Docente ───< DocenteAcademia >─── Academia
+```
+
+permite que un docente pertenezca a varias academias.
+
+
+---
+# 9. Casos de Uso
+
+## CU-001 — Registrar docente
+
+**Actor principal:** Administrador.
+
+**Objetivo:** Incorporar un nuevo docente al sistema con su información básica.
+
+**Precondiciones:** No requiere autenticación en la primera versión.
+
+**Flujo principal:**
+
+1. El administrador accede al módulo de docentes.
+2. Selecciona la opción para registrar un docente.
+3. Captura los datos obligatorios.
+4. El sistema valida la información.
+5. El sistema almacena el registro.
+6. El administrador puede agregar grados académicos, certificaciones y competencias.
+
+**Flujos alternativos:**
+
+- El administrador puede registrar primero al docente y posteriormente agregar información relacionada.
+
+**Excepciones:**
+
+- Número de empleado duplicado → el sistema rechaza el registro.
+
+**Resultado esperado:** Docente disponible para asociaciones futuras.
 
 ---
 
-## 9. Casos de Uso
+## CU-002 — Consultar candidatos elegibles para un curso
 
-**CU-001 — Registrar docente**
-- Actor principal: Administrador.
-- Objetivo: Incorporar un nuevo docente al sistema con su información básica.
-- Precondiciones: Usuario autenticado con permisos de registro.
-- Flujo principal: 1) El actor accede al módulo de docentes. 2) Captura datos obligatorios. 3) El sistema valida la información. 4) El sistema almacena el registro.
-- Flujos alternativos: El actor agrega grados académicos y certificaciones en el mismo flujo o posteriormente.
-- Excepciones: Número de empleado duplicado → el sistema rechaza el registro.
-- Resultado esperado: Docente disponible para asociaciones futuras.
+**Actor principal:** Administrador.
 
-**CU-002 — Consultar candidatos elegibles para un curso**
-- Actor principal: Coordinador académico.
-- Objetivo: Obtener la lista de docentes que cumplen los requisitos de un curso.
-- Precondiciones: El curso tiene requisitos definidos (RF-010).
-- Flujo principal: 1) El actor selecciona un curso. 2) El sistema evalúa a los docentes registrados contra los requisitos obligatorios. 3) El sistema despliega la lista de candidatos.
-- Flujos alternativos: El actor filtra adicionalmente por academia o especialidad.
-- Excepciones: Ningún docente cumple los requisitos → el sistema informa que no hay candidatos.
-- Resultado esperado: Lista de docentes elegibles (y opcionalmente recomendados).
+**Objetivo:** Obtener la lista de docentes que cumplen los requisitos de un curso.
 
-**CU-003 — Registrar proyecto académico**
-- Actor principal: Coordinador académico / Docente responsable.
-- Objetivo: Crear un proyecto asociado a un curso, docentes y recursos.
-- Precondiciones: Existe al menos un docente y, opcionalmente, un curso registrado.
-- Flujo principal: 1) El actor crea el proyecto. 2) Asigna docente(s) responsable(s)/participante(s). 3) Asocia curso (si aplica). 4) Asocia espacio/recursos.
-- Excepciones: Falta de docente responsable → el sistema no permite guardar (según RN-005, pendiente de confirmación).
-- Resultado esperado: Proyecto registrado y disponible para consulta.
+**Precondiciones:** El curso debe estar registrado y contar con la información necesaria para realizar la evaluación.
 
-**CU-004 — Asociar docente a academia**
-- Actor principal: Jefe de academia / Administrador.
-- Objetivo: Incorporar un docente a una academia.
-- Precondiciones: Docente y academia existen previamente.
-- Flujo principal: 1) El actor selecciona docente y academia. 2) El sistema valida la asociación. 3) El sistema registra la pertenencia.
-- Resultado esperado: El docente queda asociado a la academia.
+**Flujo principal:**
 
-**CU-005 — Gestionar espacio académico (aula/laboratorio)**
-- Actor principal: Administrador.
-- Objetivo: Registrar y mantener actualizados los espacios disponibles.
-- Precondiciones: Usuario con permisos administrativos.
-- Flujo principal: 1) El actor registra el espacio con capacidad y equipamiento. 2) El sistema lo hace disponible para asociación con cursos/proyectos.
-- Resultado esperado: Espacio disponible para su uso en la planeación académica.
+1. El administrador selecciona un curso.
+2. El sistema consulta los docentes registrados.
+3. El sistema evalúa los requisitos obligatorios.
+4. El sistema compara el nivel de dominio del docente con el nivel mínimo requerido.
+5. El sistema valida las certificaciones obligatorias.
+6. El sistema identifica los docentes elegibles.
+7. El sistema muestra los candidatos.
+
+**Flujos alternativos:**
+
+- El administrador puede filtrar por academia.
+- El administrador puede filtrar por especialidad.
+- El administrador puede ordenar por nivel de dominio.
+
+**Excepciones:**
+
+- Ningún docente cumple los requisitos → el sistema informa que no existen candidatos elegibles.
+
+**Resultado esperado:** Lista de docentes elegibles ordenada de acuerdo con los criterios definidos.
 
 ---
 
-## 10. Matriz de Trazabilidad Preliminar
+## CU-003 — Registrar proyecto académico
+
+**Actor principal:** Administrador.
+
+**Objetivo:** Crear un proyecto asociado a un curso, docentes y recursos.
+
+**Precondiciones:**
+
+- Debe existir un curso.
+- Debe existir al menos un docente para designarlo como responsable.
+
+**Flujo principal:**
+
+1. El administrador accede al módulo de proyectos.
+2. Crea un nuevo proyecto.
+3. Selecciona el curso asociado.
+4. Designa un docente responsable.
+5. Agrega docentes participantes, si corresponde.
+6. Asocia espacios.
+7. Asocia recursos.
+8. El sistema valida la información.
+9. El sistema registra el proyecto.
+
+**Excepciones:**
+
+- Falta de curso → el sistema no permite guardar.
+- Falta de docente responsable → el sistema no permite guardar.
+
+**Resultado esperado:** Proyecto registrado y disponible para consulta.
+
+---
+
+## CU-004 — Asociar docente a academia
+
+**Actor principal:** Administrador.
+
+**Objetivo:** Incorporar un docente a una academia.
+
+**Precondiciones:**
+
+- El docente debe existir.
+- La academia debe existir.
+
+**Flujo principal:**
+
+1. El administrador selecciona una academia.
+2. Consulta los docentes.
+3. Selecciona un docente.
+4. El sistema valida que la relación no exista previamente.
+5. El sistema registra la asociación.
+
+**Resultado esperado:** El docente queda asociado a la academia.
+
+---
+
+## CU-005 — Gestionar espacio académico
+
+**Actor principal:** Administrador.
+
+**Objetivo:** Registrar y mantener actualizados los espacios disponibles.
+
+**Precondiciones:** Ninguna.
+
+**Flujo principal:**
+
+1. El administrador accede al módulo de espacios.
+2. Selecciona aula o laboratorio.
+3. Captura nombre, capacidad y estado.
+4. Registra el equipamiento disponible.
+5. El sistema valida la información.
+6. El sistema almacena el espacio.
+
+**Resultado esperado:** Espacio disponible para su asociación con cursos y proyectos.
+
+---
+
+# 10. Matriz de Trazabilidad Preliminar
 
 | Regla de negocio | Requerimiento funcional | Caso de uso | Entidades involucradas |
 |---|---|---|---|
-| RN-001 | RF-010, RF-012, RF-013 | CU-002 | Docente, Curso, Competencia |
-| RN-002 | RF-010 | CU-002 | Curso, Competencia |
-| RN-003 | RF-006 | CU-001 | Docente, Certificación |
-| RN-004 | RF-021, RF-022 | CU-004 | Docente, Academia |
-| RN-005 | RF-017, RF-018 | CU-003 | Proyecto, Docente |
-| RN-006 | RF-006 | CU-001 | Docente, Certificación |
+| RN-001 | RF-011, RF-012, RF-013 | CU-002 | Docente, Curso, Competencia |
+| RN-002 | RF-009 | CU-002 | Docente, Curso |
+| RN-003 | RF-010, RF-013 | CU-002 | Docente, Curso |
+| RN-004 | RF-006, RF-011, RF-013 | CU-002 | Docente, Certificacion, Curso |
+| RN-005 | RF-011, RF-013 | CU-002 | Curso, Competencia |
+| RN-006 | RF-025 | CU-002 | Docente, Academia, Curso |
+| RN-007 | RF-023, RF-024 | CU-004 | Docente, Academia |
+| RN-008 | RF-025 | CU-002 | Curso, Academia |
+| RN-009 | RF-013 | CU-002 | Docente, Curso |
+| RN-010 | RF-014 | — | Docente, Curso |
+| RN-011 | RF-014 | — | Docente, Curso |
+| RN-012 | RF-006 | CU-001 | Docente, Certificacion |
+| RN-013 | RF-005 | CU-001 | Docente, GradoAcademico |
+| RN-014 | RF-018 | CU-003 | Curso, Proyecto |
+| RN-015 | RF-019 | CU-003 | Proyecto, Docente |
+| RN-016 | RF-020 | CU-003 | Proyecto, Docente |
+| RN-017 | RF-018 | CU-003 | Curso, Proyecto |
+| RN-018 | RF-015, RF-016 | — | SecuenciaAcademica, Curso |
+| RN-019 | RF-016 | — | SecuenciaAcademica, Curso |
+| RN-020 | — | — | Todas las entidades académicas |
+| RN-021 | RF-027, RF-028 | CU-005 | EspacioAcademico |
+| RN-022 | RF-003, RF-024, RF-027, RF-029 | — | Entidades principales |
 
 ---
 
-## 11. Diagramas Mermaid
+# 11. Diagramas Mermaid
 
-### A. Diagrama de casos de uso (representación equivalente)
+## A. Diagrama de casos de uso
 
 ```mermaid
-flowchart TB
-    subgraph Actores
-        A[Administrador]
-        C[Coordinador académico]
-        J[Jefe de academia]
-        D[Docente]
-    end
+flowchart LR
 
-    subgraph Casos_de_Uso
-        CU1((CU-001 Registrar docente))
-        CU2((CU-002 Consultar candidatos elegibles))
-        CU3((CU-003 Registrar proyecto académico))
-        CU4((CU-004 Asociar docente a academia))
-        CU5((CU-005 Gestionar espacio académico))
-    end
+    ADMIN[Administrador]
 
-    A --> CU1
-    A --> CU5
-    C --> CU2
-    C --> CU3
-    J --> CU4
-    D --> CU3
+    ADMIN --> DOC[Gestionar docentes]
+    ADMIN --> CUR[Gestionar cursos]
+    ADMIN --> EVAL[Evaluar elegibilidad]
+    ADMIN --> ASIG[Registrar asignación]
+    ADMIN --> ACA[Gestionar academias]
+    ADMIN --> SEC[Gestionar secuencias]
+    ADMIN --> PRO[Gestionar proyectos]
+    ADMIN --> ESP[Gestionar espacios]
+    ADMIN --> REC[Gestionar recursos]
+
+    EVAL --> CUR
+    ASIG --> EVAL
 ```
 
-### B. Diagrama entidad-relación conceptual
+---
+
+## B. Diagrama entidad-relación conceptual
 
 ```mermaid
 erDiagram
-    DOCENTE ||--o{ GRADOACADEMICO : posee
-    DOCENTE }o--o{ CERTIFICACION : obtiene
-    DOCENTE }o--o{ COMPETENCIA : tiene
-    DOCENTE }o--o{ ACADEMIA : pertenece_a
-    DOCENTE }o--o{ PROYECTO : participa_en
-    CURSO }o--o{ COMPETENCIA : requiere
-    CURSO }o--o{ SECUENCIAACADEMICA : forma_parte_de
+
+    DOCENTE ||--o{ GRADO_ACADEMICO : posee
+
+    DOCENTE ||--o{ DOCENTE_CERTIFICACION : tiene
+    CERTIFICACION ||--o{ DOCENTE_CERTIFICACION : corresponde
+
+    DOCENTE ||--o{ DOCENTE_COMPETENCIA : posee
+    COMPETENCIA ||--o{ DOCENTE_COMPETENCIA : corresponde
+
+    DOCENTE ||--o{ DOCENTE_CURSO : domina
+    CURSO ||--o{ DOCENTE_CURSO : tiene
+
+    DOCENTE ||--o{ DOCENTE_ACADEMIA : pertenece
+    ACADEMIA ||--o{ DOCENTE_ACADEMIA : integra
+
+    CURSO ||--o{ CURSO_REQUISITO : requiere
+    COMPETENCIA ||--o{ CURSO_REQUISITO : define
+
+    CURSO ||--o{ CURSO_ACADEMIA : pertenece
+    ACADEMIA ||--o{ CURSO_ACADEMIA : agrupa
+
+    SECUENCIA_ACADEMICA ||--o{ SECUENCIA_CURSO : contiene
+    CURSO ||--o{ SECUENCIA_CURSO : participa
+
     CURSO ||--o{ PROYECTO : origina
-    CURSO }o--o{ ACADEMIA : pertenece_a
-    CURSO }o--o{ AULA : se_imparte_en
-    PROYECTO }o--o{ LABORATORIO : usa
-    PROYECTO }o--o{ RECURSO : requiere
+
+    PROYECTO ||--o{ DOCENTE_PROYECTO : involucra
+    DOCENTE ||--o{ DOCENTE_PROYECTO : participa
+
+    CURSO ||--o{ CURSO_ESPACIO : utiliza
+    ESPACIO_ACADEMICO ||--o{ CURSO_ESPACIO : recibe
+
+    PROYECTO ||--o{ PROYECTO_ESPACIO : utiliza
+    ESPACIO_ACADEMICO ||--o{ PROYECTO_ESPACIO : recibe
+
+    ESPACIO_ACADEMICO ||--o{ ESPACIO_RECURSO : dispone
+    RECURSO ||--o{ ESPACIO_RECURSO : pertenece
+
+    PROYECTO ||--o{ PROYECTO_RECURSO : requiere
+    RECURSO ||--o{ PROYECTO_RECURSO : utiliza
 
     DOCENTE {
         int id_docente PK
-        string numero_empleado
+        string numero_empleado UK
         string nombre_completo
         int especialidad_id FK
+        string sni_estatus
+        string sni_nivel
+        string sni_area
+        date sni_vigencia_inicio
+        date sni_vigencia_fin
+        string prodep_estatus
+        string prodep_tipo
+        date prodep_vigencia_inicio
+        date prodep_vigencia_fin
+        boolean activo
     }
-    GRADOACADEMICO {
+
+    GRADO_ACADEMICO {
         int id_grado PK
+        int docente_id FK
         string tipo_grado
         string institucion
-        int docente_id FK
+        string area
+        int anio_obtencion
     }
+
+    ESPECIALIDAD {
+        int id_especialidad PK
+        string nombre UK
+    }
+
     CERTIFICACION {
         int id_certificacion PK
         string nombre
-        string institucion_emisora
+        string organismo_emisor
+        string descripcion
     }
-    CURSO {
-        int id_curso PK
-        string nombre
-        string clave
+
+    DOCENTE_CERTIFICACION {
+        int docente_id FK
+        int certificacion_id FK
+        date fecha_emision
+        date fecha_vencimiento
     }
+
     COMPETENCIA {
         int id_competencia PK
         string nombre
+        string descripcion
     }
-    SECUENCIAACADEMICA {
-        int id_secuencia PK
-        string nombre
+
+    DOCENTE_COMPETENCIA {
+        int docente_id FK
+        int competencia_id FK
     }
-    PROYECTO {
-        int id_proyecto PK
+
+    CURSO {
+        int id_curso PK
+        string clave UK
         string nombre
+        string descripcion
+        int nivel_minimo_dominio
+        boolean activo
+    }
+
+    DOCENTE_CURSO {
+        int docente_id FK
         int curso_id FK
+        int nivel_dominio
     }
+
+    CURSO_REQUISITO {
+        int curso_id FK
+        int competencia_id FK
+        string tipo_requisito
+    }
+
     ACADEMIA {
         int id_academia PK
+        string clave UK
         string nombre
+        string descripcion
+        boolean activo
     }
-    AULA {
-        int id_aula PK
+
+    DOCENTE_ACADEMIA {
+        int docente_id FK
+        int academia_id FK
+    }
+
+    CURSO_ACADEMIA {
+        int curso_id FK
+        int academia_id FK
+    }
+
+    SECUENCIA_ACADEMICA {
+        int id_secuencia PK
         string nombre
+        string descripcion
+    }
+
+    SECUENCIA_CURSO {
+        int secuencia_id FK
+        int curso_id FK
+        int orden
+    }
+
+    PROYECTO {
+        int id_proyecto PK
+        int curso_id FK
+        string nombre
+        string descripcion
+        string estado
+    }
+
+    DOCENTE_PROYECTO {
+        int docente_id FK
+        int proyecto_id FK
+        string rol
+    }
+
+    ESPACIO_ACADEMICO {
+        int id_espacio PK
+        string nombre
+        string tipo
         int capacidad
+        string estado
     }
-    LABORATORIO {
-        int id_laboratorio PK
-        string nombre
-        int capacidad
+
+    CURSO_ESPACIO {
+        int curso_id FK
+        int espacio_id FK
     }
+
+    PROYECTO_ESPACIO {
+        int proyecto_id FK
+        int espacio_id FK
+    }
+
     RECURSO {
         int id_recurso PK
         string nombre
         string tipo
+        int cantidad
+        string estado
+    }
+
+    ESPACIO_RECURSO {
+        int espacio_id FK
+        int recurso_id FK
+        int cantidad
+    }
+
+    PROYECTO_RECURSO {
+        int proyecto_id FK
+        int recurso_id FK
+        int cantidad
     }
 ```
 
-### C. Diagrama de flujo general — Elegibilidad docente-curso
+---
+
+## C. Diagrama de flujo general — Elegibilidad docente-curso
 
 ```mermaid
-flowchart LR
-    D[Docente] --> P[Perfil académico y profesional]
-    P --> CAP[Capacidades / Competencias del docente]
-    CAP --> REQ[Requisitos obligatorios del curso]
-    REQ --> EVAL{¿Cumple requisitos obligatorios?}
-    EVAL -- Sí --> ELEG[Docente elegible]
-    EVAL -- No --> NOELEG[Docente no elegible]
-    ELEG --> REC[Verificar criterios de recomendación opcionales]
-    REC --> RANK[Docente elegible con nivel de recomendación]
+flowchart TD
+
+    INICIO([Seleccionar curso])
+
+    CONSULTAR[Consultar docentes]
+
+    REQ{¿Cumple requisitos obligatorios?}
+
+    DOM{¿Nivel de dominio suficiente?}
+
+    CERT{¿Certificaciones obligatorias vigentes?}
+
+    ELEGIBLE[Docente elegible]
+
+    NO[Docente no elegible]
+
+    ORDENAR[Ordenar candidatos]
+
+    ACADEMIA[Considerar coincidencia de academia]
+
+    SELECCIONAR[Administrador selecciona docente]
+
+    VALIDAR[Validar elegibilidad]
+
+    ASIGNAR[Registrar asignación]
+
+    FIN([Fin])
+
+    INICIO --> CONSULTAR
+    CONSULTAR --> REQ
+
+    REQ -- No --> NO
+    REQ -- Sí --> DOM
+
+    DOM -- No --> NO
+    DOM -- Sí --> CERT
+
+    CERT -- No --> NO
+    CERT -- Sí --> ELEGIBLE
+
+    ELEGIBLE --> ACADEMIA
+    ACADEMIA --> ORDENAR
+    ORDENAR --> SELECCIONAR
+    SELECCIONAR --> VALIDAR
+    VALIDAR --> ASIGNAR
+    ASIGNAR --> FIN
+
+    NO --> FIN
 ```
 
-### D. Diagrama de clases conceptual
+---
+
+## D. Diagrama de clases conceptual
 
 ```mermaid
 classDiagram
+
     class Docente {
-        +int idDocente
-        +string numeroEmpleado
-        +string nombreCompleto
-        +consultarPerfil()
+        +int id_docente
+        +string numero_empleado
+        +string nombre_completo
+        +string sni_estatus
+        +string sni_nivel
+        +string prodep_estatus
+        +bool activo
     }
+
     class GradoAcademico {
-        +int idGrado
-        +string tipoGrado
+        +int id_grado
+        +string tipo_grado
         +string institucion
+        +string area
+        +int anio_obtencion
     }
+
+    class Especialidad {
+        +int id_especialidad
+        +string nombre
+    }
+
     class Certificacion {
-        +int idCertificacion
+        +int id_certificacion
         +string nombre
-        +string institucionEmisora
+        +string organismo_emisor
     }
+
     class Competencia {
-        +int idCompetencia
+        +int id_competencia
         +string nombre
+        +string descripcion
     }
+
     class Curso {
-        +int idCurso
+        +int id_curso
+        +string clave
         +string nombre
-        +evaluarElegibilidad(Docente)
+        +string descripcion
+        +int nivel_minimo_dominio
     }
-    class SecuenciaAcademica {
-        +int idSecuencia
-        +string nombre
-    }
-    class Proyecto {
-        +int idProyecto
-        +string nombre
-    }
+
     class Academia {
-        +int idAcademia
+        +int id_academia
+        +string clave
         +string nombre
+        +string descripcion
     }
-    class Aula {
-        +int idAula
-        +int capacidad
+
+    class SecuenciaAcademica {
+        +int id_secuencia
+        +string nombre
+        +string descripcion
     }
-    class Laboratorio {
-        +int idLaboratorio
-        +int capacidad
+
+    class Proyecto {
+        +int id_proyecto
+        +string nombre
+        +string descripcion
+        +string estado
     }
-    class Recurso {
-        +int idRecurso
+
+    class EspacioAcademico {
+        +int id_espacio
+        +string nombre
         +string tipo
+        +int capacidad
+        +string estado
+    }
+
+    class Recurso {
+        +int id_recurso
+        +string nombre
+        +string tipo
+        +int cantidad
+        +string estado
     }
 
     Docente "1" --> "0..*" GradoAcademico
     Docente "0..*" --> "0..*" Certificacion
     Docente "0..*" --> "0..*" Competencia
+    Docente "0..*" --> "0..*" Curso
     Docente "0..*" --> "0..*" Academia
-    Docente "0..*" --> "0..*" Proyecto
+
     Curso "0..*" --> "0..*" Competencia
     Curso "0..*" --> "0..*" SecuenciaAcademica
     Curso "1" --> "0..*" Proyecto
-    Curso "0..*" --> "0..*" Aula
-    Proyecto "0..*" --> "0..*" Laboratorio
+    Curso "0..*" --> "0..*" Academia
+    Curso "0..*" --> "0..*" EspacioAcademico
+
+    Proyecto "0..*" --> "0..*" Docente
+    Proyecto "0..*" --> "0..*" EspacioAcademico
     Proyecto "0..*" --> "0..*" Recurso
+
+    EspacioAcademico "0..*" --> "0..*" Recurso
 ```
 
 ---
 
-## 12. Preguntas Pendientes de Levantamiento
+# 12. Decisiones de Levantamiento de Requerimientos
 
-1. ¿Quién puede registrar docentes: solo el Administrador o también el Coordinador académico?
-2. ¿Quién puede modificar información sensible como SNI y PRODEP?
-3. ¿Qué significa exactamente que un docente esté "capacitado" para un curso: cumplimiento total de requisitos, cumplimiento parcial, o validación manual de un coordinador?
-4. ¿La capacitación/elegibilidad se determina de forma automática (por reglas) o siempre requiere confirmación de un administrador/coordinador?
-5. ¿Las certificaciones tienen fecha de expiración? ¿Afecta esto la elegibilidad del docente?
-6. ¿Un docente puede pertenecer a varias academias simultáneamente, o solo a una?
-7. ¿Un curso puede pertenecer a varias academias?
-8. ¿Cómo se determina formalmente la compatibilidad entre un docente y un curso (criterios ponderados, checklist, decisión humana)?
-9. ¿Qué diferencia conceptual existe entre "capacidad/competencia", "especialidad" y "certificación" dentro del sistema?
-10. ¿Qué información específica se debe almacenar sobre el SNI (nivel, vigencia, área)?
-11. ¿Qué información específica se debe almacenar sobre el perfil PRODEP (vigencia, tipo de reconocimiento)?
-12. ¿Las aulas y laboratorios manejarán horarios y reservaciones, o solo disponibilidad general?
-13. ¿El sistema realizará asignación automática de docentes a cursos/proyectos, o únicamente proporcionará información de apoyo para que un coordinador decida?
-14. ¿Los proyectos académicos son siempre dependientes de un curso o pueden existir de forma independiente?
-15. ¿Se manejarán periodos escolares, semestres o ciclos académicos como dimensión temporal del sistema?
-16. ¿Se requiere gestión de estudiantes en alguna etapa futura del proyecto?
-17. ¿Existen políticas institucionales de privacidad de datos que el sistema deba cumplir?
+Las preguntas que originalmente quedaron pendientes han sido resueltas para esta versión del proyecto:
+
+| Pregunta original | Decisión adoptada |
+|---|---|
+| ¿Quién puede registrar docentes? | Únicamente el Administrador. |
+| ¿Quién puede modificar SNI y PRODEP? | El Administrador. |
+| ¿Qué significa que un docente esté capacitado? | Cumplir los requisitos obligatorios y alcanzar el nivel mínimo de dominio establecido para el curso. |
+| ¿La elegibilidad es automática o manual? | Automática mediante reglas definidas. |
+| ¿La asignación es automática? | No. El Administrador realiza la asignación final manualmente. |
+| ¿Las certificaciones tienen expiración? | Sí, podrán tener fecha de vencimiento. |
+| ¿Las certificaciones vencidas afectan la elegibilidad? | Sí, cuando la certificación sea un requisito obligatorio. |
+| ¿Un docente puede pertenecer a varias academias? | Sí. |
+| ¿Un curso puede pertenecer a varias academias? | Sí. |
+| ¿Cómo se determina la compatibilidad docente-curso? | Mediante requisitos obligatorios, nivel de dominio, certificaciones y criterios de recomendación como coincidencia de academia. |
+| ¿Se utilizará una puntuación ponderada? | No. Se utilizará una evaluación basada en reglas y un ordenamiento de candidatos. |
+| ¿Qué es una competencia? | Una capacidad o conocimiento específico que puede asociarse tanto con docentes como con cursos. |
+| ¿Qué es una especialidad? | Un área académica o profesional general asociada al docente. |
+| ¿Qué es una certificación? | Una acreditación específica emitida por un organismo o institución. |
+| ¿Qué información se almacena de SNI/SNII? | Estatus, nivel, área y vigencia. |
+| ¿Qué información se almacena de PRODEP? | Estatus, tipo y vigencia. |
+| ¿Las aulas/laboratorios manejan horarios? | No. Solo disponibilidad general. |
+| ¿Existe reservación de espacios? | No en esta versión. |
+| ¿Los proyectos pueden existir sin curso? | No. Cada proyecto pertenece a un único curso. |
+| ¿Un proyecto puede utilizar varios espacios? | Sí. |
+| ¿Un proyecto puede utilizar varios recursos? | Sí. |
+| ¿Se manejan múltiples periodos escolares? | No. La primera versión representa únicamente el estado actual. |
+| ¿Se requiere gestión de estudiantes? | No. Queda fuera del alcance actual. |
+| ¿Se implementará autenticación? | No en la primera versión. |
+| ¿Habrá diferentes actores/roles? | No. Solo Administrador en la primera versión. |
+| ¿Se eliminarán físicamente los registros? | Se priorizará la desactivación de registros relacionados para preservar la integridad. |
+| ¿Qué información personal se almacenará? | Únicamente información académica y profesional necesaria para el funcionamiento del sistema. |
+
+---
+
+## Decisiones de diseño establecidas
+
+Las decisiones principales para el desarrollo son:
+
+- Un único usuario: Administrador.
+- Sin autenticación.
+- Asignación manual.
+- Nivel de dominio de 0 a 10.
+- Requisitos obligatorios y recomendados.
+- Certificaciones con posible vigencia.
+- Docentes con pertenencia a múltiples academias.
+- Cursos asociados a múltiples academias.
+- Proyectos asociados a un único curso.
+- Proyectos con exactamente un responsable.
+- Espacios representados mediante `EspacioAcademico`.
+- Aulas y laboratorios diferenciados mediante `tipo`.
+- Disponibilidad general sin horarios.
+- Sin estudiantes.
+- Sin múltiples periodos académicos.
+- Eliminación preferentemente lógica/desactivación cuando existan dependencias.
+- Relaciones N:M implementadas mediante entidades asociativas.
 
 ---
