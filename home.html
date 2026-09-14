@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de gestión de información académica y profesional de docentes.">
+    <title>Gestión Académica de Docentes</title>
+
+    <!-- W3.CSS obligatorio -->
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+    <!-- Hoja de estilos propia: se desarrollará en la siguiente etapa -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- ============================== -->
+    <!-- ENCABEZADO Y NAVEGACIÓN         -->
+    <!-- ============================== -->
+    <header class="w3-card-2">
+        <div class="w3-container w3-padding-24">
+            <h1 class="w3-xxlarge">Gestión Académica de Docentes</h1>
+            <p class="w3-large">Sistema de consulta y gestión de información académica y profesional.</p>
+        </div>
+
+        <nav class="w3-bar w3-border-top" aria-label="Navegación principal">
+            <a href="#inicio" class="w3-bar-item w3-button nav-link">Inicio</a>
+            <a href="#docentes" class="w3-bar-item w3-button nav-link">Docentes</a>
+            <a href="#academias" class="w3-bar-item w3-button nav-link">Academias</a>
+            <a href="#cursos" class="w3-bar-item w3-button nav-link">Cursos</a>
+            <a href="#asignaciones" class="w3-bar-item w3-button nav-link">Asignación de cursos</a>
+        </nav>
+    </header>
+
+    <main class="w3-content" style="max-width: 1400px;">
+
+        <!-- ============================== -->
+        <!-- INICIO                          -->
+        <!-- ============================== -->
+        <section id="inicio" class="page-section w3-container w3-padding-32">
+            <div class="w3-panel w3-leftbar">
+                <h2>Inicio</h2>
+                <p>
+                    Bienvenido al sistema de gestión de información académica y profesional de docentes.
+                    Utilice la navegación para consultar o administrar docentes, academias, cursos y asignaciones.
+                </p>
+            </div>
+
+            <div class="w3-row-padding">
+                <div class="w3-third">
+                    <div class="w3-card w3-padding">
+                        <h3>Docentes</h3>
+                        <p>Consultar y registrar información académica y profesional.</p>
+                        <a href="#docentes" class="w3-button w3-border">Ir a docentes</a>
+                    </div>
+                </div>
+
+                <div class="w3-third">
+                    <div class="w3-card w3-padding">
+                        <h3>Academias</h3>
+                        <p>Consultar y registrar academias académicas.</p>
+                        <a href="#academias" class="w3-button w3-border">Ir a academias</a>
+                    </div>
+                </div>
+
+                <div class="w3-third">
+                    <div class="w3-card w3-padding">
+                        <h3>Cursos</h3>
+                        <p>Consultar y registrar cursos asociados a academias.</p>
+                        <a href="#cursos" class="w3-button w3-border">Ir a cursos</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== -->
+        <!-- DOCENTES                         -->
+        <!-- ============================== -->
+        <section id="docentes" class="page-section w3-container w3-padding-32">
+            <div class="w3-container w3-padding-0">
+                <h2>Gestión de docentes</h2>
+                <p>Consulta y registro de información académica y profesional de los docentes.</p>
+            </div>
+
+            <!-- Consulta de docentes -->
+            <div class="w3-card w3-padding w3-margin-bottom">
+                <h3>Consultar docentes</h3>
+
+                <div class="w3-row-padding">
+                    <div class="w3-half">
+                        <label for="buscarDocente">Buscar docente</label>
+                        <input
+                            id="buscarDocente"
+                            name="buscarDocente"
+                            class="w3-input w3-border"
+                            type="search"
+                            placeholder="Nombre o número de empleado">
+                    </div>
+
+                    <div class="w3-half">
+                        <label for="filtroAcademiaDocente">Filtrar por academia</label>
+                        <select id="filtroAcademiaDocente" name="filtroAcademiaDocente" class="w3-select w3-border">
+                            <option value="">Todas las academias</option>
+                            <!-- Las opciones serán cargadas posteriormente con JavaScript -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="w3-responsive w3-margin-top">
+                    <table id="tablaDocentes" class="w3-table-all">
+                        <caption class="w3-padding">Listado de docentes</caption>
+                        <thead>
+                            <tr>
+                                <th>N.º de empleado</th>
+                                <th>Nombre</th>
+                                <th>Último grado académico</th>
+                                <th>Especialidad</th>
+                                <th>Academia</th>
+                                <th>Materias que puede impartir</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyDocentes">
+                            <tr>
+                                <td colspan="6" class="w3-center">Los docentes se cargarán mediante JavaScript.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Registro de docente -->
+            <div class="w3-card w3-padding">
+                <h3>Agregar docente</h3>
+
+                <form id="formDocente" novalidate>
+                    <div class="w3-row-padding">
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="numeroEmpleado">Número de empleado *</label>
+                            <input
+                                id="numeroEmpleado"
+                                name="numeroEmpleado"
+                                class="w3-input w3-border"
+                                type="text"
+                                required>
+                        </div>
+
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="nombreDocente">Nombre completo *</label>
+                            <input
+                                id="nombreDocente"
+                                name="nombreDocente"
+                                class="w3-input w3-border"
+                                type="text"
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="w3-row-padding">
+                        <div class="w3-third w3-margin-bottom">
+                            <label for="licenciatura">Licenciatura *</label>
+                            <select id="licenciatura" name="licenciatura" class="w3-select w3-border" required>
+                                <option value="">Seleccionar...</option>
+                                <!-- Catálogo pendiente de definir -->
+                            </select>
+                        </div>
+
+                        <div class="w3-third w3-margin-bottom">
+                            <label for="maestria">Maestría *</label>
+                            <select id="maestria" name="maestria" class="w3-select w3-border" required>
+                                <option value="">Seleccionar...</option>
+                                <!-- Catálogo pendiente de definir -->
+                            </select>
+                        </div>
+
+                        <div class="w3-third w3-margin-bottom">
+                            <label for="doctorado">Doctorado</label>
+                            <select id="doctorado" name="doctorado" class="w3-select w3-border">
+                                <option value="">Seleccionar...</option>
+                                <!-- Catálogo pendiente de definir -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="w3-row-padding">
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="especialidad">Especialidad</label>
+                            <input
+                                id="especialidad"
+                                name="especialidad"
+                                class="w3-input w3-border"
+                                type="text">
+                        </div>
+
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="academiaDocente">Academia *</label>
+                            <select id="academiaDocente" name="academiaDocente" class="w3-select w3-border" required>
+                                <option value="">Seleccionar academia...</option>
+                                <!-- Las opciones serán cargadas posteriormente con JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="w3-row-padding">
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="sni">SNI</label>
+                            <select id="sni" name="sni" class="w3-select w3-border">
+                                <option value="no">No</option>
+                                <option value="si">Sí</option>
+                            </select>
+                        </div>
+
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="nivelSni">Nivel SNI</label>
+                            <select id="nivelSni" name="nivelSni" class="w3-select w3-border" disabled>
+                                <option value="">No aplica</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="w3-row-padding">
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="prodep">Perfil PRODEP</label>
+                            <select id="prodep" name="prodep" class="w3-select w3-border">
+                                <option value="no">No</option>
+                                <option value="si">Sí</option>
+                            </select>
+                        </div>
+
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="certificaciones">Certificaciones</label>
+                            <textarea
+                                id="certificaciones"
+                                name="certificaciones"
+                                class="w3-input w3-border"
+                                rows="3"
+                                placeholder="Escriba las certificaciones del docente."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="w3-margin-top">
+                        <button type="submit" class="w3-button w3-border">Registrar docente</button>
+                        <button type="reset" class="w3-button w3-light-grey">Limpiar</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ============================== -->
+        <!-- ACADEMIAS                       -->
+        <!-- ============================== -->
+        <section id="academias" class="page-section w3-container w3-padding-32">
+            <h2>Gestión de academias</h2>
+            <p>Consulta y registro de las academias disponibles en el sistema.</p>
+
+            <!-- Consulta de academias -->
+            <div class="w3-card w3-padding w3-margin-bottom">
+                <h3>Consultar academias</h3>
+
+                <div class="w3-responsive">
+                    <table id="tablaAcademias" class="w3-table-all">
+                        <caption class="w3-padding">Listado de academias</caption>
+                        <thead>
+                            <tr>
+                                <th>Clave</th>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Integrantes</th>
+                                <th>Cursos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyAcademias">
+                            <tr>
+                                <td colspan="5" class="w3-center">Las academias se cargarán mediante JavaScript.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Registro de academia -->
+            <div class="w3-card w3-padding">
+                <h3>Agregar academia</h3>
+
+                <form id="formAcademia" novalidate>
+                    <div class="w3-row-padding">
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="claveAcademia">Clave de academia *</label>
+                            <input
+                                id="claveAcademia"
+                                name="claveAcademia"
+                                class="w3-input w3-border"
+                                type="text"
+                                maxlength="10"
+                                pattern="[A-Za-z0-9]+"
+                                title="La clave debe contener únicamente caracteres alfanuméricos y tener como máximo 10 caracteres."
+                                required>
+                            <small>Máximo 10 caracteres alfanuméricos.</small>
+                        </div>
+
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="nombreAcademia">Nombre *</label>
+                            <input
+                                id="nombreAcademia"
+                                name="nombreAcademia"
+                                class="w3-input w3-border"
+                                type="text"
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="w3-margin-bottom">
+                        <label for="descripcionAcademia">Descripción</label>
+                        <textarea
+                            id="descripcionAcademia"
+                            name="descripcionAcademia"
+                            class="w3-input w3-border"
+                            rows="4"></textarea>
+                    </div>
+
+                    <p class="w3-small">
+                        Los docentes integrantes y los cursos se relacionarán posteriormente desde sus respectivos módulos.
+                    </p>
+
+                    <button type="submit" class="w3-button w3-border">Registrar academia</button>
+                    <button type="reset" class="w3-button w3-light-grey">Limpiar</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ============================== -->
+        <!-- CURSOS                          -->
+        <!-- ============================== -->
+        <section id="cursos" class="page-section w3-container w3-padding-32">
+            <h2>Gestión de cursos</h2>
+            <p>Consulta y registro de cursos asociados obligatoriamente a una academia.</p>
+
+            <!-- Consulta de cursos -->
+            <div class="w3-card w3-padding w3-margin-bottom">
+                <h3>Consultar cursos</h3>
+
+                <div class="w3-row-padding">
+                    <div class="w3-half">
+                        <label for="buscarCurso">Buscar curso</label>
+                        <input
+                            id="buscarCurso"
+                            name="buscarCurso"
+                            class="w3-input w3-border"
+                            type="search"
+                            placeholder="Nombre del curso">
+                    </div>
+
+                    <div class="w3-half">
+                        <label for="filtroAcademiaCurso">Filtrar por academia</label>
+                        <select id="filtroAcademiaCurso" name="filtroAcademiaCurso" class="w3-select w3-border">
+                            <option value="">Todas las academias</option>
+                            <!-- Las opciones serán cargadas posteriormente con JavaScript -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="w3-responsive w3-margin-top">
+                    <table id="tablaCursos" class="w3-table-all">
+                        <caption class="w3-padding">Listado de cursos</caption>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Academia</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyCursos">
+                            <tr>
+                                <td colspan="4" class="w3-center">Los cursos se cargarán mediante JavaScript.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Registro de curso -->
+            <div class="w3-card w3-padding">
+                <h3>Agregar curso</h3>
+
+                <form id="formCurso" novalidate>
+                    <div class="w3-margin-bottom">
+                        <label for="nombreCurso">Nombre del curso *</label>
+                        <input
+                            id="nombreCurso"
+                            name="nombreCurso"
+                            class="w3-input w3-border"
+                            type="text"
+                            required>
+                    </div>
+
+                    <div class="w3-margin-bottom">
+                        <label for="descripcionCurso">Descripción</label>
+                        <textarea
+                            id="descripcionCurso"
+                            name="descripcionCurso"
+                            class="w3-input w3-border"
+                            rows="4"></textarea>
+                    </div>
+
+                    <div class="w3-margin-bottom">
+                        <label for="academiaCurso">Academia *</label>
+                        <select id="academiaCurso" name="academiaCurso" class="w3-select w3-border" required>
+                            <option value="">Seleccionar academia...</option>
+                            <!-- Las opciones serán cargadas posteriormente con JavaScript -->
+                        </select>
+                    </div>
+
+                    <button type="submit" class="w3-button w3-border">Registrar curso</button>
+                    <button type="reset" class="w3-button w3-light-grey">Limpiar</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ============================== -->
+        <!-- ASIGNACIÓN DE CURSOS            -->
+        <!-- ============================== -->
+        <section id="asignaciones" class="page-section w3-container w3-padding-32">
+            <h2>Asignación de cursos</h2>
+            <p>
+                Seleccione un curso para consultar sus docentes candidatos. Los candidatos pertenecen a la misma
+                academia del curso. La asignación es manual y el nivel de dominio funciona como apoyo mediante ordenamiento.
+            </p>
+
+            <div class="w3-card w3-padding w3-margin-bottom">
+                <h3>Seleccionar curso</h3>
+
+                <div class="w3-row-padding">
+                    <div class="w3-half">
+                        <label for="cursoAsignacion">Curso *</label>
+                        <select id="cursoAsignacion" name="cursoAsignacion" class="w3-select w3-border">
+                            <option value="">Seleccionar curso...</option>
+                            <!-- Las opciones serán cargadas posteriormente con JavaScript -->
+                        </select>
+                    </div>
+
+                    <div class="w3-half">
+                        <label for="ordenDominio">Ordenar candidatos</label>
+                        <select id="ordenDominio" name="ordenDominio" class="w3-select w3-border">
+                            <option value="desc">Mayor dominio → menor dominio</option>
+                            <option value="asc">Menor dominio → mayor dominio</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del curso seleccionado -->
+            <div id="informacionCurso" class="w3-card w3-padding w3-margin-bottom">
+                <h3>Información del curso</h3>
+                <p><strong>Curso:</strong> <span id="detalleNombreCurso">—</span></p>
+                <p><strong>Academia:</strong> <span id="detalleAcademiaCurso">—</span></p>
+                <p><strong>Estado:</strong> <span id="detalleEstadoCurso">—</span></p>
+                <p><strong>Docentes asignados:</strong> <span id="detalleDocentesAsignados">—</span></p>
+            </div>
+
+            <!-- Candidatos -->
+            <div class="w3-card w3-padding w3-margin-bottom">
+                <h3>Docentes candidatos</h3>
+
+                <div class="w3-responsive">
+                    <table id="tablaCandidatos" class="w3-table-all">
+                        <caption class="w3-padding">Docentes de la academia correspondiente</caption>
+                        <thead>
+                            <tr>
+                                <th>Docente</th>
+                                <th>Academia</th>
+                                <th>Nivel de dominio</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyCandidatos">
+                            <tr>
+                                <td colspan="5" class="w3-center">Seleccione un curso para mostrar candidatos.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Gestión de dominio -->
+            <div class="w3-card w3-padding w3-margin-bottom">
+                <h3>Registrar o modificar nivel de dominio</h3>
+                <p class="w3-small">
+                    El nivel de dominio debe ser un número entero entre 1 y 10. Un valor de 0 no es válido.
+                    Si todavía no existe un valor registrado se mostrará como "Sin registrar".
+                </p>
+
+                <form id="formDominio" novalidate>
+                    <div class="w3-row-padding">
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="docenteDominio">Docente *</label>
+                            <select id="docenteDominio" name="docenteDominio" class="w3-select w3-border" required>
+                                <option value="">Seleccionar docente...</option>
+                                <!-- Las opciones serán filtradas por academia mediante JavaScript -->
+                            </select>
+                        </div>
+
+                        <div class="w3-half w3-margin-bottom">
+                            <label for="cursoDominio">Curso *</label>
+                            <select id="cursoDominio" name="cursoDominio" class="w3-select w3-border" required>
+                                <option value="">Seleccionar curso...</option>
+                                <!-- Las opciones serán filtradas por academia mediante JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="w3-margin-bottom">
+                        <label for="nivelDominio">Nivel de dominio (1-10) *</label>
+                        <input
+                            id="nivelDominio"
+                            name="nivelDominio"
+                            class="w3-input w3-border"
+                            type="number"
+                            min="1"
+                            max="10"
+                            step="1"
+                            required>
+                    </div>
+
+                    <button type="submit" class="w3-button w3-border">Guardar nivel</button>
+                    <button type="reset" class="w3-button w3-light-grey">Limpiar</button>
+                </form>
+            </div>
+
+            <!-- Docentes asignados -->
+            <div class="w3-card w3-padding">
+                <h3>Docentes asignados al curso</h3>
+
+                <div class="w3-responsive">
+                    <table id="tablaAsignados" class="w3-table-all">
+                        <caption class="w3-padding">Asignaciones actuales</caption>
+                        <thead>
+                            <tr>
+                                <th>Docente</th>
+                                <th>Academia</th>
+                                <th>Nivel de dominio</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyAsignados">
+                            <tr>
+                                <td colspan="4" class="w3-center">No hay asignaciones para mostrar.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================== -->
+    <!-- PIE DE PÁGINA                    -->
+    <!-- ============================== -->
+    <footer class="w3-container w3-padding-24 w3-margin-top">
+        <p class="w3-center">Sistema de Gestión Académica de Docentes</p>
+    </footer>
+
+    <!-- JavaScript-->
+    <script src="mockData.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
