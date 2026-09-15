@@ -2,21 +2,15 @@
 // LÓGICA PRINCIPAL DE LA APLICACIÓN
 // ============================================================
 
-
 // ============================================================
 // ESTADO DE LA APLICACIÓN
 // ============================================================
 
 const appState = {
-
     academias: [...mockData.academias],
-
     docentes: [...mockData.docentes],
-
     cursos: [...mockData.cursos],
-
     dominios: [...mockData.dominios],
-
     asignaciones: [...mockData.asignaciones]
 };
 
@@ -28,15 +22,12 @@ const appState = {
 document.addEventListener("DOMContentLoaded", () => {
 
     inicializarCatalogos();
-
-    cargarAcademias();
-
+    cargarTodosLosSelectsAcademia();
     cargarDocentes();
-
+    cargarAcademias();
     cargarCursos();
-
     cargarDatosAsignacion();
-
+    cargarSelectsDominio();
     configurarEventos();
 
 });
@@ -50,27 +41,74 @@ function inicializarCatalogos() {
 
     llenarSelect(
         "licenciatura",
-        mockData.licenciaturas
+        mockData.licenciaturas,
+        "Seleccionar..."
     );
 
     llenarSelect(
         "maestria",
-        mockData.maestrias
+        mockData.maestrias,
+        "Seleccionar..."
     );
 
     llenarSelect(
         "doctorado",
-        mockData.doctorados
+        mockData.doctorados,
+        "Seleccionar..."
     );
 
     llenarSelect(
-        "nivelSNI",
-        mockData.nivelesSNI
+        "nivelSni",
+        mockData.nivelesSNI,
+        "No aplica"
     );
 }
 
 
-function llenarSelect(id, opciones) {
+function llenarSelect(id, opciones, textoInicial) {
+
+    const select = document.getElementById(id);
+
+    if (!select) {
+        console.warn(`No existe el elemento con id="${id}"`);
+        return;
+    }
+
+    select.innerHTML = "";
+
+    const opcionInicial = document.createElement("option");
+    opcionInicial.value = "";
+    opcionInicial.textContent = textoInicial;
+
+    select.appendChild(opcionInicial);
+
+    opciones.forEach(opcion => {
+
+        const option = document.createElement("option");
+
+        option.value = opcion;
+        option.textContent = opcion;
+
+        select.appendChild(option);
+
+    });
+}
+
+
+// ============================================================
+// ACADEMIAS EN SELECTS
+// ============================================================
+
+function cargarTodosLosSelectsAcademia() {
+
+    cargarSelectAcademias("filtroAcademiaDocente", "Todas las academias");
+    cargarSelectAcademias("academiaDocente", "Seleccionar academia...");
+    cargarSelectAcademias("filtroAcademiaCurso", "Todas las academias");
+    cargarSelectAcademias("academiaCurso", "Seleccionar academia...");
+}
+
+
+function cargarSelectAcademias(id, textoInicial) {
 
     const select = document.getElementById(id);
 
@@ -78,13 +116,22 @@ function llenarSelect(id, opciones) {
         return;
     }
 
-    opciones.forEach(opcion => {
+    select.innerHTML = "";
+
+    const opcionInicial = document.createElement("option");
+
+    opcionInicial.value = "";
+    opcionInicial.textContent = textoInicial;
+
+    select.appendChild(opcionInicial);
+
+    appState.academias.forEach(academia => {
 
         const option = document.createElement("option");
 
-        option.value = opcion;
-
-        option.textContent = opcion;
+        option.value = academia.id;
+        option.textContent =
+            `${academia.nombre} (${academia.clave})`;
 
         select.appendChild(option);
 
@@ -98,25 +145,45 @@ function llenarSelect(id, opciones) {
 
 function cargarAcademias() {
 
-    const select = document.getElementById("academia");
+    const tbody =
+        document.getElementById("tbodyAcademias");
 
-    if (!select) {
+    if (!tbody) {
         return;
     }
 
-    select.innerHTML =
-        '<option value="">Seleccione una academia</option>';
+    tbody.innerHTML = "";
 
     appState.academias.forEach(academia => {
 
-        const option = document.createElement("option");
+        const numeroIntegrantes =
+            appState.docentes.filter(
+                docente =>
+                    docente.academiaId === academia.id
+            ).length;
 
-        option.value = academia.id;
+        const numeroCursos =
+            appState.cursos.filter(
+                curso =>
+                    curso.academiaId === academia.id
+            ).length;
 
-        option.textContent =
-            `${academia.nombre} (${academia.clave})`;
+        const fila =
+            document.createElement("tr");
 
-        select.appendChild(option);
+        fila.innerHTML = `
+            <td>${escaparHTML(academia.clave)}</td>
+
+            <td>${escaparHTML(academia.nombre)}</td>
+
+            <td>${escaparHTML(academia.descripcion)}</td>
+
+            <td>${numeroIntegrantes}</td>
+
+            <td>${numeroCursos}</td>
+        `;
+
+        tbody.appendChild(fila);
 
     });
 }
@@ -128,18 +195,136 @@ function cargarAcademias() {
 
 function cargarDocentes() {
 
-    const tabla = document.getElementById("tablaDocentes");
+    const tbody =
+        document.getElementById("tbodyDocentes");
 
-    if (!tabla) {
+    if (!tbody) {
         return;
     }
 
-    tabla.innerHTML = "";
+    const busqueda =
+        document
+            .getElementById("buscarDocente")
+            ?.value
+            .trim()
+            .toLowerCase() || "";
 
-    appState.docentes.forEach(docente => {
+    const academiaSeleccionada =
+        document
+            .getElementById("filtroAcademiaDocente")
+            ?.value || "";
+
+
+    let docentesFiltrados =
+        [...appState.docentes];
+
+
+    // --------------------------------------------------------
+    // BUSQUEDA
+    // --------------------------------------------------------
+
+    if (busqueda !== "") {
+
+        docentesFiltrados =
+            docentesFiltrados.filter(docente => {
+
+                const nombre =
+                    docente.nombre
+                        .toLowerCase();
+
+                const numeroEmpleado =
+                    String(docente.numeroEmpleado)
+                        .toLowerCase();
+
+                return (
+                    nombre.includes(busqueda) ||
+                    numeroEmpleado.includes(busqueda)
+                );
+
+            });
+
+    }
+
+
+    // --------------------------------------------------------
+    // FILTRO POR ACADEMIA
+    // --------------------------------------------------------
+
+    if (academiaSeleccionada !== "") {
+
+        const academiaId =
+            Number(academiaSeleccionada);
+
+        docentesFiltrados =
+            docentesFiltrados.filter(
+                docente =>
+                    docente.academiaId === academiaId
+            );
+
+    }
+
+
+    tbody.innerHTML = "";
+
+
+    if (docentesFiltrados.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="w3-center">
+                    No se encontraron docentes.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    docentesFiltrados.forEach(docente => {
 
         const academia =
             obtenerAcademia(docente.academiaId);
+
+        const cursosAcademia =
+            appState.cursos.filter(
+                curso =>
+                    curso.academiaId === docente.academiaId
+            );
+
+
+        let materias = "Ninguna";
+
+
+        if (cursosAcademia.length > 0) {
+
+            materias =
+                cursosAcademia
+                    .map(curso => {
+
+                        const dominio =
+                            obtenerDominio(
+                                docente.id,
+                                curso.id
+                            );
+
+                        return dominio !== null
+                            ? `${curso.nombre} (${dominio}/10)`
+                            : `${curso.nombre} (Sin registrar)`;
+
+                    })
+                    .join(", ");
+
+        }
+
+
+        // ----------------------------------------------------
+        // Último grado académico
+        // ----------------------------------------------------
+
+        const ultimoGrado =
+            obtenerUltimoGrado(docente);
+
 
         const fila =
             document.createElement("tr");
@@ -147,42 +332,58 @@ function cargarDocentes() {
         fila.innerHTML = `
 
             <td>
-                ${docente.numeroEmpleado}
+                ${escaparHTML(docente.numeroEmpleado)}
             </td>
 
             <td>
-                ${docente.nombre}
+                ${escaparHTML(docente.nombre)}
             </td>
 
             <td>
-                ${docente.licenciatura}
+                ${escaparHTML(ultimoGrado)}
             </td>
 
             <td>
-                ${docente.especialidad}
+                ${escaparHTML(docente.especialidad || "No registrada")}
             </td>
 
             <td>
-                ${academia ? academia.nombre : "Sin academia"}
+                ${academia
+                    ? escaparHTML(academia.nombre)
+                    : "Sin academia"}
             </td>
 
             <td>
-                ${docente.sni
-                    ? docente.nivelSNI
-                    : "No"}
-            </td>
-
-            <td>
-                ${docente.prodep
-                    ? "Sí"
-                    : "No"}
+                ${escaparHTML(materias)}
             </td>
 
         `;
 
-        tabla.appendChild(fila);
+        tbody.appendChild(fila);
 
     });
+}
+
+
+// ============================================================
+// ÚLTIMO GRADO ACADÉMICO
+// ============================================================
+
+function obtenerUltimoGrado(docente) {
+
+    if (docente.doctorado) {
+        return docente.doctorado;
+    }
+
+    if (docente.maestria) {
+        return docente.maestria;
+    }
+
+    if (docente.licenciatura) {
+        return docente.licenciatura;
+    }
+
+    return "No registrado";
 }
 
 
@@ -192,15 +393,92 @@ function cargarDocentes() {
 
 function cargarCursos() {
 
-    const tabla = document.getElementById("tablaCursos");
+    const tbody =
+        document.getElementById("tbodyCursos");
 
-    if (!tabla) {
+    if (!tbody) {
         return;
     }
 
-    tabla.innerHTML = "";
+    const busqueda =
+        document
+            .getElementById("buscarCurso")
+            ?.value
+            .trim()
+            .toLowerCase() || "";
 
-    appState.cursos.forEach(curso => {
+    const academiaSeleccionada =
+        document
+            .getElementById("filtroAcademiaCurso")
+            ?.value || "";
+
+
+    let cursosFiltrados =
+        [...appState.cursos];
+
+
+    // --------------------------------------------------------
+    // BUSQUEDA
+    // --------------------------------------------------------
+
+    if (busqueda !== "") {
+
+        cursosFiltrados =
+            cursosFiltrados.filter(curso => {
+
+                const nombre =
+                    curso.nombre.toLowerCase();
+
+                const descripcion =
+                    (curso.descripcion || "")
+                        .toLowerCase();
+
+                return (
+                    nombre.includes(busqueda) ||
+                    descripcion.includes(busqueda)
+                );
+
+            });
+
+    }
+
+
+    // --------------------------------------------------------
+    // FILTRO POR ACADEMIA
+    // --------------------------------------------------------
+
+    if (academiaSeleccionada !== "") {
+
+        const academiaId =
+            Number(academiaSeleccionada);
+
+        cursosFiltrados =
+            cursosFiltrados.filter(
+                curso =>
+                    curso.academiaId === academiaId
+            );
+
+    }
+
+
+    tbody.innerHTML = "";
+
+
+    if (cursosFiltrados.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="w3-center">
+                    No se encontraron cursos.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    cursosFiltrados.forEach(curso => {
 
         const academia =
             obtenerAcademia(curso.academiaId);
@@ -213,22 +491,23 @@ function cargarCursos() {
                 ? "Asignado"
                 : "Disponible";
 
+
         const fila =
             document.createElement("tr");
 
         fila.innerHTML = `
 
             <td>
-                ${curso.nombre}
+                ${escaparHTML(curso.nombre)}
             </td>
 
             <td>
-                ${curso.descripcion}
+                ${escaparHTML(curso.descripcion || "")}
             </td>
 
             <td>
                 ${academia
-                    ? academia.nombre
+                    ? escaparHTML(academia.nombre)
                     : "Sin academia"}
             </td>
 
@@ -236,17 +515,9 @@ function cargarCursos() {
                 ${estado}
             </td>
 
-            <td>
-                ${asignados.length > 0
-                    ? asignados
-                        .map(docente => docente.nombre)
-                        .join(", ")
-                    : "Ninguno"}
-            </td>
-
         `;
 
-        tabla.appendChild(fila);
+        tbody.appendChild(fila);
 
     });
 }
@@ -265,8 +536,9 @@ function cargarDatosAsignacion() {
         return;
     }
 
-    selectCurso.innerHTML =
-        '<option value="">Seleccione un curso</option>';
+    selectCurso.innerHTML = `
+        <option value="">Seleccionar curso...</option>
+    `;
 
     appState.cursos.forEach(curso => {
 
@@ -274,7 +546,6 @@ function cargarDatosAsignacion() {
             document.createElement("option");
 
         option.value = curso.id;
-
         option.textContent = curso.nombre;
 
         selectCurso.appendChild(option);
@@ -293,40 +564,49 @@ function mostrarCandidatos() {
         document.getElementById("cursoAsignacion");
 
     const cursoId =
-        Number(selectCurso.value);
+        Number(selectCurso?.value);
+
+
+    actualizarInformacionCurso(cursoId);
+
 
     if (!cursoId) {
+
+        mostrarMensajeCandidatos(
+            "Seleccione un curso para mostrar candidatos."
+        );
+
+        cargarTablaAsignados(null);
+
         return;
     }
 
+
     const curso =
         appState.cursos.find(
-            curso => curso.id === cursoId
+            curso =>
+                curso.id === cursoId
         );
+
 
     if (!curso) {
         return;
     }
 
 
-    // --------------------------------------------------------
-    // Solo docentes de la misma academia
-    // --------------------------------------------------------
-
     let candidatos =
         appState.docentes.filter(
             docente =>
-                docente.academiaId === curso.academiaId
+                docente.academiaId ===
+                curso.academiaId
         );
 
 
-    // --------------------------------------------------------
-    // Sorting:
-    //
-    // Mayor dominio → menor dominio
-    //
-    // Los docentes sin dominio quedan al final.
-    // --------------------------------------------------------
+    const orden =
+        document
+            .getElementById("ordenDominio")
+            ?.value || "desc";
+
 
     candidatos.sort((a, b) => {
 
@@ -336,13 +616,26 @@ function mostrarCandidatos() {
         const dominioB =
             obtenerDominio(b.id, curso.id);
 
+
+        if (dominioA === null && dominioB === null) {
+            return a.nombre.localeCompare(b.nombre);
+        }
+
+
         if (dominioA === null) {
             return 1;
         }
 
+
         if (dominioB === null) {
             return -1;
         }
+
+
+        if (orden === "asc") {
+            return dominioA - dominioB;
+        }
+
 
         return dominioB - dominioA;
 
@@ -353,6 +646,89 @@ function mostrarCandidatos() {
         candidatos,
         curso
     );
+
+    cargarTablaAsignados(curso.id);
+}
+
+
+// ============================================================
+// INFORMACIÓN DEL CURSO
+// ============================================================
+
+function actualizarInformacionCurso(cursoId) {
+
+    const nombre =
+        document.getElementById("detalleNombreCurso");
+
+    const academia =
+        document.getElementById("detalleAcademiaCurso");
+
+    const estado =
+        document.getElementById("detalleEstadoCurso");
+
+    const asignados =
+        document.getElementById("detalleDocentesAsignados");
+
+
+    if (
+        !nombre ||
+        !academia ||
+        !estado ||
+        !asignados
+    ) {
+        return;
+    }
+
+
+    if (!cursoId) {
+
+        nombre.textContent = "—";
+        academia.textContent = "—";
+        estado.textContent = "—";
+        asignados.textContent = "—";
+
+        return;
+    }
+
+
+    const curso =
+        appState.cursos.find(
+            curso =>
+                curso.id === cursoId
+        );
+
+
+    if (!curso) {
+        return;
+    }
+
+
+    const academiaCurso =
+        obtenerAcademia(curso.academiaId);
+
+    const docentesAsignados =
+        obtenerDocentesAsignados(curso.id);
+
+
+    nombre.textContent =
+        curso.nombre;
+
+    academia.textContent =
+        academiaCurso
+            ? academiaCurso.nombre
+            : "Sin academia";
+
+    estado.textContent =
+        docentesAsignados.length > 0
+            ? "Asignado"
+            : "Disponible";
+
+    asignados.textContent =
+        docentesAsignados.length > 0
+            ? docentesAsignados
+                .map(docente => docente.nombre)
+                .join(", ")
+            : "Ninguno";
 }
 
 
@@ -365,16 +741,25 @@ function mostrarTablaCandidatos(
     curso
 ) {
 
-    const tabla =
-        document.getElementById(
-            "tablaCandidatos"
-        );
+    const tbody =
+        document.getElementById("tbodyCandidatos");
 
-    if (!tabla) {
+    if (!tbody) {
         return;
     }
 
-    tabla.innerHTML = "";
+
+    tbody.innerHTML = "";
+
+
+    if (candidatos.length === 0) {
+
+        mostrarMensajeCandidatos(
+            "No hay docentes de esta academia."
+        );
+
+        return;
+    }
 
 
     candidatos.forEach(docente => {
@@ -391,6 +776,11 @@ function mostrarTablaCandidatos(
                 docente.id
             );
 
+        const academia =
+            obtenerAcademia(
+                docente.academiaId
+            );
+
 
         const fila =
             document.createElement("tr");
@@ -399,17 +789,29 @@ function mostrarTablaCandidatos(
         fila.innerHTML = `
 
             <td>
-                ${docente.nombre}
+                ${escaparHTML(docente.nombre)}
             </td>
 
             <td>
-                ${docente.numeroEmpleado}
+                ${academia
+                    ? escaparHTML(academia.nombre)
+                    : "Sin academia"}
             </td>
 
             <td>
-                ${dominio !== null
-                    ? dominio
-                    : "Sin registrar"}
+                ${
+                    dominio !== null
+                        ? `${dominio}/10`
+                        : "Sin registrar"
+                }
+            </td>
+
+            <td>
+                ${
+                    asignado
+                        ? "Asignado"
+                        : "Disponible"
+                }
             </td>
 
             <td>
@@ -419,13 +821,9 @@ function mostrarTablaCandidatos(
 
                     ? `
                         <button
+                            type="button"
                             class="w3-button w3-small w3-red"
-                            onclick="
-                                desasignarDocente(
-                                    ${curso.id},
-                                    ${docente.id}
-                                )
-                            "
+                            onclick="desasignarDocente(${curso.id}, ${docente.id})"
                         >
                             Desasignar
                         </button>
@@ -433,13 +831,9 @@ function mostrarTablaCandidatos(
 
                     : `
                         <button
+                            type="button"
                             class="w3-button w3-small w3-blue"
-                            onclick="
-                                asignarDocente(
-                                    ${curso.id},
-                                    ${docente.id}
-                                )
-                            "
+                            onclick="asignarDocente(${curso.id}, ${docente.id})"
                         >
                             Asignar
                         </button>
@@ -450,8 +844,136 @@ function mostrarTablaCandidatos(
 
         `;
 
+        tbody.appendChild(fila);
 
-        tabla.appendChild(fila);
+    });
+}
+
+
+function mostrarMensajeCandidatos(mensaje) {
+
+    const tbody =
+        document.getElementById("tbodyCandidatos");
+
+    if (!tbody) {
+        return;
+    }
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="5" class="w3-center">
+                ${escaparHTML(mensaje)}
+            </td>
+        </tr>
+    `;
+}
+
+
+// ============================================================
+// TABLA DE DOCENTES ASIGNADOS
+// ============================================================
+
+function cargarTablaAsignados(cursoId) {
+
+    const tbody =
+        document.getElementById("tbodyAsignados");
+
+    if (!tbody) {
+        return;
+    }
+
+
+    tbody.innerHTML = "";
+
+
+    if (!cursoId) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="w3-center">
+                    No hay asignaciones para mostrar.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    const asignados =
+        obtenerDocentesAsignados(cursoId);
+
+
+    if (asignados.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="w3-center">
+                    No hay docentes asignados a este curso.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    const curso =
+        appState.cursos.find(
+            curso =>
+                curso.id === cursoId
+        );
+
+
+    asignados.forEach(docente => {
+
+        const academia =
+            obtenerAcademia(docente.academiaId);
+
+        const dominio =
+            obtenerDominio(
+                docente.id,
+                cursoId
+            );
+
+
+        const fila =
+            document.createElement("tr");
+
+
+        fila.innerHTML = `
+
+            <td>
+                ${escaparHTML(docente.nombre)}
+            </td>
+
+            <td>
+                ${academia
+                    ? escaparHTML(academia.nombre)
+                    : "Sin academia"}
+            </td>
+
+            <td>
+                ${
+                    dominio !== null
+                        ? `${dominio}/10`
+                        : "Sin registrar"
+                }
+            </td>
+
+            <td>
+                <button
+                    type="button"
+                    class="w3-button w3-small w3-red"
+                    onclick="desasignarDocente(${curso.id}, ${docente.id})"
+                >
+                    Desasignar
+                </button>
+            </td>
+
+        `;
+
+        tbody.appendChild(fila);
 
     });
 }
@@ -483,12 +1005,14 @@ function asignarDocente(
 
     const curso =
         appState.cursos.find(
-            curso => curso.id === cursoId
+            curso =>
+                curso.id === cursoId
         );
 
     const docente =
         appState.docentes.find(
-            docente => docente.id === docenteId
+            docente =>
+                docente.id === docenteId
         );
 
 
@@ -496,13 +1020,6 @@ function asignarDocente(
         return;
     }
 
-
-    // --------------------------------------------------------
-    // Regla de negocio:
-    //
-    // El docente y el curso deben pertenecer
-    // a la misma academia.
-    // --------------------------------------------------------
 
     if (
         curso.academiaId !==
@@ -523,9 +1040,8 @@ function asignarDocente(
             appState.asignaciones
         ),
 
-        cursoId: cursoId,
-
-        docenteId: docenteId
+        cursoId,
+        docenteId
 
     };
 
@@ -536,7 +1052,6 @@ function asignarDocente(
 
 
     mostrarCandidatos();
-
     cargarCursos();
 
 }
@@ -571,7 +1086,6 @@ function desasignarDocente(
 
 
     mostrarCandidatos();
-
     cargarCursos();
 
 }
@@ -604,7 +1118,7 @@ function obtenerDominio(
 
 
 // ============================================================
-// REGISTRAR / ACTUALIZAR DOMINIO
+// GUARDAR DOMINIO
 // ============================================================
 
 function guardarDominio(
@@ -615,10 +1129,6 @@ function guardarDominio(
 
     nivel = Number(nivel);
 
-
-    // --------------------------------------------------------
-    // Validación
-    // --------------------------------------------------------
 
     if (
         !Number.isInteger(nivel) ||
@@ -636,12 +1146,14 @@ function guardarDominio(
 
     const docente =
         appState.docentes.find(
-            docente => docente.id === docenteId
+            docente =>
+                docente.id === docenteId
         );
 
     const curso =
         appState.cursos.find(
-            curso => curso.id === cursoId
+            curso =>
+                curso.id === cursoId
         );
 
 
@@ -649,10 +1161,6 @@ function guardarDominio(
         return false;
     }
 
-
-    // --------------------------------------------------------
-    // Regla de academia
-    // --------------------------------------------------------
 
     if (
         docente.academiaId !==
@@ -687,18 +1195,88 @@ function guardarDominio(
                 appState.dominios
             ),
 
-            docenteId: docenteId,
-
-            cursoId: cursoId,
-
-            nivel: nivel
+            docenteId,
+            cursoId,
+            nivel
 
         });
 
     }
 
 
+    alert(
+        "Nivel de dominio guardado correctamente."
+    );
+
+
+    cargarDocentes();
+
+    mostrarCandidatos();
+
     return true;
+}
+
+
+// ============================================================
+// SELECTS DE DOMINIO
+// ============================================================
+
+function cargarSelectsDominio() {
+
+    const docenteSelect =
+        document.getElementById("docenteDominio");
+
+    const cursoSelect =
+        document.getElementById("cursoDominio");
+
+
+    if (docenteSelect) {
+
+        docenteSelect.innerHTML = `
+            <option value="">
+                Seleccionar docente...
+            </option>
+        `;
+
+        appState.docentes.forEach(docente => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = docente.id;
+
+            option.textContent =
+                `${docente.nombre} (${docente.numeroEmpleado})`;
+
+            docenteSelect.appendChild(option);
+
+        });
+
+    }
+
+
+    if (cursoSelect) {
+
+        cursoSelect.innerHTML = `
+            <option value="">
+                Seleccionar curso...
+            </option>
+        `;
+
+        appState.cursos.forEach(curso => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = curso.id;
+            option.textContent = curso.nombre;
+
+            cursoSelect.appendChild(option);
+
+        });
+
+    }
+
 }
 
 
@@ -725,20 +1303,18 @@ function obtenerDocentesAsignados(
     cursoId
 ) {
 
-    const asignaciones =
-        appState.asignaciones.filter(
+    return appState.asignaciones
+        .filter(
             asignacion =>
                 asignacion.cursoId === cursoId
-        );
-
-
-    return asignaciones
-        .map(asignacion =>
-            appState.docentes.find(
-                docente =>
-                    docente.id ===
-                    asignacion.docenteId
-            )
+        )
+        .map(
+            asignacion =>
+                appState.docentes.find(
+                    docente =>
+                        docente.id ===
+                        asignacion.docenteId
+                )
         )
         .filter(Boolean);
 }
@@ -776,7 +1352,8 @@ function obtenerNuevoId(
 
     return Math.max(
         ...coleccion.map(
-            elemento => elemento.id
+            elemento =>
+                elemento.id
         )
     ) + 1;
 }
@@ -788,20 +1365,109 @@ function obtenerNuevoId(
 
 function configurarEventos() {
 
+    // --------------------------------------------------------
+    // Buscar docentes
+    // --------------------------------------------------------
+
+    const buscarDocente =
+        document.getElementById("buscarDocente");
+
+    if (buscarDocente) {
+
+        buscarDocente.addEventListener(
+            "input",
+            cargarDocentes
+        );
+
+    }
+
 
     // --------------------------------------------------------
-    // Selección de curso para asignación
+    // Filtrar docentes por academia
     // --------------------------------------------------------
 
-    const selectCurso =
+    const filtroAcademiaDocente =
+        document.getElementById(
+            "filtroAcademiaDocente"
+        );
+
+    if (filtroAcademiaDocente) {
+
+        filtroAcademiaDocente.addEventListener(
+            "change",
+            cargarDocentes
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // Buscar cursos
+    // --------------------------------------------------------
+
+    const buscarCurso =
+        document.getElementById("buscarCurso");
+
+    if (buscarCurso) {
+
+        buscarCurso.addEventListener(
+            "input",
+            cargarCursos
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // Filtrar cursos por academia
+    // --------------------------------------------------------
+
+    const filtroAcademiaCurso =
+        document.getElementById(
+            "filtroAcademiaCurso"
+        );
+
+    if (filtroAcademiaCurso) {
+
+        filtroAcademiaCurso.addEventListener(
+            "change",
+            cargarCursos
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // Curso para asignación
+    // --------------------------------------------------------
+
+    const cursoAsignacion =
         document.getElementById(
             "cursoAsignacion"
         );
 
+    if (cursoAsignacion) {
 
-    if (selectCurso) {
+        cursoAsignacion.addEventListener(
+            "change",
+            mostrarCandidatos
+        );
 
-        selectCurso.addEventListener(
+    }
+
+
+    // --------------------------------------------------------
+    // Ordenamiento por dominio
+    // --------------------------------------------------------
+
+    const ordenDominio =
+        document.getElementById(
+            "ordenDominio"
+        );
+
+    if (ordenDominio) {
+
+        ordenDominio.addEventListener(
             "change",
             mostrarCandidatos
         );
@@ -813,36 +1479,27 @@ function configurarEventos() {
     // SNI
     // --------------------------------------------------------
 
-    const checkboxSNI =
-        document.getElementById(
-            "sni"
-        );
+    const sni =
+        document.getElementById("sni");
+
+    const nivelSni =
+        document.getElementById("nivelSni");
 
 
-    const nivelSNI =
-        document.getElementById(
-            "nivelSNI"
-        );
+    if (sni && nivelSni) {
 
-
-    if (
-        checkboxSNI &&
-        nivelSNI
-    ) {
-
-        checkboxSNI.addEventListener(
+        sni.addEventListener(
             "change",
             () => {
 
-                nivelSNI.disabled =
-                    !checkboxSNI.checked;
+                const tieneSni =
+                    sni.value === "si";
 
-                if (
-                    !checkboxSNI.checked
-                ) {
+                nivelSni.disabled =
+                    !tieneSni;
 
-                    nivelSNI.value = "";
-
+                if (!tieneSni) {
+                    nivelSni.value = "";
                 }
 
             }
@@ -852,14 +1509,13 @@ function configurarEventos() {
 
 
     // --------------------------------------------------------
-    // FORMULARIO DE DOCENTE
+    // Formulario docente
     // --------------------------------------------------------
 
     const formularioDocente =
         document.getElementById(
             "formDocente"
         );
-
 
     if (formularioDocente) {
 
@@ -872,14 +1528,13 @@ function configurarEventos() {
 
 
     // --------------------------------------------------------
-    // FORMULARIO DE ACADEMIA
+    // Formulario academia
     // --------------------------------------------------------
 
     const formularioAcademia =
         document.getElementById(
             "formAcademia"
         );
-
 
     if (formularioAcademia) {
 
@@ -892,7 +1547,7 @@ function configurarEventos() {
 
 
     // --------------------------------------------------------
-    // FORMULARIO DE CURSO
+    // Formulario curso
     // --------------------------------------------------------
 
     const formularioCurso =
@@ -900,12 +1555,60 @@ function configurarEventos() {
             "formCurso"
         );
 
-
     if (formularioCurso) {
 
         formularioCurso.addEventListener(
             "submit",
             manejarFormularioCurso
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // Formulario dominio
+    // --------------------------------------------------------
+
+    const formularioDominio =
+        document.getElementById(
+            "formDominio"
+        );
+
+    if (formularioDominio) {
+
+        formularioDominio.addEventListener(
+            "submit",
+            manejarFormularioDominio
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // Cambiar docente de dominio
+    // --------------------------------------------------------
+
+    const docenteDominio =
+        document.getElementById(
+            "docenteDominio"
+        );
+
+    const cursoDominio =
+        document.getElementById(
+            "cursoDominio"
+        );
+
+
+    if (docenteDominio && cursoDominio) {
+
+        docenteDominio.addEventListener(
+            "change",
+            cargarDominioExistente
+        );
+
+        cursoDominio.addEventListener(
+            "change",
+            cargarDominioExistente
         );
 
     }
@@ -925,33 +1628,39 @@ function manejarFormularioDocente(
 
 
     const numeroEmpleado =
-        document.getElementById(
-            "numeroEmpleado"
-        ).value.trim();
-
+        document
+            .getElementById("numeroEmpleado")
+            .value
+            .trim();
 
     const nombre =
-        document.getElementById(
-            "nombre"
-        ).value.trim();
-
+        document
+            .getElementById("nombreDocente")
+            .value
+            .trim();
 
     const academiaId =
         Number(
-            document.getElementById(
-                "academia"
-            ).value
+            document
+                .getElementById("academiaDocente")
+                .value
         );
 
 
-    // --------------------------------------------------------
-    // Número de empleado único
-    // --------------------------------------------------------
+    if (!numeroEmpleado || !nombre) {
+
+        alert(
+            "Complete los campos obligatorios."
+        );
+
+        return;
+    }
+
 
     const empleadoExiste =
         appState.docentes.some(
             docente =>
-                docente.numeroEmpleado
+                String(docente.numeroEmpleado)
                     .toLowerCase() ===
                 numeroEmpleado.toLowerCase()
         );
@@ -978,17 +1687,17 @@ function manejarFormularioDocente(
 
 
     const sni =
-        document.getElementById(
-            "sni"
-        ).checked;
+        document.getElementById("sni").value === "si";
 
 
     const nivelSNI =
         sni
-            ? document.getElementById(
-                "nivelSNI"
-            ).value
+            ? document.getElementById("nivelSni").value
             : "";
+
+
+    const prodep =
+        document.getElementById("prodep").value === "si";
 
 
     const nuevoDocente = {
@@ -1002,38 +1711,37 @@ function manejarFormularioDocente(
         nombre,
 
         licenciatura:
-            document.getElementById(
-                "licenciatura"
-            ).value,
+            document
+                .getElementById("licenciatura")
+                .value,
 
         maestria:
-            document.getElementById(
-                "maestria"
-            ).value,
+            document
+                .getElementById("maestria")
+                .value,
 
         doctorado:
-            document.getElementById(
-                "doctorado"
-            ).value,
+            document
+                .getElementById("doctorado")
+                .value,
 
         especialidad:
-            document.getElementById(
-                "especialidad"
-            ).value.trim(),
+            document
+                .getElementById("especialidad")
+                .value
+                .trim(),
 
         sni,
 
         nivelSNI,
 
-        prodep:
-            document.getElementById(
-                "prodep"
-            ).checked,
+        prodep,
 
         certificaciones:
-            document.getElementById(
-                "certificaciones"
-            ).value.trim(),
+            document
+                .getElementById("certificaciones")
+                .value
+                .trim(),
 
         academiaId
 
@@ -1050,18 +1758,25 @@ function manejarFormularioDocente(
     );
 
 
-    formularioDocente.reset();
+    document
+        .getElementById("formDocente")
+        .reset();
 
 
-    document.getElementById(
-        "nivelSNI"
-    ).disabled = true;
+    const nivelSniSelect =
+        document.getElementById("nivelSni");
+
+    if (nivelSniSelect) {
+
+        nivelSniSelect.disabled = true;
+        nivelSniSelect.value = "";
+
+    }
 
 
     cargarDocentes();
-
     cargarAcademias();
-
+    cargarSelectsDominio();
 }
 
 
@@ -1077,37 +1792,29 @@ function manejarFormularioAcademia(
 
 
     const nombre =
-        document.getElementById(
-            "nombreAcademia"
-        ).value.trim();
-
+        document
+            .getElementById("nombreAcademia")
+            .value
+            .trim();
 
     const clave =
-        document.getElementById(
-            "claveAcademia"
-        ).value.trim();
-
+        document
+            .getElementById("claveAcademia")
+            .value
+            .trim();
 
     const descripcion =
-        document.getElementById(
-            "descripcionAcademia"
-        ).value.trim();
+        document
+            .getElementById("descripcionAcademia")
+            .value
+            .trim();
 
-
-    // --------------------------------------------------------
-    // Validación de clave
-    //
-    // Máximo 10 caracteres
-    // Solo caracteres alfanuméricos
-    // --------------------------------------------------------
 
     const claveValida =
         /^[a-zA-Z0-9]{1,10}$/;
 
 
-    if (
-        !claveValida.test(clave)
-    ) {
+    if (!claveValida.test(clave)) {
 
         alert(
             "La clave debe ser alfanumérica y tener máximo 10 caracteres."
@@ -1117,9 +1824,15 @@ function manejarFormularioAcademia(
     }
 
 
-    // --------------------------------------------------------
-    // Clave única
-    // --------------------------------------------------------
+    if (!nombre) {
+
+        alert(
+            "Debe ingresar un nombre para la academia."
+        );
+
+        return;
+    }
+
 
     const claveExiste =
         appState.academias.some(
@@ -1147,9 +1860,7 @@ function manejarFormularioAcademia(
         ),
 
         nombre,
-
         clave,
-
         descripcion
 
     };
@@ -1166,14 +1877,12 @@ function manejarFormularioAcademia(
 
 
     document
-        .getElementById(
-            "formAcademia"
-        )
+        .getElementById("formAcademia")
         .reset();
 
 
     cargarAcademias();
-
+    cargarTodosLosSelectsAcademia();
 }
 
 
@@ -1189,23 +1898,33 @@ function manejarFormularioCurso(
 
 
     const nombre =
-        document.getElementById(
-            "nombreCurso"
-        ).value.trim();
-
+        document
+            .getElementById("nombreCurso")
+            .value
+            .trim();
 
     const descripcion =
-        document.getElementById(
-            "descripcionCurso"
-        ).value.trim();
-
+        document
+            .getElementById("descripcionCurso")
+            .value
+            .trim();
 
     const academiaId =
         Number(
-            document.getElementById(
-                "academiaCurso"
-            ).value
+            document
+                .getElementById("academiaCurso")
+                .value
         );
+
+
+    if (!nombre) {
+
+        alert(
+            "Debe ingresar un nombre para el curso."
+        );
+
+        return;
+    }
 
 
     if (!academiaId) {
@@ -1217,10 +1936,6 @@ function manejarFormularioCurso(
         return;
     }
 
-
-    // --------------------------------------------------------
-    // Nombre único
-    // --------------------------------------------------------
 
     const nombreExiste =
         appState.cursos.some(
@@ -1248,9 +1963,7 @@ function manejarFormularioCurso(
         ),
 
         nombre,
-
         descripcion,
-
         academiaId
 
     };
@@ -1267,14 +1980,138 @@ function manejarFormularioCurso(
 
 
     document
-        .getElementById(
-            "formCurso"
-        )
+        .getElementById("formCurso")
         .reset();
 
 
     cargarCursos();
-
+    cargarAcademias();
     cargarDatosAsignacion();
+    cargarSelectsDominio();
+}
 
+
+// ============================================================
+// FORMULARIO DOMINIO
+// ============================================================
+
+function manejarFormularioDominio(
+    event
+) {
+
+    event.preventDefault();
+
+
+    const docenteId =
+        Number(
+            document
+                .getElementById("docenteDominio")
+                .value
+        );
+
+    const cursoId =
+        Number(
+            document
+                .getElementById("cursoDominio")
+                .value
+        );
+
+    const nivel =
+        document
+            .getElementById("nivelDominio")
+            .value;
+
+
+    if (!docenteId || !cursoId) {
+
+        alert(
+            "Debe seleccionar un docente y un curso."
+        );
+
+        return;
+    }
+
+
+    const guardado =
+        guardarDominio(
+            docenteId,
+            cursoId,
+            nivel
+        );
+
+
+    if (guardado) {
+
+        document
+            .getElementById("formDominio")
+            .reset();
+
+    }
+
+}
+
+
+// ============================================================
+// CARGAR DOMINIO EXISTENTE
+// ============================================================
+
+function cargarDominioExistente() {
+
+    const docenteId =
+        Number(
+            document
+                .getElementById("docenteDominio")
+                .value
+        );
+
+    const cursoId =
+        Number(
+            document
+                .getElementById("cursoDominio")
+                .value
+        );
+
+    const campoNivel =
+        document.getElementById("nivelDominio");
+
+
+    if (
+        !docenteId ||
+        !cursoId ||
+        !campoNivel
+    ) {
+
+        campoNivel.value = "";
+
+        return;
+    }
+
+
+    const dominio =
+        obtenerDominio(
+            docenteId,
+            cursoId
+        );
+
+
+    campoNivel.value =
+        dominio !== null
+            ? dominio
+            : "";
+
+}
+
+
+// ============================================================
+// SEGURIDAD BÁSICA PARA TEXTO
+// ============================================================
+
+function escaparHTML(valor) {
+
+    return String(valor ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
