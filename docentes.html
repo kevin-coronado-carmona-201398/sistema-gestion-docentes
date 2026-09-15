@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docentes - Gestión Académica</title>
+
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <div class="brand">
+
+                <div class="brand-mark"></div>
+
+                <div>
+                    <h1>Gestión Académica</h1>
+                    <p>Sistema de información académica y profesional</p>
+                </div>
+
+            </div>
+
+
+            <nav class="main-nav">
+
+                <a href="home.html">
+                    Inicio
+                </a>
+
+                <a href="docentes.html" class="active">
+                    Docentes
+                </a>
+
+                <a href="academias.html">
+                    Academias
+                </a>
+
+                <a href="cursos.html">
+                    Cursos
+                </a>
+
+                <a href="asignacion.html">
+                    Asignación de cursos
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <main class="page-container">
+
+        <a class="back-link" href="home.html">
+            ← Volver al inicio
+        </a>
+
+
+        <div class="page-title">
+
+            <h2>Gestión de docentes</h2>
+
+            <p>
+                Consulta y registro de información académica y profesional.
+            </p>
+
+        </div>
+
+
+        <!-- ==================================================
+             CONSULTAR DOCENTES
+             ================================================== -->
+
+        <section class="card">
+
+            <h3>Consultar docentes</h3>
+
+
+            <div class="form-grid-2">
+
+                <div class="form-group">
+
+                    <label for="buscarDocente">
+                        Buscar docente
+                    </label>
+
+                    <input
+                        id="buscarDocente"
+                        class="w3-input w3-border"
+                        type="search"
+                        placeholder="Nombre o número de empleado"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="filtroAcademiaDocente">
+                        Filtrar por academia
+                    </label>
+
+                    <select
+                        id="filtroAcademiaDocente"
+                        class="w3-select w3-border"
+                    >
+                        <option value="">
+                            Todas las academias
+                        </option>
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-wrap">
+
+                <table class="w3-table-all">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                N.º de empleado
+                            </th>
+
+                            <th>
+                                Nombre
+                            </th>
+
+                            <th>
+                                Último grado académico
+                            </th>
+
+                            <th>
+                                Especialidad
+                            </th>
+
+                            <th>
+                                Academia
+                            </th>
+
+                            <th>
+                                Materias que puede impartir
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="tbodyDocentes">
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                class="w3-center"
+                            >
+                                Los docentes se cargarán mediante JavaScript.
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             AGREGAR DOCENTE
+             ================================================== -->
+
+        <section class="card">
+
+            <h3>Agregar docente</h3>
+
+
+            <form id="formDocente" novalidate>
+
+
+                <div class="form-grid-2">
+
+                    <div class="form-group">
+
+                        <label for="numeroEmpleado">
+                            Número de empleado *
+                        </label>
+
+                        <input
+                            id="numeroEmpleado"
+                            class="w3-input w3-border"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="nombreDocente">
+                            Nombre completo *
+                        </label>
+
+                        <input
+                            id="nombreDocente"
+                            class="w3-input w3-border"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid-3">
+
+                    <div class="form-group">
+
+                        <label for="licenciatura">
+                            Licenciatura *
+                        </label>
+
+                        <select
+                            id="licenciatura"
+                            class="w3-select w3-border"
+                            required
+                        ></select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="maestria">
+                            Maestría *
+                        </label>
+
+                        <select
+                            id="maestria"
+                            class="w3-select w3-border"
+                            required
+                        ></select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="doctorado">
+                            Doctorado
+                        </label>
+
+                        <select
+                            id="doctorado"
+                            class="w3-select w3-border"
+                        ></select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid-2">
+
+                    <div class="form-group">
+
+                        <label for="especialidad">
+                            Especialidad
+                        </label>
+
+                        <input
+                            id="especialidad"
+                            class="w3-input w3-border"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="academiaDocente">
+                            Academia *
+                        </label>
+
+                        <select
+                            id="academiaDocente"
+                            class="w3-select w3-border"
+                            required
+                        ></select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid-2">
+
+                    <div class="form-group">
+
+                        <label for="sni">
+                            SNI
+                        </label>
+
+                        <select
+                            id="sni"
+                            class="w3-select w3-border"
+                        >
+
+                            <option value="no">
+                                No
+                            </option>
+
+                            <option value="si">
+                                Sí
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="nivelSni">
+                            Nivel SNI
+                        </label>
+
+                        <select
+                            id="nivelSni"
+                            class="w3-select w3-border"
+                            disabled
+                        ></select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid-2">
+
+                    <div class="form-group">
+
+                        <label for="prodep">
+                            Perfil PRODEP
+                        </label>
+
+                        <select
+                            id="prodep"
+                            class="w3-select w3-border"
+                        >
+
+                            <option value="no">
+                                No
+                            </option>
+
+                            <option value="si">
+                                Sí
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="certificaciones">
+                            Certificaciones
+                        </label>
+
+                        <textarea
+                            id="certificaciones"
+                            class="w3-input w3-border"
+                            rows="3"
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="action-row">
+
+                    <button
+                        type="submit"
+                        class="w3-button w3-blue"
+                    >
+                        Registrar docente
+                    </button>
+
+                    <button
+                        type="reset"
+                        class="w3-button w3-light-grey"
+                    >
+                        Limpiar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <footer class="site-footer">
+        © Sistema de Gestión Académica de Docentes
+    </footer>
+
+
+    <script src="mockData.js"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>

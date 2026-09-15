@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academias - Gestión Académica</title>
+
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <div class="brand">
+
+                <div class="brand-mark"></div>
+
+                <div>
+                    <h1>Gestión Académica</h1>
+                    <p>Sistema de información académica y profesional</p>
+                </div>
+
+            </div>
+
+
+            <nav class="main-nav">
+
+                <a href="home.html">
+                    Inicio
+                </a>
+
+                <a href="docentes.html">
+                    Docentes
+                </a>
+
+                <a href="academias.html" class="active">
+                    Academias
+                </a>
+
+                <a href="cursos.html">
+                    Cursos
+                </a>
+
+                <a href="asignacion.html">
+                    Asignación de cursos
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <main class="page-container">
+
+        <a class="back-link" href="home.html">
+            ← Volver al inicio
+        </a>
+
+
+        <div class="page-title">
+
+            <h2>Gestión de academias</h2>
+
+            <p>
+                Consulta y registro de las academias disponibles.
+            </p>
+
+        </div>
+
+
+        <!-- ==================================================
+             CONSULTAR ACADEMIAS
+             ================================================== -->
+
+        <section class="card">
+
+            <h3>Consultar academias</h3>
+
+
+            <div class="table-wrap">
+
+                <table class="w3-table-all">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Clave
+                            </th>
+
+                            <th>
+                                Nombre
+                            </th>
+
+                            <th>
+                                Descripción
+                            </th>
+
+                            <th>
+                                Integrantes
+                            </th>
+
+                            <th>
+                                Cursos
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="tbodyAcademias">
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="w3-center"
+                            >
+                               <!---Las academias se cargarán mediante JavaScript.-->
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             AGREGAR ACADEMIA
+             ================================================== -->
+
+        <section class="card">
+
+            <h3>Agregar academia</h3>
+
+
+            <form
+                id="formAcademia"
+                novalidate
+            >
+
+                <div class="form-grid-2">
+
+                    <div class="form-group">
+
+                        <label for="claveAcademia">
+                            Clave de academia *
+                        </label>
+
+                        <input
+                            id="claveAcademia"
+                            class="w3-input w3-border"
+                            maxlength="10"
+                            required
+                        >
+
+                        <small>
+                            Máximo 10 caracteres alfanuméricos.
+                        </small>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="nombreAcademia">
+                            Nombre *
+                        </label>
+
+                        <input
+                            id="nombreAcademia"
+                            class="w3-input w3-border"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="descripcionAcademia">
+                        Descripción
+                    </label>
+
+                    <textarea
+                        id="descripcionAcademia"
+                        class="w3-input w3-border"
+                        rows="4"
+                    ></textarea>
+
+                </div>
+
+
+                <div class="action-row">
+
+                    <button
+                        type="submit"
+                        class="w3-button w3-blue"
+                    >
+                        Registrar academia
+                    </button>
+
+                    <button
+                        type="reset"
+                        class="w3-button w3-light-grey"
+                    >
+                        Limpiar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <footer class="site-footer">
+        © Sistema de Gestión Académica de Docentes
+    </footer>
+
+
+    <script src="mockData.js"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
