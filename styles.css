@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* ============================================================
    VARIABLES DE COLOR
    ============================================================ */
@@ -463,4 +464,402 @@ body {
         padding-right: 16px;
     }
 
+=======
+/* =========================================================
+   Sistema de Gestión Académica de Docentes
+   Hoja de estilos complementaria a W3.CSS
+   ========================================================= */
+
+:root {
+    --azul-institucional: #163a63;
+    --azul-secundario: #2f5d8a;
+    --dorado-institucional: #c8a13a;
+    --dorado-claro: #f4ead0;
+    --gris-fondo: #f3f4f6;
+    --gris-borde: #d9dde3;
+    --gris-texto: #555;
+    --blanco: #ffffff;
+    --verde: #2e7d32;
+    --rojo: #b3261e;
+}
+
+/* ---------- Base ---------- */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background-color: var(--gris-fondo);
+    color: #222;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: Georgia, "Times New Roman", serif;
+    color: var(--azul-institucional);
+}
+
+h1 {
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+h2 {
+    margin-top: 0;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--dorado-institucional);
+}
+
+h3 {
+    margin-top: 0;
+}
+
+p {
+    color: #333;
+}
+
+/* ---------- Encabezado ---------- */
+header {
+    background-color: var(--blanco);
+    border-top: 6px solid var(--azul-institucional);
+    border-bottom: 1px solid var(--gris-borde);
+}
+
+header .w3-container {
+    padding-top: 26px !important;
+    padding-bottom: 20px !important;
+}
+
+header p {
+    margin-top: 0;
+    color: var(--gris-texto);
+}
+
+/* ---------- Navegación ---------- */
+header nav {
+    background-color: var(--azul-institucional);
+}
+
+header nav .nav-link {
+    color: var(--blanco) !important;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+header nav .nav-link:hover,
+header nav .nav-link:focus {
+    background-color: var(--dorado-institucional) !important;
+    color: #222 !important;
+}
+
+header nav .nav-link.active {
+    background-color: var(--dorado-institucional) !important;
+    color: #222 !important;
+    font-weight: 700;
+}
+
+/* ---------- Contenido principal ---------- */
+main {
+    min-height: 70vh;
+}
+
+.page-section {
+    padding-top: 36px !important;
+    padding-bottom: 36px !important;
+    scroll-margin-top: 20px;
+}
+
+.page-section + .page-section {
+    border-top: 1px solid var(--gris-borde);
+}
+
+/* ---------- Panel de bienvenida ---------- */
+#inicio .w3-panel {
+    background-color: var(--blanco);
+    border-left: 5px solid var(--dorado-institucional) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+#inicio .w3-third {
+    padding-bottom: 16px;
+}
+
+#inicio .w3-card {
+    background-color: var(--blanco);
+    height: 100%;
+    border-top: 4px solid var(--azul-institucional);
+}
+
+#inicio .w3-card p {
+    min-height: 48px;
+}
+
+/* ---------- Tarjetas ---------- */
+.w3-card,
+.w3-card-2 {
+    border-radius: 2px;
+}
+
+.w3-card {
+    background-color: var(--blanco);
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ---------- Formularios ---------- */
+label {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-weight: 700;
+    color: #333;
+}
+
+.w3-input,
+.w3-select,
+.w3-button,
+textarea {
+    box-sizing: border-box;
+}
+
+.w3-input,
+.w3-select,
+textarea {
+    background-color: var(--blanco);
+    border-color: var(--gris-borde) !important;
+}
+
+.w3-input:focus,
+.w3-select:focus,
+textarea:focus {
+    border-color: var(--azul-secundario) !important;
+    outline: 2px solid rgba(47, 93, 138, 0.15);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+input:disabled,
+select:disabled {
+    background-color: #eceff2 !important;
+    color: #777 !important;
+    cursor: not-allowed;
+}
+
+small,
+.w3-small {
+    color: var(--gris-texto);
+}
+
+/* ---------- Botones ---------- */
+.w3-button {
+    border-radius: 2px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.w3-button.w3-border {
+    border: 1px solid var(--azul-institucional) !important;
+    background-color: var(--blanco);
+    color: var(--azul-institucional) !important;
+}
+
+.w3-button.w3-border:hover,
+.w3-button.w3-border:focus {
+    background-color: var(--azul-institucional) !important;
+    color: var(--blanco) !important;
+}
+
+.w3-button.w3-light-grey {
+    border: 1px solid #c7ccd2;
+}
+
+/* ---------- Tablas ---------- */
+.w3-responsive {
+    border: 1px solid var(--gris-borde);
+    background-color: var(--blanco);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table caption {
+    caption-side: top;
+    background-color: var(--azul-institucional);
+    color: var(--blanco);
+    text-align: left;
+    font-weight: 700;
+}
+
+thead th {
+    background-color: #e8edf3;
+    color: var(--azul-institucional);
+    font-weight: 700;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+tbody td {
+    vertical-align: middle;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+tbody tr:hover {
+    background-color: var(--dorado-claro);
+}
+
+/* ---------- Estados ---------- */
+.estado {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.estado-disponible {
+    background-color: #e8f5e9;
+    color: var(--verde);
+}
+
+.estado-asignado {
+    background-color: #e3eef9;
+    color: var(--azul-institucional);
+}
+
+.estado-sin-registro {
+    background-color: #eeeeee;
+    color: #666;
+}
+
+/* ---------- Nivel de dominio ---------- */
+.nivel-dominio {
+    font-weight: 700;
+    text-align: center;
+}
+
+.nivel-dominio.alto {
+    color: var(--verde);
+}
+
+.nivel-dominio.medio {
+    color: #8a6500;
+}
+
+.nivel-dominio.bajo {
+    color: var(--rojo);
+}
+
+/* ---------- Información del curso ---------- */
+#informacionCurso {
+    border-left: 5px solid var(--dorado-institucional);
+}
+
+#informacionCurso p {
+    margin: 8px 0;
+}
+
+#informacionCurso span {
+    font-weight: 700;
+    color: var(--azul-institucional);
+}
+
+/* ---------- Sección de asignación ---------- */
+#asignaciones .w3-card h3 {
+    border-bottom: 1px solid var(--gris-borde);
+    padding-bottom: 8px;
+}
+
+#tablaCandidatos tbody td:last-child,
+#tablaAsignados tbody td:last-child {
+    white-space: nowrap;
+}
+
+/* ---------- Pie de página ---------- */
+footer {
+    background-color: var(--azul-institucional);
+    border-top: 5px solid var(--dorado-institucional);
+}
+
+footer p {
+    margin: 0;
+    color: var(--blanco);
+}
+
+/* ---------- Accesibilidad y estados de enfoque ---------- */
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline-offset: 2px;
+}
+
+/* ---------- Utilidades para JavaScript ---------- */
+.hidden {
+    display: none !important;
+}
+
+.texto-vacio {
+    color: #777;
+    font-style: italic;
+}
+
+.mensaje-sistema {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-left: 4px solid var(--azul-institucional);
+    background-color: #eef3f8;
+}
+
+.mensaje-sistema.exito {
+    border-left-color: var(--verde);
+    background-color: #edf7ee;
+}
+
+.mensaje-sistema.error {
+    border-left-color: var(--rojo);
+    background-color: #fceeee;
+}
+
+/* ---------- Ajustes generales ---------- */
+.w3-row-padding > .w3-half,
+.w3-row-padding > .w3-third {
+    margin-bottom: 4px;
+}
+
+@media (max-width: 768px) {
+    header .w3-xxlarge {
+        font-size: 1.8rem !important;
+    }
+
+    header nav .nav-link {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .page-section {
+        padding-top: 24px !important;
+        padding-bottom: 24px !important;
+    }
+
+    .w3-padding-32 {
+        padding-top: 24px !important;
+        padding-bottom: 24px !important;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+>>>>>>> 277328fd1937c02e37dd6b3f05942bcdfc3c7231
 }
