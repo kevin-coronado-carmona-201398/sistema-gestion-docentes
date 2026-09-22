@@ -644,7 +644,7 @@ function renderTeachers() {
         )?.value || "";
 
 
-    let list =
+    const list =
         appState.docentes.filter(
             docente => {
 
@@ -662,7 +662,8 @@ function renderTeachers() {
 
                 const matchesAcademy =
                     !filter ||
-                    String(docente.academiaId) === String(filter);
+                    String(docente.academiaId) ===
+                    String(filter);
 
 
                 return (
@@ -677,14 +678,18 @@ function renderTeachers() {
     if (list.length === 0) {
 
         tableBody.innerHTML = `
+
             <tr>
+
                 <td
-                    colspan="6"
+                    colspan="7"
                     class="w3-center"
                 >
                     No se encontraron docentes.
                 </td>
+
             </tr>
+
         `;
 
         return;
@@ -700,8 +705,12 @@ function renderTeachers() {
                         appState.cursos
                             .filter(
                                 curso =>
-                                    curso.academiaId ===
-                                    docente.academiaId
+                                    String(
+                                        curso.academiaId
+                                    ) ===
+                                    String(
+                                        docente.academiaId
+                                    )
                             )
                             .map(
                                 curso => {
@@ -764,6 +773,26 @@ function renderTeachers() {
                                 ${esc(courses)}
                             </td>
 
+                            <td>
+
+                                <button
+                                    type="button"
+                                    class="w3-button w3-small w3-blue w3-margin-right"
+                                    onclick='editTeacher(${JSON.stringify(docente.id)})'
+                                >
+                                    Editar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="w3-button w3-small w3-red"
+                                    onclick='removeTeacher(${JSON.stringify(docente.id)})'
+                                >
+                                    Eliminar
+                                </button>
+
+                            </td>
+
                         </tr>
 
                     `;
@@ -774,6 +803,353 @@ function renderTeachers() {
 
 }
 
+// ============================================================
+// EDITAR DOCENTE
+// ============================================================
+
+function editTeacher(id) {
+
+    const docente =
+        appState.docentes.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+
+    if (!docente) {
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            `¿Desea editar al docente "${docente.nombre}"?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const form =
+        document.getElementById(
+            "formDocente"
+        );
+
+
+    if (!form) {
+        return;
+    }
+
+
+    document.getElementById(
+        "numeroEmpleado"
+    ).value =
+        docente.numeroEmpleado || "";
+
+
+    document.getElementById(
+        "nombreDocente"
+    ).value =
+        docente.nombre || "";
+
+
+    document.getElementById(
+        "licenciatura"
+    ).value =
+        docente.licenciatura || "";
+
+
+    document.getElementById(
+        "maestria"
+    ).value =
+        docente.maestria || "";
+
+
+    document.getElementById(
+        "doctorado"
+    ).value =
+        docente.doctorado || "";
+
+
+    document.getElementById(
+        "especialidad"
+    ).value =
+        docente.especialidad || "";
+
+
+    document.getElementById(
+        "academiaDocente"
+    ).value =
+        docente.academiaId || "";
+
+
+    document.getElementById(
+        "sni"
+    ).value =
+        docente.sni
+            ? "si"
+            : "no";
+
+
+    document.getElementById(
+        "nivelSni"
+    ).value =
+        docente.nivelSNI || "";
+
+
+    document.getElementById(
+        "nivelSni"
+    ).disabled =
+        !docente.sni;
+
+
+    document.getElementById(
+        "prodep"
+    ).value =
+        docente.prodep
+            ? "si"
+            : "no";
+
+
+    document.getElementById(
+        "certificaciones"
+    ).value =
+        docente.certificaciones || "";
+
+
+    editingTeacherId =
+        String(docente.id);
+
+
+    const submitButton =
+        form.querySelector(
+            'button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+
+        submitButton.textContent =
+            "Actualizar docente";
+
+    }
+
+    const clearButton =
+    document.getElementById(
+            "limpiarDocente"
+        );
+
+    if (clearButton) {
+        clearButton.textContent =
+            "Cancelar edición";
+    }
+
+
+    form.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+}
+
+// ============================================================
+// CANCELAR EDICIÓN DE DOCENTE
+// ============================================================
+
+function cancelTeacherEdit() {
+
+    editingTeacherId = null;
+
+    const form =
+        document.getElementById(
+            "formDocente"
+        );
+
+
+    if (!form) {
+        return;
+    }
+
+
+    form.reset();
+
+
+    const level =
+        document.getElementById(
+            "nivelSni"
+        );
+
+
+    if (level) {
+
+        level.disabled = true;
+        level.value = "";
+
+    }
+
+
+    const submitButton =
+        form.querySelector(
+            'button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+
+        submitButton.textContent =
+            "Registrar docente";
+
+    }
+
+
+    const clearButton =
+        document.getElementById(
+            "limpiarDocente"
+        );
+
+
+    if (clearButton) {
+
+        clearButton.textContent =
+            "Limpiar";
+
+    }
+
+
+    console.log(
+        "Edición de docente cancelada."
+    );
+
+}
+
+// ============================================================
+// ELIMINAR DOCENTE
+// ============================================================
+
+async function removeTeacher(id) {
+
+    const docente =
+        appState.docentes.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+
+    if (!docente) {
+        return;
+    }
+
+
+    const domainCount =
+        appState.dominios.filter(
+            dominio =>
+                String(dominio.docenteId) ===
+                String(docente.id)
+        ).length;
+
+
+    const assignmentCount =
+        appState.asignaciones.filter(
+            asignacion =>
+                String(asignacion.docenteId) ===
+                String(docente.id)
+        ).length;
+
+
+    if (
+        domainCount > 0 ||
+        assignmentCount > 0
+    ) {
+
+        alert(
+            `No se puede eliminar al docente "${docente.nombre}" porque tiene ` +
+            `${domainCount} dominio(s) y ` +
+            `${assignmentCount} asignación(es) asociada(s).`
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            `¿Está seguro de eliminar al docente "${docente.nombre}"?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        await deleteTeacher(
+            docente.id
+        );
+
+
+        appState.docentes =
+            appState.docentes.filter(
+                item =>
+                    String(item.id) !==
+                    String(docente.id)
+            );
+
+
+        if (
+            editingTeacherId &&
+            String(editingTeacherId) ===
+                String(docente.id)
+        ) {
+
+            editingTeacherId = null;
+
+        }
+
+
+        initSelects();
+
+        renderTeachers();
+
+        renderAcademies();
+
+        renderCourses();
+
+        renderAssignment();
+
+
+        console.log(
+            "Docente eliminado:",
+            docente
+        );
+
+
+        alert(
+            "Docente eliminado correctamente."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Error al eliminar docente:",
+            error
+        );
+
+
+        alert(
+            "No se pudo eliminar el docente.\n\n" +
+            error.message
+        );
+
+    }
+
+}
 
 // ============================================================
 // RENDERIZAR CURSOS
@@ -1858,6 +2234,16 @@ function editAcademy(id) {
 
     }
 
+    const clearButton =
+    document.getElementById(
+        "limpiarAcademia"
+    );
+
+
+    if (clearButton) {
+            clearButton.textContent =
+                "Cancelar edición";
+    }
 
     form.scrollIntoView({
         behavior: "smooth",
@@ -1866,6 +2252,62 @@ function editAcademy(id) {
 
 }
 
+// ============================================================
+// CANCELAR EDICIÓN DE ACADEMIA
+// ============================================================
+
+function cancelAcademyEdit() {
+
+    editingAcademyId = null;
+
+
+    const form =
+        document.getElementById(
+            "formAcademia"
+        );
+
+
+    if (!form) {
+        return;
+    }
+
+
+    form.reset();
+
+
+    const submitButton =
+        form.querySelector(
+            'button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+
+        submitButton.textContent =
+            "Registrar academia";
+
+    }
+
+
+    const clearButton =
+        document.getElementById(
+            "limpiarAcademia"
+        );
+
+
+    if (clearButton) {
+
+        clearButton.textContent =
+            "Limpiar";
+
+    }
+
+
+    console.log(
+        "Edición de academia cancelada."
+    );
+
+}
 
 // ============================================================
 // ELIMINAR ACADEMIA
@@ -2146,6 +2588,68 @@ async function createTeacher(data) {
 
 }
 
+// ============================================================
+// API - ACTUALIZAR DOCENTE
+// ============================================================
+
+async function updateTeacher(id, data) {
+
+    const response =
+        await fetch(
+            `${API_URL}/docentes/${id}`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(data)
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al actualizar docente: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+// ============================================================
+// API - ELIMINAR DOCENTE
+// ============================================================
+
+async function deleteTeacher(id) {
+
+    const response =
+        await fetch(
+            `${API_URL}/docentes/${id}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al eliminar docente: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return true;
+
+}
 
 // ============================================================
 // API - CREAR DOMINIO
@@ -2580,6 +3084,17 @@ function bind() {
 
                         editingAcademyId =
                             null;
+                        
+                        const clearButton =
+                        document.getElementById(
+                            "limpiarAcademia"
+                        );
+
+
+                        if (clearButton) {
+                            clearButton.textContent =
+                                "Limpiar";
+                        }
 
                     }
 
@@ -2669,221 +3184,244 @@ function bind() {
     );
 
     // --------------------------------------------------------
+    // CANCELAR / LIMPIAR FORMULARIO DE ACADEMIA
+    // --------------------------------------------------------
+
+    document
+        .getElementById(
+            "limpiarAcademia"
+        )
+        ?.addEventListener(
+            "click",
+            event => {
+
+                if (editingAcademyId) {
+
+                    event.preventDefault();
+
+                    cancelAcademyEdit();
+
+                }
+
+            }
+        );
+
+    // --------------------------------------------------------
     // FORMULARIO DE CURSO
     // --------------------------------------------------------
 
-document
-    .getElementById("formCurso")
-    ?.addEventListener(
-        "submit",
-        async event => {
+    document
+        .getElementById("formCurso")
+        ?.addEventListener(
+            "submit",
+            async event => {
 
-            event.preventDefault();
-
-
-            const nombre =
-                document
-                    .getElementById(
-                        "nombreCurso"
-                    )
-                    .value
-                    .trim();
+                event.preventDefault();
 
 
-            const descripcion =
-                document
-                    .getElementById(
-                        "descripcionCurso"
-                    )
-                    .value
-                    .trim();
+                const nombre =
+                    document
+                        .getElementById(
+                            "nombreCurso"
+                        )
+                        .value
+                        .trim();
 
 
-            const academiaId =
-                document
-                    .getElementById(
-                        "academiaCurso"
-                    )
-                    .value;
+                const descripcion =
+                    document
+                        .getElementById(
+                            "descripcionCurso"
+                        )
+                        .value
+                        .trim();
 
 
-            // ------------------------------------------------
-            // VALIDACIÓN
-            // ------------------------------------------------
-
-            if (
-                !nombre ||
-                !academiaId
-            ) {
-
-                alert(
-                    "Complete correctamente los datos del curso."
-                );
-
-                return;
-            }
+                const academiaId =
+                    document
+                        .getElementById(
+                            "academiaCurso"
+                        )
+                        .value;
 
 
-            const wasEditing =
-            Boolean(editingCourseId);
+                // ------------------------------------------------
+                // VALIDACIÓN
+                // ------------------------------------------------
+
+                if (
+                    !nombre ||
+                    !academiaId
+                ) {
+
+                    alert(
+                        "Complete correctamente los datos del curso."
+                    );
+
+                    return;
+                }
 
 
-            const exists =
-                appState.cursos.some(
-                    curso =>
-                        String(curso.id) !==
-                            String(editingCourseId) &&
-
-                        String(curso.academiaId) ===
-                            String(academiaId) &&
-
-                        curso.nombre
-                            .toLowerCase() ===
-                            nombre.toLowerCase()
-                );
+                const wasEditing =
+                Boolean(editingCourseId);
 
 
-            if (exists) {
+                const exists =
+                    appState.cursos.some(
+                        curso =>
+                            String(curso.id) !==
+                                String(editingCourseId) &&
 
-                alert(
-                    "El nombre del curso ya existe en esta academia."
-                );
+                            String(curso.academiaId) ===
+                                String(academiaId) &&
 
-                return;
-            }
+                            curso.nombre
+                                .toLowerCase() ===
+                                nombre.toLowerCase()
+                    );
 
 
-            try {
+                if (exists) {
 
-                // ========================================================
-                // ACTUALIZAR CURSO
-                // ========================================================
+                    alert(
+                        "El nombre del curso ya existe en esta academia."
+                    );
 
-                if (wasEditing) {
+                    return;
+                }
 
-                    const updatedCourse =
-                        await updateCourse(
-                            editingCourseId,
-                            {
-                                nombre,
-                                descripcion,
-                                academiaId
-                            }
+
+                try {
+
+                    // ========================================================
+                    // ACTUALIZAR CURSO
+                    // ========================================================
+
+                    if (wasEditing) {
+
+                        const updatedCourse =
+                            await updateCourse(
+                                editingCourseId,
+                                {
+                                    nombre,
+                                    descripcion,
+                                    academiaId
+                                }
+                            );
+
+
+                        const index =
+                            appState.cursos.findIndex(
+                                item =>
+                                    String(item.id) ===
+                                    String(editingCourseId)
+                            );
+
+
+                        if (index !== -1) {
+
+                            appState.cursos[index] =
+                                updatedCourse;
+
+                        }
+
+
+                        console.log(
+                            "Curso actualizado:",
+                            updatedCourse
                         );
 
 
-                    const index =
-                        appState.cursos.findIndex(
-                            item =>
-                                String(item.id) ===
-                                String(editingCourseId)
-                        );
-
-
-                    if (index !== -1) {
-
-                        appState.cursos[index] =
-                            updatedCourse;
+                        editingCourseId =
+                            null;
 
                     }
 
 
-                    console.log(
-                        "Curso actualizado:",
-                        updatedCourse
+                    // ========================================================
+                    // CREAR CURSO
+                    // ========================================================
+
+                    else {
+
+                        const nuevoCurso =
+                            await createCourse({
+
+                                nombre,
+                                descripcion,
+                                academiaId
+
+                            });
+
+
+                        appState.cursos.push(
+                            nuevoCurso
+                        );
+
+
+                        console.log(
+                            "Curso creado:",
+                            nuevoCurso
+                        );
+
+                    }
+
+
+                    // ========================================================
+                    // ACTUALIZAR INTERFAZ
+                    // ========================================================
+
+                    event.target.reset();
+
+
+                    const submitButton =
+                        event.target.querySelector(
+                            'button[type="submit"]'
+                        );
+
+
+                    if (submitButton) {
+
+                        submitButton.textContent =
+                            "Registrar curso";
+
+                    }
+
+
+                    initSelects();
+
+                    renderCourses();
+
+                    renderAcademies();
+
+                    renderTeachers();
+
+                    renderAssignment();
+
+
+                    alert(
+                        wasEditing
+                            ? "Curso actualizado correctamente."
+                            : "Curso registrado correctamente."
                     );
 
 
-                    editingCourseId =
-                        null;
+                } catch (error) {
+
+                    console.error(
+                        "Error al guardar curso:",
+                        error
+                    );
+
+
+                    alert(
+                        "No se pudo guardar el curso.\n\n" +
+                        error.message
+                    );
 
                 }
-
-
-                // ========================================================
-                // CREAR CURSO
-                // ========================================================
-
-                else {
-
-                    const nuevoCurso =
-                        await createCourse({
-
-                            nombre,
-                            descripcion,
-                            academiaId
-
-                        });
-
-
-                    appState.cursos.push(
-                        nuevoCurso
-                    );
-
-
-                    console.log(
-                        "Curso creado:",
-                        nuevoCurso
-                    );
-
-                }
-
-
-                // ========================================================
-                // ACTUALIZAR INTERFAZ
-                // ========================================================
-
-                event.target.reset();
-
-
-                const submitButton =
-                    event.target.querySelector(
-                        'button[type="submit"]'
-                    );
-
-
-                if (submitButton) {
-
-                    submitButton.textContent =
-                        "Registrar curso";
-
-                }
-
-
-                initSelects();
-
-                renderCourses();
-
-                renderAcademies();
-
-                renderTeachers();
-
-                renderAssignment();
-
-
-                alert(
-                    wasEditing
-                        ? "Curso actualizado correctamente."
-                        : "Curso registrado correctamente."
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "Error al guardar curso:",
-                    error
-                );
-
-
-                alert(
-                    "No se pudo guardar el curso.\n\n" +
-                    error.message
-                );
-
             }
-        }
-    );
+        );
 
     // --------------------------------------------------------
     // FORMULARIO DE DOCENTE
@@ -2947,15 +3485,20 @@ document
                     return;
                 }
 
+                const wasEditing =
+                Boolean(editingTeacherId);
 
                 const exists =
                     appState.docentes.some(
                         docente =>
+                            String(docente.id) !==
+                                String(editingTeacherId) &&
+
                             String(
                                 docente.numeroEmpleado
                             )
                                 .toLowerCase() ===
-                            numeroEmpleado.toLowerCase()
+                                numeroEmpleado.toLowerCase()
                     );
 
 
@@ -2967,7 +3510,6 @@ document
 
                     return;
                 }
-
 
                 // ------------------------------------------------
                 // CREAR OBJETO
@@ -3038,31 +3580,88 @@ document
 
                 };
 
-
-                // ------------------------------------------------
-                // POST
-                // ------------------------------------------------
-
                 try {
 
-                    const docenteCreado =
-                        await createTeacher(
-                            nuevoDocente
+                    // ========================================================
+                    // ACTUALIZAR DOCENTE
+                    // ========================================================
+                    if (wasEditing) {
+
+                        const docenteActualizado =
+                            await updateTeacher(
+                                editingTeacherId,
+                                nuevoDocente
+                            );
+
+
+                        const index =
+                            appState.docentes.findIndex(
+                                item =>
+                                    String(item.id) ===
+                                    String(editingTeacherId)
+                            );
+
+
+                        if (index !== -1) {
+
+                            appState.docentes[index] =
+                                docenteActualizado;
+
+                        }
+
+
+                        console.log(
+                            "Docente actualizado:",
+                            docenteActualizado
                         );
 
 
-                    // --------------------------------------------
-                    // ACTUALIZAR ESTADO
-                    // --------------------------------------------
-
-                    appState.docentes.push(
-                        docenteCreado
-                    );
+                        editingTeacherId =
+                            null;
 
 
-                    // --------------------------------------------
+                        const clearButton =
+                            document.getElementById(
+                                "limpiarDocente"
+                            );
+
+
+                        if (clearButton) {
+
+                            clearButton.textContent =
+                                "Limpiar";
+
+                        }
+
+                    }
+                    // ========================================================
+                    // CREAR DOCENTE
+                    // ========================================================
+
+                    else {
+
+                        const docenteCreado =
+                            await createTeacher(
+                                nuevoDocente
+                            );
+
+
+                        appState.docentes.push(
+                            docenteCreado
+                        );
+
+
+                        console.log(
+                            "Docente creado:",
+                            docenteCreado
+                        );
+
+                    }
+
+
+                    // ========================================================
                     // LIMPIAR FORMULARIO
-                    // --------------------------------------------
+                    // ========================================================
 
                     event.target.reset();
 
@@ -3082,34 +3681,46 @@ document
                     }
 
 
+                    const submitButton =
+                        event.target.querySelector(
+                            'button[type="submit"]'
+                        );
+
+
+                    if (submitButton) {
+
+                        submitButton.textContent =
+                            "Registrar docente";
+
+                    }
+
+
                     initSelects();
 
                     renderTeachers();
 
                     renderAcademies();
 
-
-                    console.log(
-                        "Docente creado:",
-                        docenteCreado
-                    );
+                    renderAssignment();
 
 
                     alert(
-                        "Docente registrado correctamente."
+                        wasEditing
+                            ? "Docente actualizado correctamente."
+                            : "Docente registrado correctamente."
                     );
 
 
                 } catch (error) {
 
                     console.error(
-                        "Error al registrar docente:",
+                        "Error al guardar docente:",
                         error
                     );
 
 
                     alert(
-                        "No se pudo registrar el docente.\n\n" +
+                        "No se pudo guardar el docente.\n\n" +
                         error.message
                     );
 
@@ -3117,6 +3728,29 @@ document
 
             }
         );
+
+// --------------------------------------------------------
+// CANCELAR / LIMPIAR FORMULARIO DE DOCENTE
+// --------------------------------------------------------
+
+document
+    .getElementById(
+        "limpiarDocente"
+    )
+    ?.addEventListener(
+        "click",
+        event => {
+
+            if (editingTeacherId) {
+
+                event.preventDefault();
+
+                cancelTeacherEdit();
+
+            }
+
+        }
+    );
 
 // --------------------------------------------------------
 // FORMULARIO DE DOMINIO
