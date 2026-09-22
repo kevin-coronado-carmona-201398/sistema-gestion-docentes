@@ -1,61 +1,177 @@
 // ============================================================
-// CONFIGURACIÓN
+// CONFIGURACIÓN DE LA API
 // ============================================================
 
-const STORAGE_KEY = "gestionAcademicaState";
+const API_URL = "http://localhost:3000";
 
 
 // ============================================================
 // ESTADO DE LA APLICACIÓN
 // ============================================================
 
-function clone(data) {
-    return JSON.parse(JSON.stringify(data));
-}
+const appState = {
+    academias: [],
+    docentes: [],
+    cursos: [],
+    dominios: [],
+    asignaciones: [],
+    licenciaturas: [],
+    maestrias: [],
+    doctorados: [],
+    nivelesSNI: [],
+    especialidades: []
+};
 
+let editingAcademyId = null;
+let editingCourseId = null;
+let editingTeacherId = null;
 
-function initialState() {
+// ============================================================
+// CARGAR DATOS DESDE JSON SERVER
+// ============================================================
 
-    return {
-        academias: clone(mockData.academias),
-        docentes: clone(mockData.docentes),
-        cursos: clone(mockData.cursos),
-        dominios: clone(mockData.dominios),
-        asignaciones: clone(mockData.asignaciones)
-    };
+async function fetchResource(resource) {
 
-}
+    const response =
+        await fetch(`${API_URL}/${resource}`);
 
+    if (!response.ok) {
 
-function loadState() {
+        throw new Error(
+            `${resource}: HTTP ${response.status} - ${response.statusText}`
+        );
 
-    const raw = localStorage.getItem(STORAGE_KEY);
-
-    if (!raw) {
-        return initialState();
     }
+
+    const data =
+        await response.json();
+
+    if (!Array.isArray(data)) {
+
+        throw new Error(
+            `${resource}: la respuesta no es un arreglo.`
+        );
+
+    }
+
+    return data;
+
+}
+
+
+async function loadDataFromAPI() {
 
     try {
-        return JSON.parse(raw);
-    } catch {
-        return initialState();
+    const [
+        academias,
+        docentes,
+        cursos,
+        dominios,
+        asignaciones,
+        licenciaturas,
+        maestrias,
+        doctorados,
+        nivelesSNI,
+        especialidades
+    ] = await Promise.all([
+        fetchResource("academias"),
+        fetchResource("docentes"),
+        fetchResource("cursos"),
+        fetchResource("dominios"),
+        fetchResource("asignaciones"),
+        fetchResource("licenciaturas"),
+        fetchResource("maestrias"),
+        fetchResource("doctorados"),
+        fetchResource("nivelesSNI"),
+        fetchResource("especialidades")
+    ]);
+
+        appState.academias =
+            academias.map(item => ({
+                ...item,
+                id: String(item.id)
+            }));
+
+        appState.docentes =
+            docentes.map(item => ({
+                ...item,
+                id: String(item.id),
+                academiaId: String(item.academiaId)
+            }));
+
+        appState.cursos =
+            cursos.map(item => ({
+                ...item,
+                id: String(item.id),
+                academiaId: String(item.academiaId)
+            }));
+
+        appState.dominios =
+            dominios.map(item => ({
+                ...item,
+                id: String(item.id),
+                docenteId: String(item.docenteId),
+                cursoId: String(item.cursoId)
+            }));
+
+        appState.asignaciones =
+            asignaciones.map(item => ({
+                ...item,
+                id: String(item.id),
+                docenteId: String(item.docenteId),
+                cursoId: String(item.cursoId)
+            }));
+
+            appState.licenciaturas = licenciaturas;
+            appState.maestrias = maestrias;
+            appState.doctorados = doctorados;
+            appState.nivelesSNI = nivelesSNI;
+            appState.especialidades = especialidades;
+
+        console.log(
+            "Datos cargados desde JSON Server."
+        );
+
+        console.log(
+            "Academias:",
+            appState.academias
+        );
+
+        console.log(
+            "Docentes:",
+            appState.docentes
+        );
+
+        console.log(
+            "Cursos:",
+            appState.cursos
+        );
+
+        console.log(
+            "Dominios:",
+            appState.dominios
+        );
+
+        console.log(
+            "Asignaciones:",
+            appState.asignaciones
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Error al cargar datos desde JSON Server:",
+            error
+        );
+
+        alert(
+            `Error al conectar con JSON Server:\n\n${error.message}`
+        );
+
     }
 
 }
-
-
-const appState = loadState();
-
-
-function saveState() {
-
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(appState)
-    );
-
-}
-
 
 // ============================================================
 // FUNCIONES AUXILIARES
@@ -76,24 +192,10 @@ function esc(value) {
 function academy(id) {
 
     return appState.academias.find(
-        item => item.id === id
+        item => String(item.id) === String(id)
     );
 
 }
-
-
-function nextId(array) {
-
-    if (array.length === 0) {
-        return 1;
-    }
-
-    return Math.max(
-        ...array.map(item => item.id)
-    ) + 1;
-
-}
-
 
 function domain(
     docenteId,
@@ -103,14 +205,13 @@ function domain(
     const item =
         appState.dominios.find(
             d =>
-                d.docenteId === docenteId &&
-                d.cursoId === cursoId
+                String(d.docenteId) === String(docenteId) &&
+                String(d.cursoId) === String(cursoId)
         );
 
     return item
         ? item.nivel
         : null;
-
 }
 
 
@@ -121,27 +222,31 @@ function assigned(
 
     return appState.asignaciones.some(
         a =>
-            a.cursoId === cursoId &&
-            a.docenteId === docenteId
+            String(a.cursoId) === String(cursoId) &&
+            String(a.docenteId) === String(docenteId)
     );
-
 }
 
 
 function assignedTeachers(cursoId) {
 
     return appState.asignaciones
+
         .filter(
-            a => a.cursoId === cursoId
+            a =>
+                String(a.cursoId) === String(cursoId)
         )
+
         .map(
             a =>
                 appState.docentes.find(
-                    d => d.id === a.docenteId
+                    d =>
+                        String(d.id) ===
+                        String(a.docenteId)
                 )
         )
-        .filter(Boolean);
 
+        .filter(Boolean);
 }
 
 
@@ -160,7 +265,6 @@ function lastDegree(docente) {
 // ============================================================
 // LLENADO DE SELECTS
 // ============================================================
-
 function fill(
     id,
     items,
@@ -190,15 +294,19 @@ function fill(
         const option =
             document.createElement("option");
 
-        option.value = item;
-        option.textContent = item;
+        const value =
+            typeof item === "object"
+                ? item.nombre
+                : item;
+
+        option.value = value;
+        option.textContent = value;
 
         select.appendChild(option);
 
     });
 
 }
-
 
 function fillAcademies(
     id,
@@ -332,28 +440,27 @@ function initSelects() {
 
     fill(
         "licenciatura",
-        mockData.licenciaturas,
+        appState.licenciaturas,
         "Seleccionar..."
     );
 
     fill(
         "maestria",
-        mockData.maestrias,
+        appState.maestrias,
         "Seleccionar..."
     );
 
     fill(
         "doctorado",
-        mockData.doctorados,
+        appState.doctorados,
         "Seleccionar..."
     );
 
     fill(
         "nivelSni",
-        mockData.nivelesSNI,
+        appState.nivelesSNI,
         "No aplica"
     );
-
 
     fillAcademies(
         "academiaDocente",
@@ -375,7 +482,6 @@ function initSelects() {
         "Todas las academias"
     );
 
-
     fillPeople(
         "docenteDominio",
         "Seleccionar docente..."
@@ -393,7 +499,6 @@ function initSelects() {
 
 }
 
-
 // ============================================================
 // RENDERIZAR ACADEMIAS
 // ============================================================
@@ -406,6 +511,27 @@ function renderAcademies() {
         );
 
     if (!tableBody) {
+        return;
+    }
+
+
+    if (appState.academias.length === 0) {
+
+        tableBody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    class="w3-center"
+                >
+                    No hay academias registradas.
+                </td>
+
+            </tr>
+
+        `;
+
         return;
     }
 
@@ -433,8 +559,12 @@ function renderAcademies() {
                             ${
                                 appState.docentes.filter(
                                     docente =>
-                                        docente.academiaId ===
-                                        academia.id
+                                        String(
+                                            docente.academiaId
+                                        ) ===
+                                        String(
+                                            academia.id
+                                        )
                                 ).length
                             }
                         </td>
@@ -443,10 +573,34 @@ function renderAcademies() {
                             ${
                                 appState.cursos.filter(
                                     curso =>
-                                        curso.academiaId ===
-                                        academia.id
+                                        String(
+                                            curso.academiaId
+                                        ) ===
+                                        String(
+                                            academia.id
+                                        )
                                 ).length
                             }
+                        </td>
+
+                        <td>
+
+                            <button
+                                type="button"
+                                class="w3-button w3-small w3-blue w3-margin-right"
+                                onclick='editAcademy(${JSON.stringify(academia.id)})'
+                            >
+                                Editar
+                            </button>
+
+                            <button
+                                type="button"
+                                class="w3-button w3-small w3-red"
+                                onclick='removeAcademy(${JSON.stringify(academia.id)})'
+                            >
+                                Eliminar
+                            </button>
+
                         </td>
 
                     </tr>
@@ -508,8 +662,7 @@ function renderTeachers() {
 
                 const matchesAcademy =
                     !filter ||
-                    docente.academiaId ===
-                        Number(filter);
+                    String(docente.academiaId) === String(filter);
 
 
                 return (
@@ -625,7 +778,6 @@ function renderTeachers() {
 // ============================================================
 // RENDERIZAR CURSOS
 // ============================================================
-
 function renderCourses() {
 
     const tableBody =
@@ -654,7 +806,7 @@ function renderCourses() {
         )?.value || "";
 
 
-    let list =
+    const list =
         appState.cursos.filter(
             curso => {
 
@@ -670,8 +822,8 @@ function renderCourses() {
 
                 const matchesAcademy =
                     !filter ||
-                    curso.academiaId ===
-                        Number(filter);
+                    String(curso.academiaId) ===
+                    String(filter);
 
 
                 return (
@@ -686,14 +838,18 @@ function renderCourses() {
     if (list.length === 0) {
 
         tableBody.innerHTML = `
+
             <tr>
+
                 <td
-                    colspan="4"
+                    colspan="5"
                     class="w3-center"
                 >
                     No se encontraron cursos.
                 </td>
+
             </tr>
+
         `;
 
         return;
@@ -723,7 +879,8 @@ function renderCourses() {
 
                             <td>
                                 ${esc(
-                                    curso.descripcion
+                                    curso.descripcion ||
+                                    ""
                                 )}
                             </td>
 
@@ -757,6 +914,26 @@ function renderCourses() {
 
                             </td>
 
+                            <td>
+
+                                <button
+                                    type="button"
+                                    class="w3-button w3-small w3-blue w3-margin-right"
+                                    onclick='editCourse(${JSON.stringify(curso.id)})'
+                                >
+                                    Editar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="w3-button w3-small w3-red"
+                                    onclick='removeCourse(${JSON.stringify(curso.id)})'
+                                >
+                                    Eliminar
+                                </button>
+
+                            </td>
+
                         </tr>
 
                     `;
@@ -767,6 +944,215 @@ function renderCourses() {
 
 }
 
+// ============================================================
+// EDITAR CURSO
+// ============================================================
+
+function editCourse(id) {
+
+    const curso =
+        appState.cursos.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+
+    if (!curso) {
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            `¿Desea editar el curso "${curso.nombre}"?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const form =
+        document.getElementById(
+            "formCurso"
+        );
+
+
+    if (!form) {
+        return;
+    }
+
+
+    document.getElementById(
+        "nombreCurso"
+    ).value =
+        curso.nombre || "";
+
+
+    document.getElementById(
+        "descripcionCurso"
+    ).value =
+        curso.descripcion || "";
+
+
+    document.getElementById(
+        "academiaCurso"
+    ).value =
+        curso.academiaId || "";
+
+
+    editingCourseId =
+        String(curso.id);
+
+
+    const submitButton =
+        form.querySelector(
+            'button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+
+        submitButton.textContent =
+            "Actualizar curso";
+
+    }
+
+
+    form.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+}
+
+// ============================================================
+// ELIMINAR CURSO
+// ============================================================
+
+async function removeCourse(id) {
+
+    const curso =
+        appState.cursos.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
+
+
+    if (!curso) {
+        return;
+    }
+
+
+    const domainCount =
+        appState.dominios.filter(
+            dominio =>
+                String(dominio.cursoId) ===
+                String(curso.id)
+        ).length;
+
+
+    const assignmentCount =
+        appState.asignaciones.filter(
+            asignacion =>
+                String(asignacion.cursoId) ===
+                String(curso.id)
+        ).length;
+
+
+    if (
+        domainCount > 0 ||
+        assignmentCount > 0
+    ) {
+
+        alert(
+            `No se puede eliminar el curso "${curso.nombre}" porque tiene ` +
+            `${domainCount} dominio(s) y ` +
+            `${assignmentCount} asignación(es) asociada(s).`
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            `¿Está seguro de eliminar el curso "${curso.nombre}"?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        await deleteCourse(
+            curso.id
+        );
+
+
+        appState.cursos =
+            appState.cursos.filter(
+                item =>
+                    String(item.id) !==
+                    String(curso.id)
+            );
+
+
+        if (
+            editingCourseId &&
+            String(editingCourseId) ===
+                String(curso.id)
+        ) {
+
+            editingCourseId = null;
+
+        }
+
+
+        initSelects();
+
+        renderCourses();
+
+        renderAcademies();
+
+        renderTeachers();
+
+        renderAssignment();
+
+
+        console.log(
+            "Curso eliminado:",
+            curso
+        );
+
+
+        alert(
+            "Curso eliminado correctamente."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Error al eliminar curso:",
+            error
+        );
+
+
+        alert(
+            "No se pudo eliminar el curso.\n\n" +
+            error.message
+        );
+
+    }
+
+}
 
 // ============================================================
 // RENDERIZAR ASIGNACIÓN DE CURSOS
@@ -775,11 +1161,9 @@ function renderCourses() {
 function renderAssignment() {
 
     const courseId =
-        Number(
-            document.getElementById(
-                "cursoAsignacion"
-            )?.value
-        );
+    document.getElementById(
+        "cursoAsignacion"
+    )?.value || "";
 
 
     const name =
@@ -864,35 +1248,35 @@ function renderAssignment() {
 
         }
 
+if (assignedBody) {
 
-        if (assignedBody) {
+    assignedBody.innerHTML = `
 
-            assignedBody.innerHTML = `
+        <tr>
 
-                <tr>
+            <td
+                colspan="4"
+                class="w3-center"
+            >
+                No hay asignaciones para mostrar.
+            </td>
 
-                    <td
-                        colspan="4"
-                        class="w3-center"
-                    >
-                        No hay asignaciones para mostrar.
-                    </td>
+        </tr>
 
-                </tr>
+    `;
 
-            `;
+}
 
-        }
+return;
 
-        return;
-    }
-
+}
 
     const course =
-        appState.cursos.find(
-            item =>
-                item.id === courseId
-        );
+    appState.cursos.find(
+        item =>
+            String(item.id) ===
+            String(courseId)
+    );
 
 
     if (!course) {
@@ -906,7 +1290,7 @@ function renderAssignment() {
         );
 
 
-    const assigned =
+    const assignedList =
         assignedTeachers(
             courseId
         );
@@ -927,22 +1311,24 @@ function renderAssignment() {
     }
 
     if (status) {
-        status.textContent =
-            assigned.length > 0
-                ? "Asignado"
-                : "Disponible";
+    status.textContent =
+        assignedList.length > 0
+            ? "Asignado"
+            : "Disponible";
     }
 
     if (assignedNames) {
-        assignedNames.textContent =
-            assigned.length > 0
-                ? assigned
-                    .map(
-                        teacher =>
-                            teacher.nombre
-                    )
-                    .join(", ")
-                : "Ninguno";
+    assignedNames.textContent =
+        assignedList.length > 0
+
+            ? assignedList
+                .map(
+                    teacher =>
+                        teacher.nombre
+                )
+                .join(", ")
+
+            : "Ninguno";
     }
 
 
@@ -953,9 +1339,9 @@ function renderAssignment() {
     let candidates =
         appState.docentes.filter(
             docente =>
-                docente.academiaId ===
-                course.academiaId
-        );
+                String(docente.academiaId) ===
+                String(course.academiaId)
+            );
 
 
     const order =
@@ -1014,99 +1400,97 @@ function renderAssignment() {
 
     if (candidatesBody) {
 
-        candidatesBody.innerHTML =
-            candidates
-                .map(
-                    docente => {
+    candidatesBody.innerHTML =
+        candidates
+            .map(
+                docente => {
 
-                        const level =
-                            domain(
-                                docente.id,
-                                course.id
-                            );
+                    const level =
+                        domain(
+                            docente.id,
+                            course.id
+                        );
 
+                    const isAssigned =
+                        assigned(
+                            course.id,
+                            docente.id
+                        );
 
-                        const isAssigned =
-                            assigned(
-                                course.id,
-                                docente.id
-                            );
+                    return `
 
+                        <tr>
 
-                        return `
+                            <td>
+                                ${esc(
+                                    docente.nombre
+                                )}
+                            </td>
 
-                            <tr>
+                            <td>
+                                ${esc(
+                                    academyData?.nombre ||
+                                    "Sin academia"
+                                )}
+                            </td>
 
-                                <td>
-                                    ${esc(
-                                        docente.nombre
-                                    )}
-                                </td>
+                            <td>
+                                ${
+                                    level === null
+                                        ? "Sin registrar"
+                                        : `${level}/10`
+                                }
+                            </td>
 
-                                <td>
-                                    ${esc(
-                                        academyData?.nombre ||
-                                        "Sin academia"
-                                    )}
-                                </td>
+                            <td>
+                                ${
+                                    isAssigned
+                                        ? "Asignado"
+                                        : "Disponible"
+                                }
+                            </td>
 
-                                <td>
-                                    ${
-                                        level === null
-                                            ? "Sin registrar"
-                                            : `${level}/10`
-                                    }
-                                </td>
+                            <td>
 
-                                <td>
-                                    ${
-                                        isAssigned
-                                            ? "Asignado"
-                                            : "Disponible"
-                                    }
-                                </td>
+                                ${
+                                    isAssigned
 
-                                <td>
+                                        ? `
 
-                                    ${
-                                        isAssigned
+                                            <button
+                                                type="button"
+                                                class="w3-button w3-small w3-red"
+                                                onclick="unassign('${course.id}', '${docente.id}')"
+                                            >
+                                                Desasignar
+                                            </button>
 
-                                            ? `
+                                        `
 
-                                                <button
-                                                    type="button"
-                                                    class="w3-button w3-small w3-red"
-                                                    onclick="unassign(${course.id}, ${docente.id})"
-                                                >
-                                                    Desasignar
-                                                </button>
+                                        : `
 
-                                            `
+                                            <button
+                                                type="button"
+                                                class="w3-button w3-small w3-blue"
+                                                onclick='assign(${JSON.stringify(course.id)}, ${JSON.stringify(docente.id)})'
+                                            >
+                                                Asignar
+                                            </button>
 
-                                            : `
+                                        `
+                                }
 
-                                                <button
-                                                    type="button"
-                                                    class="w3-button w3-small w3-blue"
-                                                    onclick="assign(${course.id}, ${docente.id})"
-                                                >
-                                                    Asignar
-                                                </button>
+                            </td>
 
-                                            `
-                                    }
+                        </tr>
 
-                                </td>
+                    `;
 
-                            </tr>
+                }
+            )
+            .join("");
 
-                        `;
-
-                    }
-                )
-                .join("");
-
-    }
+}
 
 
     /*
@@ -1115,7 +1499,7 @@ function renderAssignment() {
 
     if (assignedBody) {
 
-        if (assigned.length === 0) {
+        if (assignedList.length === 0) {
 
             assignedBody.innerHTML = `
 
@@ -1135,7 +1519,7 @@ function renderAssignment() {
         } else {
 
             assignedBody.innerHTML =
-                assigned
+                assignedList
                     .map(
                         docente => {
 
@@ -1176,7 +1560,7 @@ function renderAssignment() {
                                         <button
                                             type="button"
                                             class="w3-button w3-small w3-red"
-                                            onclick="unassign(${course.id}, ${docente.id})"
+                                            onclick='unassign(${JSON.stringify(course.id)}, ${JSON.stringify(docente.id)})'
                                         >
                                             Desasignar
                                         </button>
@@ -1197,12 +1581,11 @@ function renderAssignment() {
 
 }
 
-
 // ============================================================
 // ASIGNAR DOCENTE
 // ============================================================
 
-function assign(
+async function assign(
     courseId,
     teacherId
 ) {
@@ -1220,14 +1603,16 @@ function assign(
     const course =
         appState.cursos.find(
             item =>
-                item.id === courseId
+                String(item.id) ===
+                String(courseId)
         );
 
 
     const teacher =
         appState.docentes.find(
             item =>
-                item.id === teacherId
+                String(item.id) ===
+                String(teacherId)
         );
 
 
@@ -1237,60 +1622,62 @@ function assign(
 
 
     if (
-        course.academiaId !==
-        teacher.academiaId
+        String(course.academiaId) !==
+        String(teacher.academiaId)
     ) {
+
+        alert(
+            "El docente y el curso deben pertenecer a la misma academia."
+        );
+
         return;
+
     }
 
 
-    appState.asignaciones.push({
+    try {
 
-        id: nextId(
-            appState.asignaciones
-        ),
+        const nuevaAsignacion =
+            await createAssignment({
 
-        cursoId: courseId,
+                cursoId: String(courseId),
 
-        docenteId: teacherId
+                docenteId: String(teacherId)
 
-    });
-
-
-    saveState();
-
-    renderCourses();
-    renderAssignment();
-
-}
+            });
 
 
-// ============================================================
-// DESASIGNAR DOCENTE
-// ============================================================
-
-function unassign(
-    courseId,
-    teacherId
-) {
-
-    appState.asignaciones =
-        appState.asignaciones.filter(
-            item =>
-                !(
-                    item.cursoId === courseId &&
-                    item.docenteId === teacherId
-                )
+        appState.asignaciones.push(
+            nuevaAsignacion
         );
 
 
-    saveState();
+        console.log(
+            "Asignación creada:",
+            nuevaAsignacion
+        );
 
-    renderCourses();
-    renderAssignment();
 
+        renderCourses();
+
+        renderAssignment();
+
+
+    } catch (error) {
+
+        console.error(
+            "Error al asignar docente:",
+            error
+        );
+
+
+        alert(
+            "No se pudo realizar la asignación.\n\n" +
+            error.message
+        );
+
+    }
 }
-
 
 // ============================================================
 // CARGAR DOMINIO EXISTENTE
@@ -1299,19 +1686,15 @@ function unassign(
 function existingDomain() {
 
     const teacherId =
-        Number(
-            document.getElementById(
-                "docenteDominio"
-            )?.value
-        );
+        document.getElementById(
+            "docenteDominio"
+        )?.value || "";
 
 
     const courseId =
-        Number(
-            document.getElementById(
-                "cursoDominio"
-            )?.value
-        );
+        document.getElementById(
+            "cursoDominio"
+        )?.value || "";
 
 
     const levelInput =
@@ -1347,6 +1730,588 @@ function existingDomain() {
 
 }
 
+// ============================================================
+// API - CREAR ACADEMIA
+// ============================================================
+
+async function createAcademy(data) {
+    const response =
+        await fetch(`${API_URL}/academias`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+    if (!response.ok) {
+        throw new Error(
+            `Error al crear academia: HTTP ${response.status}`
+        );
+    }
+
+    return await response.json();
+}
+
+// ============================================================
+// API - ACTUALIZAR ACADEMIA
+// ============================================================
+
+async function updateAcademy(id, data) {
+
+    const response =
+        await fetch(
+            `${API_URL}/academias/${id}`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(data)
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al actualizar academia: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+// ============================================================
+// EDITAR ACADEMIA
+// ============================================================
+
+function editAcademy(id) {
+
+    const academia =
+        academy(id);
+
+    if (!academia) {
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            `¿Desea editar la academia "${academia.nombre}"?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const form =
+        document.getElementById(
+            "formAcademia"
+        );
+
+    if (!form) {
+        return;
+    }
+
+
+    document.getElementById(
+        "claveAcademia"
+    ).value =
+        academia.clave || "";
+
+
+    document.getElementById(
+        "nombreAcademia"
+    ).value =
+        academia.nombre || "";
+
+
+    document.getElementById(
+        "descripcionAcademia"
+    ).value =
+        academia.descripcion || "";
+
+
+    editingAcademyId =
+        String(academia.id);
+
+
+    const submitButton =
+        form.querySelector(
+            'button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+
+        submitButton.textContent =
+            "Actualizar academia";
+
+    }
+
+
+    form.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+}
+
+
+// ============================================================
+// ELIMINAR ACADEMIA
+// ============================================================
+
+async function removeAcademy(id) {
+
+    const academia =
+        academy(id);
+
+    if (!academia) {
+        return;
+    }
+
+
+    const teachersCount =
+        appState.docentes.filter(
+            docente =>
+                String(docente.academiaId) ===
+                String(academia.id)
+        ).length;
+
+
+    const coursesCount =
+        appState.cursos.filter(
+            curso =>
+                String(curso.academiaId) ===
+                String(academia.id)
+        ).length;
+
+
+    if (
+        teachersCount > 0 ||
+        coursesCount > 0
+    ) {
+
+        alert(
+            `No se puede eliminar la academia "${academia.nombre}" porque tiene ` +
+            `${teachersCount} docente(s) y ${coursesCount} curso(s) asociados.`
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            `¿Está seguro de eliminar la academia "${academia.nombre}"?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        await deleteAcademy(
+            academia.id
+        );
+
+
+        appState.academias =
+            appState.academias.filter(
+                item =>
+                    String(item.id) !==
+                    String(academia.id)
+            );
+
+
+        if (
+            editingAcademyId &&
+            String(editingAcademyId) ===
+                String(academia.id)
+        ) {
+
+            editingAcademyId = null;
+
+        }
+
+
+        initSelects();
+
+        renderAcademies();
+
+        renderTeachers();
+
+        renderCourses();
+
+        renderAssignment();
+
+
+        console.log(
+            "Academia eliminada:",
+            academia
+        );
+
+
+        alert(
+            "Academia eliminada correctamente."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Error al eliminar academia:",
+            error
+        );
+
+
+        alert(
+            "No se pudo eliminar la academia.\n\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+// ============================================================
+// API - ELIMINAR ACADEMIA
+// ============================================================
+
+async function deleteAcademy(id) {
+
+    const response =
+        await fetch(
+            `${API_URL}/academias/${id}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al eliminar academia: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return true;
+
+}
+
+// ============================================================
+// API - CREAR CURSO
+// ============================================================
+
+async function createCourse(data) {
+
+    const response =
+        await fetch(`${API_URL}/cursos`, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(data)
+
+        });
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al crear curso: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+// ============================================================
+// API - ACTUALIZAR CURSO
+// ============================================================
+
+async function updateCourse(id, data) {
+
+    const response =
+        await fetch(
+            `${API_URL}/cursos/${id}`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(data)
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al actualizar curso: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+// ============================================================
+// API - ELIMINAR CURSO
+// ============================================================
+
+async function deleteCourse(id) {
+
+    const response =
+        await fetch(
+            `${API_URL}/cursos/${id}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al eliminar curso: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return true;
+
+}
+
+
+// ============================================================
+// API - CREAR DOCENTE
+// ============================================================
+
+async function createTeacher(data) {
+
+    const response =
+        await fetch(`${API_URL}/docentes`, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(data)
+
+        });
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al crear docente: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+// ============================================================
+// API - CREAR DOMINIO
+// ============================================================
+
+async function createDomain(data) {
+
+    const response =
+        await fetch(`${API_URL}/dominios`, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(data)
+
+        });
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al crear dominio: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+// ============================================================
+// API - ACTUALIZAR DOMINIO
+// ============================================================
+
+async function updateDomain(id, data) {
+
+    const response =
+        await fetch(
+            `${API_URL}/dominios/${id}`,
+            {
+
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(data)
+
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al actualizar dominio: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+// ============================================================
+// API - CREAR ASIGNACIÓN
+// ============================================================
+
+async function createAssignment(data) {
+
+    const response =
+        await fetch(`${API_URL}/asignaciones`, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(data)
+
+        });
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Error al crear asignación: HTTP ${response.status}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+// ============================================================
+// API - ELIMINAR ASIGNACIÓN
+// ============================================================
+
+async function deleteAssignment(id) {
+    const response = await fetch(
+        `${API_URL}/asignaciones/${id}`,
+        {
+            method: "DELETE"
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            `Error al eliminar asignación: HTTP ${response.status}`
+        );
+    }
+
+    return true;
+}
+
+async function unassign(courseId, teacherId) {
+
+    const assignment = appState.asignaciones.find(
+        a =>
+            String(a.cursoId) === String(courseId) &&
+            String(a.docenteId) === String(teacherId)
+    );
+
+    if (!assignment) {
+        return;
+    }
+
+    try {
+
+        await deleteAssignment(assignment.id);
+
+        appState.asignaciones =
+            appState.asignaciones.filter(
+                a => String(a.id) !== String(assignment.id)
+            );
+
+        renderCourses();
+        renderAssignment();
+
+        console.log("Asignación eliminada:", assignment);
+
+    } catch (error) {
+
+        console.error(
+            "Error al desasignar docente:",
+            error
+        );
+
+        alert(
+            "No se pudo desasignar el docente.\n\n" +
+            error.message
+        );
+    }
+}
 
 // ============================================================
 // EVENTOS
@@ -1487,7 +2452,7 @@ function bind() {
 
             }
         );
-
+    
 
     // --------------------------------------------------------
     // FORMULARIO DE ACADEMIA
@@ -1497,7 +2462,7 @@ function bind() {
         .getElementById("formAcademia")
         ?.addEventListener(
             "submit",
-            event => {
+            async event => {
 
                 event.preventDefault();
 
@@ -1529,6 +2494,10 @@ function bind() {
                         .trim();
 
 
+                // ------------------------------------------------
+                // VALIDACIÓN
+                // ------------------------------------------------
+
                 if (
                     !/^[A-Za-z0-9]{1,10}$/.test(
                         clave
@@ -1543,13 +2512,18 @@ function bind() {
                     return;
                 }
 
+                
+                const wasEditing =
+                Boolean(editingAcademyId);
 
                 const exists =
                     appState.academias.some(
                         academia =>
+                            String(academia.id) !==
+                                String(editingAcademyId) &&
                             academia.clave
                                 .toLowerCase() ===
-                            clave.toLowerCase()
+                                clave.toLowerCase()
                     );
 
 
@@ -1563,129 +2537,318 @@ function bind() {
                 }
 
 
-                appState.academias.push({
+                try {
 
-                    id: nextId(
-                        appState.academias
-                    ),
+                    // ========================================================
+                    // ACTUALIZAR ACADEMIA
+                    // ========================================================
 
-                    nombre,
+                    if (wasEditing) {
 
-                    clave,
-
-                    descripcion
-
-                });
-
-
-                saveState();
-
-                event.target.reset();
-
-                initSelects();
-
-                renderAcademies();
+                        const updatedAcademy =
+                            await updateAcademy(
+                                editingAcademyId,
+                                {
+                                    nombre,
+                                    clave,
+                                    descripcion
+                                }
+                            );
 
 
-                alert(
-                    "Academia registrada correctamente."
-                );
+                        const index =
+                            appState.academias.findIndex(
+                                item =>
+                                    String(item.id) ===
+                                    String(editingAcademyId)
+                            );
 
-            }
-        );
 
+                        if (index !== -1) {
+
+                            appState.academias[index] =
+                                updatedAcademy;
+
+                        }
+
+
+                        console.log(
+                            "Academia actualizada:",
+                            updatedAcademy
+                        );
+
+
+                        editingAcademyId =
+                            null;
+
+                    }
+
+
+                    // ========================================================
+                    // CREAR ACADEMIA
+                    // ========================================================
+
+                    else {
+
+                        const nuevaAcademia =
+                            await createAcademy({
+
+                                nombre,
+                                clave,
+                                descripcion
+
+                            });
+
+
+                        appState.academias.push(
+                            nuevaAcademia
+                        );
+
+
+                        console.log(
+                            "Academia creada:",
+                            nuevaAcademia
+                        );
+
+                    }
+
+
+                    // ========================================================
+                    // ACTUALIZAR INTERFAZ
+                    // ========================================================
+
+                    event.target.reset();
+
+
+                    const submitButton =
+                        event.target.querySelector(
+                            'button[type="submit"]'
+                        );
+
+
+                    if (submitButton) {
+
+                        submitButton.textContent =
+                            "Registrar academia";
+
+                    }
+
+
+                    initSelects();
+
+                    renderAcademies();
+
+                    renderTeachers();
+
+                    renderCourses();
+
+
+                    alert(
+                        wasEditing
+                            ? "Academia actualizada correctamente."
+                            : "Academia registrada correctamente."
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Error al guardar academia:",
+                        error
+                    );
+
+
+                    alert(
+                        "No se pudo guardar la academia.\n\n" +
+                        error.message
+                    );
+
+                }
+
+                }
+    );
 
     // --------------------------------------------------------
     // FORMULARIO DE CURSO
     // --------------------------------------------------------
 
-    document
-        .getElementById("formCurso")
-        ?.addEventListener(
-            "submit",
-            event => {
+document
+    .getElementById("formCurso")
+    ?.addEventListener(
+        "submit",
+        async event => {
 
-                event.preventDefault();
-
-
-                const nombre =
-                    document
-                        .getElementById(
-                            "nombreCurso"
-                        )
-                        .value
-                        .trim();
+            event.preventDefault();
 
 
-                const descripcion =
-                    document
-                        .getElementById(
-                            "descripcionCurso"
-                        )
-                        .value
-                        .trim();
+            const nombre =
+                document
+                    .getElementById(
+                        "nombreCurso"
+                    )
+                    .value
+                    .trim();
 
 
-                const academiaId =
-                    Number(
-                        document
-                            .getElementById(
-                                "academiaCurso"
-                            )
-                            .value
-                    );
+            const descripcion =
+                document
+                    .getElementById(
+                        "descripcionCurso"
+                    )
+                    .value
+                    .trim();
 
 
-                if (
-                    !nombre ||
-                    !academiaId
-                ) {
-
-                    alert(
-                        "Complete correctamente los datos del curso."
-                    );
-
-                    return;
-                }
+            const academiaId =
+                document
+                    .getElementById(
+                        "academiaCurso"
+                    )
+                    .value;
 
 
-                const exists =
-                    appState.cursos.some(
-                        curso =>
-                            curso.nombre
-                                .toLowerCase() ===
+            // ------------------------------------------------
+            // VALIDACIÓN
+            // ------------------------------------------------
+
+            if (
+                !nombre ||
+                !academiaId
+            ) {
+
+                alert(
+                    "Complete correctamente los datos del curso."
+                );
+
+                return;
+            }
+
+
+            const wasEditing =
+            Boolean(editingCourseId);
+
+
+            const exists =
+                appState.cursos.some(
+                    curso =>
+                        String(curso.id) !==
+                            String(editingCourseId) &&
+
+                        String(curso.academiaId) ===
+                            String(academiaId) &&
+
+                        curso.nombre
+                            .toLowerCase() ===
                             nombre.toLowerCase()
+                );
+
+
+            if (exists) {
+
+                alert(
+                    "El nombre del curso ya existe en esta academia."
+                );
+
+                return;
+            }
+
+
+            try {
+
+                // ========================================================
+                // ACTUALIZAR CURSO
+                // ========================================================
+
+                if (wasEditing) {
+
+                    const updatedCourse =
+                        await updateCourse(
+                            editingCourseId,
+                            {
+                                nombre,
+                                descripcion,
+                                academiaId
+                            }
+                        );
+
+
+                    const index =
+                        appState.cursos.findIndex(
+                            item =>
+                                String(item.id) ===
+                                String(editingCourseId)
+                        );
+
+
+                    if (index !== -1) {
+
+                        appState.cursos[index] =
+                            updatedCourse;
+
+                    }
+
+
+                    console.log(
+                        "Curso actualizado:",
+                        updatedCourse
                     );
 
 
-                if (exists) {
+                    editingCourseId =
+                        null;
 
-                    alert(
-                        "El nombre del curso ya existe."
-                    );
-
-                    return;
                 }
 
 
-                appState.cursos.push({
+                // ========================================================
+                // CREAR CURSO
+                // ========================================================
 
-                    id: nextId(
-                        appState.cursos
-                    ),
+                else {
 
-                    nombre,
+                    const nuevoCurso =
+                        await createCourse({
 
-                    descripcion,
+                            nombre,
+                            descripcion,
+                            academiaId
 
-                    academiaId
-
-                });
+                        });
 
 
-                saveState();
+                    appState.cursos.push(
+                        nuevoCurso
+                    );
+
+
+                    console.log(
+                        "Curso creado:",
+                        nuevoCurso
+                    );
+
+                }
+
+
+                // ========================================================
+                // ACTUALIZAR INTERFAZ
+                // ========================================================
 
                 event.target.reset();
+
+
+                const submitButton =
+                    event.target.querySelector(
+                        'button[type="submit"]'
+                    );
+
+
+                if (submitButton) {
+
+                    submitButton.textContent =
+                        "Registrar curso";
+
+                }
+
 
                 initSelects();
 
@@ -1693,14 +2856,34 @@ function bind() {
 
                 renderAcademies();
 
+                renderTeachers();
+
+                renderAssignment();
+
 
                 alert(
-                    "Curso registrado correctamente."
+                    wasEditing
+                        ? "Curso actualizado correctamente."
+                        : "Curso registrado correctamente."
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error al guardar curso:",
+                    error
+                );
+
+
+                alert(
+                    "No se pudo guardar el curso.\n\n" +
+                    error.message
                 );
 
             }
-        );
-
+        }
+    );
 
     // --------------------------------------------------------
     // FORMULARIO DE DOCENTE
@@ -1710,7 +2893,7 @@ function bind() {
         .getElementById("formDocente")
         ?.addEventListener(
             "submit",
-            event => {
+            async event => {
 
                 event.preventDefault();
 
@@ -1734,13 +2917,11 @@ function bind() {
 
 
                 const academiaId =
-                    Number(
-                        document
-                            .getElementById(
-                                "academiaDocente"
-                            )
-                            .value
-                    );
+                    document
+                        .getElementById(
+                            "academiaDocente"
+                        )
+                        .value;
 
 
                 const sni =
@@ -1748,6 +2929,10 @@ function bind() {
                         .getElementById("sni")
                         .value === "si";
 
+
+                // ------------------------------------------------
+                // VALIDACIÓN
+                // ------------------------------------------------
 
                 if (
                     !numeroEmpleado ||
@@ -1784,11 +2969,11 @@ function bind() {
                 }
 
 
-                appState.docentes.push({
+                // ------------------------------------------------
+                // CREAR OBJETO
+                // ------------------------------------------------
 
-                    id: nextId(
-                        appState.docentes
-                    ),
+                const nuevoDocente = {
 
                     numeroEmpleado,
 
@@ -1851,165 +3036,255 @@ function bind() {
 
                     academiaId
 
-                });
+                };
 
 
-                saveState();
+                // ------------------------------------------------
+                // POST
+                // ------------------------------------------------
 
-                event.target.reset();
+                try {
+
+                    const docenteCreado =
+                        await createTeacher(
+                            nuevoDocente
+                        );
 
 
-                const level =
-                    document.getElementById(
-                        "nivelSni"
+                    // --------------------------------------------
+                    // ACTUALIZAR ESTADO
+                    // --------------------------------------------
+
+                    appState.docentes.push(
+                        docenteCreado
                     );
 
 
-                if (level) {
+                    // --------------------------------------------
+                    // LIMPIAR FORMULARIO
+                    // --------------------------------------------
 
-                    level.disabled = true;
-                    level.value = "";
+                    event.target.reset();
+
+
+                    const level =
+                        document.getElementById(
+                            "nivelSni"
+                        );
+
+
+                    if (level) {
+
+                        level.disabled = true;
+
+                        level.value = "";
+
+                    }
+
+
+                    initSelects();
+
+                    renderTeachers();
+
+                    renderAcademies();
+
+
+                    console.log(
+                        "Docente creado:",
+                        docenteCreado
+                    );
+
+
+                    alert(
+                        "Docente registrado correctamente."
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Error al registrar docente:",
+                        error
+                    );
+
+
+                    alert(
+                        "No se pudo registrar el docente.\n\n" +
+                        error.message
+                    );
 
                 }
-
-
-                initSelects();
-
-                renderTeachers();
-
-                renderAcademies();
-
-
-                alert(
-                    "Docente registrado correctamente."
-                );
 
             }
         );
 
+// --------------------------------------------------------
+// FORMULARIO DE DOMINIO
+// --------------------------------------------------------
 
-    // --------------------------------------------------------
-    // FORMULARIO DE DOMINIO
-    // --------------------------------------------------------
+document
+    .getElementById("formDominio")
+    ?.addEventListener(
+        "submit",
+        async event => {
 
-    document
-        .getElementById("formDominio")
-        ?.addEventListener(
-            "submit",
-            event => {
-
-                event.preventDefault();
-
-
-                const docenteId =
-                    Number(
-                        document
-                            .getElementById(
-                                "docenteDominio"
-                            )
-                            .value
-                    );
+            event.preventDefault();
 
 
-                const cursoId =
-                    Number(
-                        document
-                            .getElementById(
-                                "cursoDominio"
-                            )
-                            .value
-                    );
+            const docenteId =
+                document
+                    .getElementById(
+                        "docenteDominio"
+                    )
+                    .value;
 
 
-                const nivel =
-                    Number(
-                        document
-                            .getElementById(
-                                "nivelDominio"
-                            )
-                            .value
-                    );
+            const cursoId =
+                document
+                    .getElementById(
+                        "cursoDominio"
+                    )
+                    .value;
 
 
-                const docente =
-                    appState.docentes.find(
-                        item =>
-                            item.id === docenteId
-                    );
+            const nivel =
+                Number(
+                    document
+                        .getElementById(
+                            "nivelDominio"
+                        )
+                        .value
+                );
 
 
-                const curso =
-                    appState.cursos.find(
-                        item =>
-                            item.id === cursoId
-                    );
+            const docente =
+                appState.docentes.find(
+                    item =>
+                        String(item.id) ===
+                        String(docenteId)
+                );
 
 
-                if (
-                    !docenteId ||
-                    !cursoId ||
-                    !Number.isInteger(nivel) ||
-                    nivel < 1 ||
-                    nivel > 10
-                ) {
-
-                    alert(
-                        "El nivel de dominio debe ser un entero entre 1 y 10."
-                    );
-
-                    return;
-                }
+            const curso =
+                appState.cursos.find(
+                    item =>
+                        String(item.id) ===
+                        String(cursoId)
+                );
 
 
-                if (
-                    !docente ||
-                    !curso ||
-                    docente.academiaId !==
-                        curso.academiaId
-                ) {
+            // ------------------------------------------------
+            // VALIDACIÓN
+            // ------------------------------------------------
 
-                    alert(
-                        "El docente y el curso deben pertenecer a la misma academia."
-                    );
+            if (
+                !docenteId ||
+                !cursoId ||
+                !Number.isInteger(nivel) ||
+                nivel < 1 ||
+                nivel > 10
+            ) {
 
-                    return;
-                }
+                alert(
+                    "El nivel de dominio debe ser un entero entre 1 y 10."
+                );
+
+                return;
+            }
 
 
-                const old =
-                    appState.dominios.find(
-                        item =>
-                            item.docenteId ===
-                                docenteId &&
-                            item.cursoId ===
-                                cursoId
-                    );
+            if (
+                !docente ||
+                !curso ||
+                String(docente.academiaId) !==
+                    String(curso.academiaId)
+            ) {
 
+                alert(
+                    "El docente y el curso deben pertenecer a la misma academia."
+                );
+
+                return;
+            }
+
+
+            // ------------------------------------------------
+            // BUSCAR DOMINIO EXISTENTE
+            // ------------------------------------------------
+
+            const old =
+                appState.dominios.find(
+                    item =>
+                        String(item.docenteId) ===
+                            String(docenteId) &&
+                        String(item.cursoId) ===
+                            String(cursoId)
+                );
+
+
+            try {
+
+                // ------------------------------------------------
+                // ACTUALIZAR DOMINIO EXISTENTE
+                // ------------------------------------------------
 
                 if (old) {
 
-                    old.nivel = nivel;
+                    const updatedDomain =
+                        await updateDomain(
+                            old.id,
+                            {
+                                nivel
+                            }
+                        );
 
-                } else {
 
-                    appState.dominios.push({
+                    const index =
+                        appState.dominios.findIndex(
+                            item =>
+                                String(item.id) ===
+                                String(old.id)
+                        );
 
-                        id: nextId(
-                            appState.dominios
-                        ),
 
-                        docenteId,
+                    if (index !== -1) {
 
-                        cursoId,
+                        appState.dominios[index] =
+                            updatedDomain;
 
-                        nivel
-
-                    });
+                    }
 
                 }
 
 
-                saveState();
+                // ------------------------------------------------
+                // CREAR DOMINIO NUEVO
+                // ------------------------------------------------
+
+                else {
+
+                    const newDomain =
+                        await createDomain({
+
+                            docenteId,
+
+                            cursoId,
+
+                            nivel
+
+                        });
+
+
+                    appState.dominios.push(
+                        newDomain
+                    );
+
+                }
+
+
+                // ------------------------------------------------
+                // ACTUALIZAR INTERFAZ
+                // ------------------------------------------------
 
                 event.target.reset();
 
@@ -2018,35 +3293,71 @@ function bind() {
                 renderAssignment();
 
 
+                console.log(
+                    "Dominio guardado correctamente."
+                );
+
+
                 alert(
                     "Nivel de dominio guardado correctamente."
                 );
 
+
+            } catch (error) {
+
+                console.error(
+                    "Error al guardar dominio:",
+                    error
+                );
+
+
+                alert(
+                    "No se pudo guardar el nivel de dominio.\n\n" +
+                    error.message
+                );
+
             }
-        );
+
+        }
+    );
+}
+
+// ============================================================
+// INICIALIZACIÓN DE LA APLICACIÓN
+// ============================================================
+
+async function startApp() {
+
+    await loadDataFromAPI();
+
+    initSelects();
+
+    bind();
+
+    renderTeachers();
+
+    renderAcademies();
+
+    renderCourses();
+
+    renderAssignment();
 
 }
 
 
 // ============================================================
-// INICIALIZACIÓN FINAL
+// INICIAR CUANDO EL DOM ESTÉ DISPONIBLE
 // ============================================================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+if (document.readyState === "loading") {
 
-        initSelects();
+    document.addEventListener(
+        "DOMContentLoaded",
+        startApp
+    );
 
-        bind();
+} else {
 
-        renderTeachers();
+    startApp();
 
-        renderAcademies();
-
-        renderCourses();
-
-        renderAssignment();
-
-    }
-);
+}
