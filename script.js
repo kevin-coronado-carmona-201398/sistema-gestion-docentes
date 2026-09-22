@@ -2452,7 +2452,7 @@ function bind() {
 
             }
         );
-    
+
 
     // --------------------------------------------------------
     // FORMULARIO DE ACADEMIA
@@ -2512,7 +2512,7 @@ function bind() {
                     return;
                 }
 
-                
+
                 const wasEditing =
                 Boolean(editingAcademyId);
 
