@@ -306,7 +306,6 @@ export async function updateCourse(id, data) {
 
 }
 
-
 export async function deleteCourse(id) {
 
     const response = await fetch(
@@ -345,7 +344,6 @@ export async function createDomain(data) {
         }
     );
 
-
     if (!response.ok) {
 
         throw new Error(
@@ -354,11 +352,9 @@ export async function createDomain(data) {
 
     }
 
-
     return await response.json();
 
 }
-
 
 export async function updateDomain(id, data) {
 
@@ -402,7 +398,6 @@ export async function createAssignment(data) {
         }
     );
 
-
     if (!response.ok) {
 
         throw new Error(
@@ -415,7 +410,6 @@ export async function createAssignment(data) {
     return await response.json();
 
 }
-
 
 export async function deleteAssignment(id) {
 

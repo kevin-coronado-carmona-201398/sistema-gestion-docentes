@@ -521,7 +521,6 @@ export async function removeTeacher(id) {
 
 }
 
-
 // ============================================================
 // FORMULARIO DE DOCENTE
 // ============================================================
@@ -533,8 +532,6 @@ export function bindTeacherEvents() {
             "formDocente"
         );
     
-    console.log("bindTeacherEvents ejecutándose");
-
     if (!form) {
         return;
     }
@@ -600,7 +597,6 @@ export function bindTeacherEvents() {
     );
 
     updateSniLevelState();
-
     
     // --------------------------------------------------------
     // FORMULARIO
@@ -687,14 +683,12 @@ export function bindTeacherEvents() {
                     )
                     .value;
 
-
             const prodep =
                 document
                     .getElementById(
                         "prodep"
                     )
                     .value;
-
 
             const certificaciones =
                 document
@@ -703,7 +697,6 @@ export function bindTeacherEvents() {
                     )
                     .value
                     .trim();
-
 
             // ------------------------------------------------
             // VALIDACIONES
@@ -722,12 +715,10 @@ export function bindTeacherEvents() {
                 return;
             }
 
-
             const wasEditing =
                 Boolean(
                     editState.teacherId
                 );
-
 
             // ------------------------------------------------
             // VALIDAR NÚMERO DE EMPLEADO
@@ -746,7 +737,6 @@ export function bindTeacherEvents() {
                             numeroEmpleado.toLowerCase()
                 );
 
-
             if (employeeExists) {
 
                 alert(
@@ -755,7 +745,6 @@ export function bindTeacherEvents() {
 
                 return;
             }
-
 
             // ------------------------------------------------
             // VALIDAR CAMBIO DE ACADEMIA
@@ -771,7 +760,6 @@ export function bindTeacherEvents() {
                                 editState.teacherId
                             )
                     );
-
 
                 if (
                     docenteActual &&
@@ -792,7 +780,6 @@ export function bindTeacherEvents() {
                                 )
                         );
 
-
                     const hasAssignments =
                         appState.asignaciones.some(
                             asignacion =>
@@ -803,7 +790,6 @@ export function bindTeacherEvents() {
                                     docenteActual.id
                                 )
                         );
-
 
                     if (
                         hasDomains ||
@@ -820,7 +806,6 @@ export function bindTeacherEvents() {
                 }
 
             }
-
 
             try {
 
@@ -841,7 +826,6 @@ export function bindTeacherEvents() {
                     certificaciones
 
                 };
-
 
                 // ============================================
                 // ACTUALIZAR
@@ -867,7 +851,6 @@ export function bindTeacherEvents() {
                             updatedTeacher.academiaId
                         );
 
-
                     const index =
                         appState.docentes.findIndex(
                             item =>
@@ -877,14 +860,12 @@ export function bindTeacherEvents() {
                                 )
                         );
 
-
                     if (index !== -1) {
 
                         appState.docentes[index] =
                             updatedTeacher;
 
                     }
-
 
                     editState.teacherId =
                         null;
@@ -930,16 +911,13 @@ export function bindTeacherEvents() {
                         "Docente creado:",
                         newTeacher
                     );
-
                 }
-
 
                 // ============================================
                 // ACTUALIZAR INTERFAZ
                 // ============================================
 
                 form.reset();
-
 
                 const submitButton =
                     form.querySelector(
@@ -954,7 +932,6 @@ export function bindTeacherEvents() {
 
                 }
 
-
                 const clearButton =
                     document.getElementById(
                         "limpiarDocente"
@@ -968,11 +945,9 @@ export function bindTeacherEvents() {
 
                 }
 
-
                 initSelects();
 
                 renderTeachers();
-
 
                 alert(
                     wasEditing
@@ -998,7 +973,6 @@ export function bindTeacherEvents() {
 
         }
     );
-
 
     // --------------------------------------------------------
     // LIMPIAR / CANCELAR
@@ -1026,7 +1000,6 @@ export function bindTeacherEvents() {
         );
 
 }
-
 
 // ============================================================
 // COMPATIBILIDAD TEMPORAL CON onclick

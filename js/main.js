@@ -131,7 +131,8 @@ async function startApp() {
 
         appState.especialidades =
             data.especialidades;
-
+        
+        window.appState = appState;
 
         console.log(
             "Datos cargados desde JSON Server."

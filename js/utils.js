@@ -13,7 +13,6 @@ export function esc(value) {
 
 }
 
-
 // ============================================================
 // OBTENER ACADEMIA
 // ============================================================
@@ -31,34 +30,16 @@ export function academy(
 
 }
 
-
 // ============================================================
 // OBTENER DOMINIO
 // ============================================================
-
-export function domain(
-    appState,
-    docenteId,
-    cursoId
-) {
-
-    const item =
-        appState.dominios.find(
-            d =>
-                String(d.docenteId) ===
-                    String(docenteId) &&
-
-                String(d.cursoId) ===
-                    String(cursoId)
-        );
-
-
-    return item
-        ? item.nivel
-        : null;
-
+export function domain(appState, docenteId, cursoId) {
+    return appState.dominios.find(
+        item =>
+            String(item.docenteId) === String(docenteId) &&
+            String(item.cursoId) === String(cursoId)
+    );
 }
-
 
 // ============================================================
 // VERIFICAR ASIGNACIÓN
@@ -80,7 +61,6 @@ export function assigned(
     );
 
 }
-
 
 // ============================================================
 // DOCENTES ASIGNADOS
@@ -111,7 +91,6 @@ export function assignedTeachers(
         .filter(Boolean);
 
 }
-
 
 // ============================================================
 // ÚLTIMO GRADO ACADÉMICO

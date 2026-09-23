@@ -2,12 +2,10 @@ import {
     appState
 } from "./state.js";
 
-
 import {
     createAssignment,
     deleteAssignment
 } from "./api.js";
-
 
 import {
     esc,
@@ -16,18 +14,15 @@ import {
     assigned
 } from "./utils.js";
 
-
 import {
     initSelects
 } from "./selects.js";
-
 
 // ============================================================
 // ESTADO LOCAL DEL MÓDULO
 // ============================================================
 
 let selectedCourseId = null;
-
 
 // ============================================================
 // OBTENER CURSO SELECCIONADO
@@ -47,7 +42,6 @@ function getSelectedCourse() {
     );
 
 }
-
 
 // ============================================================
 // MOSTRAR INFORMACIÓN DEL CURSO
@@ -88,10 +82,8 @@ function renderCourseDetails() {
         return;
     }
 
-
     const curso =
         getSelectedCourse();
-
 
     if (!curso) {
 
@@ -103,13 +95,11 @@ function renderCourseDetails() {
         return;
     }
 
-
     const cursoAcademia =
         academy(
             appState,
             curso.academiaId
         );
-
 
     const assignedTeacherIds =
         appState.asignaciones
@@ -165,41 +155,35 @@ function renderCourseDetails() {
 
 }
 
-
 // ============================================================
 // OBTENER NIVEL DE DOMINIO
 // ============================================================
 
-function getDomainLevel(
-    docenteId,
-    cursoId
-) {
+function getDomainLevel(docenteId, cursoId) {
+    console.log("BUSCANDO DOMINIO:");
+    console.log("docenteId:", docenteId);
+    console.log("cursoId:", cursoId);
 
-    const relation =
-        domain(
-            appState,
-            docenteId,
-            cursoId
-        );
+    const relation = domain(
+        appState,
+        docenteId,
+        cursoId
+    );
 
+    console.log("RELACIÓN ENCONTRADA:", relation);
 
     if (!relation) {
         return null;
     }
 
+    const nivel = Number(relation.nivel);
 
-    const nivel =
-        Number(
-            relation.nivel
-        );
-
+    console.log("NIVEL:", nivel);
 
     return Number.isFinite(nivel)
         ? nivel
         : null;
-
 }
-
 
 // ============================================================
 // RENDERIZAR DOCENTES CANDIDATOS
@@ -242,18 +226,15 @@ export function renderCandidates() {
         return;
     }
 
-
     const orderSelect =
         document.getElementById(
             "ordenDominio"
         );
 
-
     const order =
         orderSelect
             ? orderSelect.value
             : "desc";
-
 
     // --------------------------------------------------------
     // CANDIDATOS DE LA MISMA ACADEMIA
@@ -290,7 +271,6 @@ export function renderCandidates() {
                 })
             );
 
-
     // --------------------------------------------------------
     // ORDENAR POR DOMINIO
     // --------------------------------------------------------
@@ -322,7 +302,6 @@ export function renderCandidates() {
         }
     );
 
-
     if (candidates.length === 0) {
 
         tableBody.innerHTML = `
@@ -342,7 +321,6 @@ export function renderCandidates() {
 
         return;
     }
-
 
     tableBody.innerHTML =
         candidates
@@ -442,7 +420,6 @@ export function renderCandidates() {
 
 }
 
-
 // ============================================================
 // RENDERIZAR DOCENTES ASIGNADOS
 // ============================================================
@@ -454,11 +431,9 @@ export function renderAssigned() {
             "tbodyAsignados"
         );
 
-
     if (!tableBody) {
         return;
     }
-
 
     const curso =
         getSelectedCourse();
@@ -483,7 +458,6 @@ export function renderAssigned() {
 
         return;
     }
-
 
     const relations =
         appState.asignaciones.filter(
@@ -514,7 +488,6 @@ export function renderAssigned() {
 
         return;
     }
-
 
     tableBody.innerHTML =
         relations
@@ -598,7 +571,6 @@ export function renderAssigned() {
 
 }
 
-
 // ============================================================
 // RENDERIZAR TODA LA INFORMACIÓN
 // ============================================================
@@ -610,7 +582,6 @@ function renderAssignmentPage() {
     renderAssigned();
 
 }
-
 
 // ============================================================
 // ASIGNAR DOCENTE A CURSO
@@ -628,7 +599,6 @@ export async function assignCourse(
                 String(courseId)
         );
 
-
     const docente =
         appState.docentes.find(
             item =>
@@ -636,14 +606,12 @@ export async function assignCourse(
                 String(teacherId)
         );
 
-
     if (
         !curso ||
         !docente
     ) {
         return;
     }
-
 
     // --------------------------------------------------------
     // VALIDAR MISMA ACADEMIA
@@ -661,7 +629,6 @@ export async function assignCourse(
         return;
     }
 
-
     // --------------------------------------------------------
     // EVITAR DUPLICADOS
     // --------------------------------------------------------
@@ -673,14 +640,12 @@ export async function assignCourse(
             teacherId
         )
     ) {
-
         alert(
             "El docente ya está asignado a este curso."
         );
 
         return;
     }
-
 
     try {
 
@@ -695,29 +660,24 @@ export async function assignCourse(
                 }
             );
 
-
         newAssignment.id =
             String(
                 newAssignment.id
             );
-
 
         newAssignment.cursoId =
             String(
                 newAssignment.cursoId
             );
 
-
         newAssignment.docenteId =
             String(
                 newAssignment.docenteId
             );
 
-
         appState.asignaciones.push(
             newAssignment
         );
-
 
         renderAssignmentPage();
 
@@ -728,7 +688,6 @@ export async function assignCourse(
             error
         );
 
-
         alert(
             "No se pudo asignar el docente.\n\n" +
             error.message
@@ -738,7 +697,6 @@ export async function assignCourse(
 
 }
 
-
 // ============================================================
 // DESASIGNAR DOCENTE
 // ============================================================
@@ -747,7 +705,6 @@ export async function unassignCourse(
     courseId,
     teacherId
 ) {
-
     const assignment =
         appState.asignaciones.find(
             item =>
@@ -761,11 +718,9 @@ export async function unassignCourse(
                 String(teacherId)
         );
 
-
     if (!assignment) {
         return;
     }
-
 
     const docente =
         appState.docentes.find(
@@ -774,7 +729,6 @@ export async function unassignCourse(
                 String(teacherId)
         );
 
-
     const curso =
         appState.cursos.find(
             item =>
@@ -782,24 +736,20 @@ export async function unassignCourse(
                 String(courseId)
         );
 
-
     const confirmed =
         confirm(
             `¿Está seguro de desasignar a "${docente?.nombre || "este docente"}" del curso "${curso?.nombre || "este curso"}"?`
         );
 
-
     if (!confirmed) {
         return;
     }
-
 
     try {
 
         await deleteAssignment(
             assignment.id
         );
-
 
         appState.asignaciones =
             appState.asignaciones.filter(
@@ -818,7 +768,6 @@ export async function unassignCourse(
             error
         );
 
-
         alert(
             "No se pudo desasignar el docente.\n\n" +
             error.message
@@ -827,7 +776,6 @@ export async function unassignCourse(
     }
 
 }
-
 
 // ============================================================
 // EVENTOS DE ASIGNACIÓN
@@ -840,12 +788,10 @@ export function bindAssignmentEvents() {
             "cursoAsignacion"
         );
 
-
     const orderSelect =
         document.getElementById(
             "ordenDominio"
         );
-
 
     courseSelect?.addEventListener(
         "change",
@@ -860,7 +806,6 @@ export function bindAssignmentEvents() {
         }
     );
 
-
     orderSelect?.addEventListener(
         "change",
         () => {
@@ -869,7 +814,6 @@ export function bindAssignmentEvents() {
 
         }
     );
-
 
     // --------------------------------------------------------
     // ACTUALIZAR CANDIDATOS DESPUÉS DE CAMBIAR DOMINIO
@@ -884,7 +828,6 @@ export function bindAssignmentEvents() {
         }
     );
 
-
     // --------------------------------------------------------
     // RENDER INICIAL
     // --------------------------------------------------------
@@ -896,7 +839,6 @@ export function bindAssignmentEvents() {
     renderAssignmentPage();
 
 }
-
 
 // ============================================================
 // COMPATIBILIDAD TEMPORAL CON onclick

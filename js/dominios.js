@@ -2,19 +2,16 @@ import {
     appState
 } from "./state.js";
 
-
 import {
     createDomain,
     updateDomain
 } from "./api.js";
-
 
 import {
     esc,
     academy,
     domain
 } from "./utils.js";
-
 
 import {
     initSelects
@@ -31,11 +28,9 @@ export function renderDomains() {
             "tbodyDominios"
         );
 
-
     if (!tableBody) {
         return;
     }
-
 
     if (appState.dominios.length === 0) {
 
@@ -56,7 +51,6 @@ export function renderDomains() {
 
         return;
     }
-
 
     tableBody.innerHTML =
         appState.dominios
@@ -82,7 +76,6 @@ export function renderDomains() {
                                 )
                         );
 
-
                     const docenteAcademia =
                         docente
                             ? academy(
@@ -90,7 +83,6 @@ export function renderDomains() {
                                 docente.academiaId
                             )
                             : null;
-
 
                     return `
 
@@ -147,18 +139,15 @@ export function bindDomainEvents() {
             "formDominio"
         );
 
-
     if (!form) {
         return;
     }
-
 
     form.addEventListener(
         "submit",
         async event => {
 
             event.preventDefault();
-
 
             const docenteId =
                 document
@@ -167,14 +156,12 @@ export function bindDomainEvents() {
                     )
                     .value;
 
-
             const cursoId =
                 document
                     .getElementById(
                         "cursoDominio"
                     )
                     .value;
-
 
             const nivel =
                 Number(
@@ -184,7 +171,6 @@ export function bindDomainEvents() {
                         )
                         .value
                 );
-
 
             // ------------------------------------------------
             // VALIDACIONES
@@ -204,7 +190,6 @@ export function bindDomainEvents() {
 
                 return;
             }
-
 
             // ------------------------------------------------
             // BUSCAR DOCENTE Y CURSO
@@ -255,7 +240,6 @@ export function bindDomainEvents() {
                 return;
             }
 
-
             // ------------------------------------------------
             // BUSCAR DOMINIO EXISTENTE
             // ------------------------------------------------
@@ -266,7 +250,6 @@ export function bindDomainEvents() {
                     docenteId,
                     cursoId
                 );
-
 
             try {
 
@@ -287,7 +270,6 @@ export function bindDomainEvents() {
                                 nivel
                             }
                         );
-
 
                     updatedDomain.id =
                         String(
@@ -319,7 +301,6 @@ export function bindDomainEvents() {
                             updatedDomain;
 
                     }
-
 
                     alert(
                         "Dominio actualizado correctamente."
@@ -365,13 +346,11 @@ export function bindDomainEvents() {
                         newDomain
                     );
 
-
                     alert(
                         "Dominio registrado correctamente."
                     );
 
                 }
-
 
                 form.reset();
 
@@ -379,14 +358,12 @@ export function bindDomainEvents() {
 
                 renderDomains();
 
-
             } catch (error) {
 
                 console.error(
                     "Error al guardar dominio:",
                     error
                 );
-
 
                 alert(
                     "No se pudo guardar el dominio.\n\n" +
