@@ -1396,11 +1396,79 @@ function editCourse(id) {
 
     }
 
+    const clearButton =
+    document.getElementById(
+        "limpiarCurso"
+    );
+
+    if (clearButton) {
+
+        clearButton.textContent =
+            "Cancelar edición";
+
+    }
 
     form.scrollIntoView({
         behavior: "smooth",
         block: "center"
     });
+
+}
+
+// ============================================================
+// CANCELAR EDICIÓN DE CURSO
+// ============================================================
+
+function cancelCourseEdit() {
+
+    editingCourseId = null;
+
+
+    const form =
+        document.getElementById(
+            "formCurso"
+        );
+
+
+    if (!form) {
+        return;
+    }
+
+
+    form.reset();
+
+
+    const submitButton =
+        form.querySelector(
+            'button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+
+        submitButton.textContent =
+            "Registrar curso";
+
+    }
+
+
+    const clearButton =
+        document.getElementById(
+            "limpiarCurso"
+        );
+
+
+    if (clearButton) {
+
+        clearButton.textContent =
+            "Limpiar";
+
+    }
+
+
+    console.log(
+        "Edición de curso cancelada."
+    );
 
 }
 
@@ -3265,6 +3333,53 @@ function bind() {
                 const wasEditing =
                 Boolean(editingCourseId);
 
+                if (wasEditing) {
+                    const currentCourse =
+                        appState.cursos.find(
+                            curso =>
+                                String(curso.id) ===
+                                String(editingCourseId)
+                        );
+
+
+                    if (currentCourse) {
+
+                        const hasDomains =
+                            appState.dominios.some(
+                                dominio =>
+                                    String(dominio.cursoId) ===
+                                    String(currentCourse.id)
+                            );
+
+
+                        const hasAssignments =
+                            appState.asignaciones.some(
+                                asignacion =>
+                                    String(asignacion.cursoId) ===
+                                    String(currentCourse.id)
+                            );
+
+
+                        const changingAcademy =
+                            String(currentCourse.academiaId) !==
+                            String(academiaId);
+
+
+                        if (
+                            changingAcademy &&
+                            (hasDomains || hasAssignments)
+                        ) {
+
+                            alert(
+                                "No se puede cambiar de academia un curso que tiene dominios o asignaciones asociadas."
+                            );
+
+                            return;
+                        }
+
+                    }
+
+                }
 
                 const exists =
                     appState.cursos.some(
@@ -3308,7 +3423,18 @@ function bind() {
                                     academiaId
                                 }
                             );
+                        
+                        const clearButton =
+                        document.getElementById(
+                            "limpiarCurso"
+                        );
 
+                        if (clearButton) {
+
+                            clearButton.textContent =
+                                "Limpiar";
+
+                        }
 
                         const index =
                             appState.cursos.findIndex(
@@ -3420,6 +3546,29 @@ function bind() {
                     );
 
                 }
+            }
+        );
+    
+    // --------------------------------------------------------
+    // CANCELAR / LIMPIAR FORMULARIO DE CURSO
+    // --------------------------------------------------------
+
+    document
+        .getElementById(
+            "limpiarCurso"
+        )
+        ?.addEventListener(
+            "click",
+            event => {
+
+                if (editingCourseId) {
+
+                    event.preventDefault();
+
+                    cancelCourseEdit();
+
+                }
+
             }
         );
 
