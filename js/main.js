@@ -36,6 +36,10 @@ import {
     bindDomainEvents
 } from "./dominios.js";
 
+import {
+    bindAssignmentEvents
+} from "./asignaciones.js";
+
 // ============================================================
 // INICIALIZACIÓN
 // ============================================================
@@ -146,6 +150,8 @@ async function startApp() {
 
         renderDomains();
         bindDomainEvents();
+
+        bindAssignmentEvents();
 
     } catch (error) {
 

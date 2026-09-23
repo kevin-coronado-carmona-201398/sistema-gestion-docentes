@@ -384,3 +384,57 @@ export async function updateDomain(id, data) {
     return await response.json();
 
 }
+
+// ============================================================
+// ASIGNACIONES
+// ============================================================
+
+export async function createAssignment(data) {
+
+    const response = await fetch(
+        `${API_URL}/asignaciones`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        }
+    );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `asignaciones: HTTP ${response.status} - ${response.statusText}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+export async function deleteAssignment(id) {
+
+    const response = await fetch(
+        `${API_URL}/asignaciones/${id}`,
+        {
+            method: "DELETE"
+        }
+    );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `asignaciones: HTTP ${response.status} - ${response.statusText}`
+        );
+
+    }
+
+    return true;
+
+}
