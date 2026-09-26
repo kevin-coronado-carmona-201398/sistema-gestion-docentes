@@ -25,7 +25,6 @@ import {
 // ============================================================
 // RENDERIZAR DOCENTES
 // ============================================================
-
 export function renderTeachers() {
 
     const tableBody =
@@ -39,7 +38,84 @@ export function renderTeachers() {
     }
 
 
-    if (appState.docentes.length === 0) {
+    // ============================================================
+    // OBTENER FILTROS
+    // ============================================================
+
+    const searchInput =
+        document.getElementById(
+            "buscarDocente"
+        );
+
+
+    const academyFilter =
+        document.getElementById(
+            "filtroAcademiaDocente"
+        );
+
+
+    const search =
+        searchInput
+            ? searchInput.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    const academyId =
+        academyFilter
+            ? academyFilter.value
+            : "";
+
+
+    // ============================================================
+    // APLICAR FILTROS
+    // ============================================================
+
+    const filteredTeachers =
+        appState.docentes.filter(
+            docente => {
+
+                const matchesSearch =
+                    !search ||
+                    String(
+                        docente.nombre || ""
+                    )
+                        .toLowerCase()
+                        .includes(search) ||
+                    String(
+                        docente.numeroEmpleado || ""
+                    )
+                        .toLowerCase()
+                        .includes(search);
+
+
+                const matchesAcademy =
+                    !academyId ||
+                    String(
+                        docente.academiaId
+                    ) ===
+                    String(
+                        academyId
+                    );
+
+
+                return (
+                    matchesSearch &&
+                    matchesAcademy
+                );
+
+            }
+        );
+
+
+    // ============================================================
+    // SIN DOCENTES
+    // ============================================================
+
+    if (
+        appState.docentes.length === 0
+    ) {
 
         tableBody.innerHTML = `
 
@@ -60,8 +136,39 @@ export function renderTeachers() {
     }
 
 
+    // ============================================================
+    // SIN RESULTADOS DE LOS FILTROS
+    // ============================================================
+
+    if (
+        filteredTeachers.length === 0
+    ) {
+
+        tableBody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="7"
+                    class="w3-center"
+                >
+                    No se encontraron docentes con los filtros seleccionados.
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+    }
+
+
+    // ============================================================
+    // RENDERIZAR TABLA
+    // ============================================================
+
     tableBody.innerHTML =
-        appState.docentes
+        filteredTeachers
             .map(
                 docente => {
 
@@ -97,6 +204,7 @@ export function renderTeachers() {
                                                 )
                                         );
 
+
                                     return curso
                                         ? curso.nombre
                                         : null;
@@ -116,11 +224,13 @@ export function renderTeachers() {
                                 )}
                             </td>
 
+
                             <td>
                                 ${esc(
                                     docente.nombre
                                 )}
                             </td>
+
 
                             <td>
                                 ${esc(
@@ -128,11 +238,13 @@ export function renderTeachers() {
                                 )}
                             </td>
 
+
                             <td>
                                 ${esc(
                                     docente.especialidad || ""
                                 )}
                             </td>
+
 
                             <td>
                                 ${esc(
@@ -141,6 +253,7 @@ export function renderTeachers() {
                                         : "Sin academia"
                                 )}
                             </td>
+
 
                             <td>
                                 ${
@@ -155,6 +268,7 @@ export function renderTeachers() {
                                 }
                             </td>
 
+
                             <td>
 
                                 <button
@@ -164,6 +278,7 @@ export function renderTeachers() {
                                 >
                                     Editar
                                 </button>
+
 
                                 <button
                                     type="button"
@@ -184,7 +299,6 @@ export function renderTeachers() {
             .join("");
 
 }
-
 
 // ============================================================
 // EDITAR DOCENTE
@@ -934,6 +1048,41 @@ export function bindTeacherEvents() {
                 );
 
             }
+
+        }
+    );
+    
+    // --------------------------------------------------------
+    // FILTROS DE DOCENTES
+    // --------------------------------------------------------
+
+    const searchInput =
+        document.getElementById(
+            "buscarDocente"
+        );
+
+
+    const academyFilter =
+        document.getElementById(
+            "filtroAcademiaDocente"
+        );
+
+
+    searchInput?.addEventListener(
+        "input",
+        () => {
+
+            renderTeachers();
+
+        }
+    );
+
+
+    academyFilter?.addEventListener(
+        "change",
+        () => {
+
+            renderTeachers();
 
         }
     );
