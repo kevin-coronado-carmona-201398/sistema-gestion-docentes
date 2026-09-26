@@ -22,7 +22,108 @@ import {
 // ESTADO LOCAL DEL MÓDULO
 // ============================================================
 
+let selectedAcademyId = null;
 let selectedCourseId = null;
+
+// ============================================================
+// CARGAR CURSOS SEGÚN ACADEMIA
+// ============================================================
+
+function fillAssignmentCourses() {
+
+    const academySelect =
+        document.getElementById(
+            "academiaAsignacion"
+        );
+
+    const courseSelect =
+        document.getElementById(
+            "cursoAsignacion"
+        );
+
+
+    if (!academySelect || !courseSelect) {
+        return;
+    }
+
+
+    const academyId =
+        academySelect.value;
+
+
+    courseSelect.innerHTML = `
+
+        <option value="">
+            Seleccionar curso...
+        </option>
+
+    `;
+
+
+    selectedCourseId = null;
+
+
+    if (!academyId) {
+
+        courseSelect.disabled = true;
+
+        return;
+    }
+
+
+    const courses =
+        appState.cursos
+            .filter(
+                curso =>
+                    String(curso.academiaId) ===
+                    String(academyId)
+            )
+            .sort(
+                (a, b) =>
+                    a.nombre.localeCompare(
+                        b.nombre,
+                        "es"
+                    )
+            );
+
+
+    if (courses.length === 0) {
+
+        courseSelect.innerHTML += `
+
+            <option value="">
+                No hay cursos registrados para esta academia.
+            </option>
+
+        `;
+
+        courseSelect.disabled = true;
+
+        return;
+    }
+
+
+    courses.forEach(curso => {
+
+        const option =
+            document.createElement("option");
+
+        option.value =
+            String(curso.id);
+
+        option.textContent =
+            curso.nombre;
+
+        courseSelect.appendChild(
+            option
+        );
+
+    });
+
+
+    courseSelect.disabled = false;
+
+}
 
 // ============================================================
 // OBTENER CURSO SELECCIONADO
@@ -160,9 +261,6 @@ function renderCourseDetails() {
 // ============================================================
 
 function getDomainLevel(docenteId, cursoId) {
-    console.log("BUSCANDO DOMINIO:");
-    console.log("docenteId:", docenteId);
-    console.log("cursoId:", cursoId);
 
     const relation = domain(
         appState,
@@ -170,15 +268,11 @@ function getDomainLevel(docenteId, cursoId) {
         cursoId
     );
 
-    console.log("RELACIÓN ENCONTRADA:", relation);
-
     if (!relation) {
         return null;
     }
 
     const nivel = Number(relation.nivel);
-
-    console.log("NIVEL:", nivel);
 
     return Number.isFinite(nivel)
         ? nivel
@@ -188,8 +282,7 @@ function getDomainLevel(docenteId, cursoId) {
 // ============================================================
 // RENDERIZAR DOCENTES CANDIDATOS
 // ============================================================
-
-export function renderCandidates() {
+function renderCandidates() {
 
     const tableBody =
         document.getElementById(
@@ -197,26 +290,26 @@ export function renderCandidates() {
         );
 
 
+    const course =
+        getSelectedCourse();
+
+
     if (!tableBody) {
         return;
     }
 
 
-    const curso =
-        getSelectedCourse();
-
-
-    if (!curso) {
+    if (!course) {
 
         tableBody.innerHTML = `
 
             <tr>
 
                 <td
-                    colspan="5"
+                    colspan="12"
                     class="w3-center"
                 >
-                    Seleccione un curso para mostrar candidatos.
+                    Seleccione una academia y un curso para mostrar candidatos.
                 </td>
 
             </tr>
@@ -226,81 +319,53 @@ export function renderCandidates() {
         return;
     }
 
-    const orderSelect =
-        document.getElementById(
-            "ordenDominio"
+
+    let candidates =
+        appState.docentes.filter(
+            docente =>
+                String(docente.academiaId) ===
+                String(course.academiaId)
         );
 
+
     const order =
-        orderSelect
-            ? orderSelect.value
-            : "desc";
+        document.getElementById(
+            "ordenDominio"
+        )?.value || "desc";
 
-    // --------------------------------------------------------
-    // CANDIDATOS DE LA MISMA ACADEMIA
-    // --------------------------------------------------------
 
-    const candidates =
-        appState.docentes
-            .filter(
-                docente =>
-                    String(
-                        docente.academiaId
-                    ) ===
-                    String(
-                        curso.academiaId
-                    )
-            )
-            .map(
-                docente => ({
+    candidates.sort((a, b) => {
 
-                    docente,
-                    nivel:
-                        getDomainLevel(
-                            docente.id,
-                            curso.id
-                        ),
-
-                    isAssigned:
-                        assigned(
-                            appState,
-                            curso.id,
-                            docente.id
-                        )
-
-                })
+        const domainA =
+            getDomainLevel(
+                a.id,
+                course.id
             );
 
-    // --------------------------------------------------------
-    // ORDENAR POR DOMINIO
-    // --------------------------------------------------------
 
-    candidates.sort(
-        (a, b) => {
-
-            const nivelA =
-                a.nivel === null
-                    ? -1
-                    : a.nivel;
+        const domainB =
+            getDomainLevel(
+                b.id,
+                course.id
+            );
 
 
-            const nivelB =
-                b.nivel === null
-                    ? -1
-                    : b.nivel;
-
-
-            if (order === "asc") {
-
-                return nivelA - nivelB;
-
-            }
-
-
-            return nivelB - nivelA;
-
+        if (domainA === null) {
+            return 1;
         }
-    );
+
+
+        if (domainB === null) {
+            return -1;
+        }
+
+
+        return order === "asc"
+            ? domainA - domainB
+            : domainB - domainA;
+
+    });
+
 
     if (candidates.length === 0) {
 
@@ -309,10 +374,10 @@ export function renderCandidates() {
             <tr>
 
                 <td
-                    colspan="5"
+                    colspan="12"
                     class="w3-center"
                 >
-                    No hay docentes de la misma academia disponibles como candidatos.
+                    No hay docentes en esta academia.
                 </td>
 
             </tr>
@@ -322,100 +387,206 @@ export function renderCandidates() {
         return;
     }
 
+
     tableBody.innerHTML =
         candidates
-            .map(
-                candidate => {
+            .map(docente => {
 
-                    const docente =
-                        candidate.docente;
-
-
-                    const docenteAcademia =
-                        academy(
-                            appState,
-                            docente.academiaId
-                        );
+                const docenteAcademia =
+                    academy(
+                        appState,
+                        docente.academiaId
+                    );
 
 
-                    const nivel =
-                        candidate.nivel === null
-                            ? "Sin dominio"
-                            : candidate.nivel;
+                const domainLevel =
+                    getDomainLevel(
+                        docente.id,
+                        course.id
+                    );
 
 
-                    const estado =
-                        candidate.isAssigned
-                            ? "Asignado"
-                            : "Disponible";
+                const isAssigned =
+                    assigned(
+                        appState,
+                        course.id,
+                        docente.id
+                    );
 
 
-                    const action =
-                        candidate.isAssigned
-
-                            ? `
-
-                                <button
-                                    type="button"
-                                    class="w3-button w3-small w3-red"
-                                    onclick='unassignCourse(${JSON.stringify(curso.id)}, ${JSON.stringify(docente.id)})'
-                                >
-                                    Desasignar
-                                </button>
-
-                            `
-
-                            : `
-
-                                <button
-                                    type="button"
-                                    class="w3-button w3-small w3-green"
-                                    onclick='assignCourse(${JSON.stringify(curso.id)}, ${JSON.stringify(docente.id)})'
-                                >
-                                    Asignar
-                                </button>
-
-                            `;
+                const sni =
+                    String(
+                        docente.sni || "no"
+                    )
+                        .trim()
+                        .toLowerCase();
 
 
-                    return `
+                const hasSni =
+                    sni === "si";
 
-                        <tr>
 
-                            <td>
-                                ${esc(
-                                    docente.nombre
+                const prodep =
+                    String(
+                        docente.prodep || "no"
+                    )
+                        .trim()
+                        .toLowerCase();
+
+
+                const certificationText =
+                    docente.certificaciones
+                        ? esc(
+                            docente.certificaciones
+                        ).replace(
+                            /\n/g,
+                            "<br>"
+                        )
+                        : "—";
+
+
+                return `
+
+                    <tr>
+
+                        <td>
+                            ${esc(
+                                docente.nombre
+                            )}
+                            <br>
+                            <span class="w3-small">
+                                N.º ${esc(
+                                    docente.numeroEmpleado
                                 )}
-                            </td>
+                            </span>
+                        </td>
 
-                            <td>
-                                ${esc(
-                                    docenteAcademia
-                                        ? docenteAcademia.nombre
-                                        : "Sin academia"
-                                )}
-                            </td>
 
-                            <td>
-                                ${esc(
-                                    nivel
-                                )}
-                            </td>
+                        <td>
+                            ${esc(
+                                docenteAcademia
+                                    ? docenteAcademia.nombre
+                                    : "Sin academia"
+                            )}
+                        </td>
 
-                            <td>
-                                ${estado}
-                            </td>
 
-                            <td>
-                                ${action}
-                            </td>
+                        <td>
+                            ${esc(
+                                docente.nivelAcademico || "—"
+                            )}
+                        </td>
 
-                        </tr>
 
-                    `;
+                        <td>
+                            ${esc(
+                                docente.tituloAcademico || "—"
+                            )}
+                        </td>
 
-                }
-            )
+
+                        <td>
+                            ${esc(
+                                docente.especialidad || "—"
+                            )}
+                        </td>
+
+
+                        <td>
+                            ${
+                                prodep === "si"
+                                    ? "Sí"
+                                    : "No"
+                            }
+                        </td>
+
+
+                        <td>
+                            ${
+                                hasSni
+                                    ? "Sí"
+                                    : "No"
+                            }
+                        </td>
+
+
+                        <td>
+                            ${
+                                hasSni
+                                    ? esc(
+                                        docente.nivelSni || "Sin nivel"
+                                    )
+                                    : "—"
+                            }
+                        </td>
+
+
+                        <td>
+                            ${certificationText}
+                        </td>
+
+
+                        <td>
+                            ${
+                                domainLevel !== null
+                                    ? `${domainLevel}/10`
+                                    : "Sin registrar"
+                            }
+                        </td>
+
+
+                        <td>
+                            ${
+                                isAssigned
+                                    ? "Asignado"
+                                    : "Disponible"
+                            }
+                        </td>
+
+
+                        <td>
+
+                            ${
+                                isAssigned
+
+                                    ? `
+
+                                        <button
+                                            type="button"
+                                            class="w3-button w3-small w3-red"
+                                            onclick='unassignCourse(
+                                                ${JSON.stringify(course.id)},
+                                                ${JSON.stringify(docente.id)}
+                                            )'
+                                        >
+                                            Desasignar
+                                        </button>
+
+                                    `
+
+                                    : `
+
+                                        <button
+                                            type="button"
+                                            class="w3-button w3-small w3-blue"
+                                            onclick='assignCourse(
+                                                ${JSON.stringify(course.id)},
+                                                ${JSON.stringify(docente.id)}
+                                            )'
+                                        >
+                                            Asignar
+                                        </button>
+
+                                    `
+                            }
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            })
             .join("");
 
 }
@@ -783,37 +954,104 @@ export async function unassignCourse(
 
 export function bindAssignmentEvents() {
 
+    // ============================================================
+    // CARGAR ACADEMIAS PARA ASIGNACIÓN
+    // ============================================================
+
+    const academySelect =
+        document.getElementById(
+            "academiaAsignacion"
+        );
+
+
     const courseSelect =
         document.getElementById(
             "cursoAsignacion"
         );
 
-    const orderSelect =
-        document.getElementById(
-            "ordenDominio"
+
+    if (academySelect) {
+
+        academySelect.innerHTML = `
+
+            <option value="">
+                Seleccionar academia...
+            </option>
+
+        `;
+
+
+        appState.academias
+            .slice()
+            .sort(
+                (a, b) =>
+                    a.nombre.localeCompare(
+                        b.nombre,
+                        "es"
+                    )
+            )
+            .forEach(academia => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    String(academia.id);
+
+                option.textContent =
+                    academia.nombre;
+
+                academySelect.appendChild(
+                    option
+                );
+
+            });
+
+    }
+
+
+    // ============================================================
+    // EVENTOS DE SELECCIÓN
+    // ============================================================
+
+    if (academySelect) {
+
+        academySelect.addEventListener(
+            "change",
+            () => {
+
+                selectedAcademyId =
+                    academySelect.value || null;
+
+                selectedCourseId = null;
+
+                fillAssignmentCourses();
+
+                renderAssignmentPage();
+
+            }
         );
 
-    courseSelect?.addEventListener(
-        "change",
-        () => {
-
-            selectedCourseId =
-                courseSelect.value || null;
+    }
 
 
-            renderAssignmentPage();
+    if (courseSelect) {
 
-        }
-    );
+        courseSelect.addEventListener(
+            "change",
+            () => {
 
-    orderSelect?.addEventListener(
-        "change",
-        () => {
+                selectedCourseId =
+                    courseSelect.value || null;
 
-            renderCandidates();
+                renderAssignmentPage();
 
-        }
-    );
+            }
+        );
+
+    }
 
     // --------------------------------------------------------
     // ACTUALIZAR CANDIDATOS DESPUÉS DE CAMBIAR DOMINIO

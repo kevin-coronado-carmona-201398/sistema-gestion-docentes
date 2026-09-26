@@ -13,9 +13,7 @@ import {
 
 import {
     esc,
-    academy,
-    assignedTeachers,
-    lastDegree
+    academy
 } from "./utils.js";
 
 
@@ -126,9 +124,7 @@ export function renderTeachers() {
 
                             <td>
                                 ${esc(
-                                    lastDegree(
-                                        docente
-                                    )
+                                    docente.nivelAcademico || ""
                                 )}
                             </td>
 
@@ -242,30 +238,20 @@ export function editTeacher(id) {
     ).value =
         docente.nombre || "";
 
+    document.getElementById(
+        "nivelAcademico"
+    ).value =
+        docente.nivelAcademico || "";
 
     document.getElementById(
-        "licenciatura"
+        "tituloAcademico"
     ).value =
-        docente.licenciatura || "";
-
-
-    document.getElementById(
-        "maestria"
-    ).value =
-        docente.maestria || "";
-
-
-    document.getElementById(
-        "doctorado"
-    ).value =
-        docente.doctorado || "";
-
+        docente.tituloAcademico || "";
 
     document.getElementById(
         "especialidad"
     ).value =
         docente.especialidad || "";
-
 
     document.getElementById(
         "academiaDocente"
@@ -559,18 +545,6 @@ export function bindTeacherEvents() {
                 .normalize("NFD")
                 .replace(/[\u0300-\u036f]/g, "");
 
-
-        console.log(
-            "Valor SNI:",
-            sniValue
-        );
-
-        console.log(
-            "Antes de cambiar disabled:",
-            nivelSniSelect.disabled
-        );
-
-
         if (sniValue === "si") {
 
             nivelSniSelect.disabled = false;
@@ -582,12 +556,10 @@ export function bindTeacherEvents() {
 
         }
 
-
         console.log(
             "Después de cambiar disabled:",
             nivelSniSelect.disabled
         );
-
     }
 
 
@@ -626,30 +598,21 @@ export function bindTeacherEvents() {
                     .value
                     .trim();
 
-
-            const licenciatura =
+            const nivelAcademico =
                 document
                     .getElementById(
-                        "licenciatura"
+                        "nivelAcademico"
                     )
                     .value;
 
 
-            const maestria =
+            const tituloAcademico =
                 document
                     .getElementById(
-                        "maestria"
+                        "tituloAcademico"
                     )
-                    .value;
-
-
-            const doctorado =
-                document
-                    .getElementById(
-                        "doctorado"
-                    )
-                    .value;
-
+                    .value
+                    .trim();
 
             const especialidad =
                 document
@@ -701,10 +664,12 @@ export function bindTeacherEvents() {
             // ------------------------------------------------
             // VALIDACIONES
             // ------------------------------------------------
-
+       
             if (
                 !numeroEmpleado ||
                 !nombre ||
+                !nivelAcademico ||
+                !tituloAcademico ||
                 !academiaId
             ) {
 
@@ -813,9 +778,8 @@ export function bindTeacherEvents() {
 
                     numeroEmpleado,
                     nombre,
-                    licenciatura,
-                    maestria,
-                    doctorado,
+                    nivelAcademico,
+                    tituloAcademico,
                     especialidad,
                     academiaId: String(
                         academiaId
