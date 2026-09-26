@@ -1,0 +1,24 @@
+{
+  "name": "sistema-gestion-docentes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "mockData.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kevin-coronado-carmona-201398/sistema-gestion-docentes.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kevin-coronado-carmona-201398/sistema-gestion-docentes/issues"
+  },
+  "homepage": "https://github.com/kevin-coronado-carmona-201398/sistema-gestion-docentes#readme",
+  "dependencies": {
+    "json-server": "^1.0.0-beta.15"
+  }
+}

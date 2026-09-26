@@ -139,7 +139,7 @@
                             </th>
 
                             <th>
-                                Último grado académico
+                                Nivel académico
                             </th>
 
                             <th>
@@ -154,6 +154,9 @@
                                 Materias que puede impartir
                             </th>
 
+                            <th>
+                                Acción
+                            </th>
                         </tr>
 
                     </thead>
@@ -227,48 +230,54 @@
                 </div>
 
 
-                <div class="form-grid-3">
+                <div class="form-grid-2">
 
                     <div class="form-group">
 
-                        <label for="licenciatura">
-                            Licenciatura *
+                        <label for="nivelAcademico">
+                            Nivel académico *
                         </label>
 
                         <select
-                            id="licenciatura"
+                            id="nivelAcademico"
                             class="w3-select w3-border"
                             required
-                        ></select>
+                        >
+
+                            <option value="">
+                                Seleccionar nivel académico...
+                            </option>
+
+                            <option value="Licenciatura">
+                                Licenciatura
+                            </option>
+
+                            <option value="Maestría">
+                                Maestría
+                            </option>
+
+                            <option value="Doctorado">
+                                Doctorado
+                            </option>
+
+                        </select>
 
                     </div>
 
 
                     <div class="form-group">
 
-                        <label for="maestria">
-                            Maestría *
+                        <label for="tituloAcademico">
+                            Título obtenido *
                         </label>
 
-                        <select
-                            id="maestria"
-                            class="w3-select w3-border"
+                        <input
+                            id="tituloAcademico"
+                            class="w3-input w3-border"
+                            type="text"
+                            placeholder="Ej. Ingeniería en Sistemas Computacionales"
                             required
-                        ></select>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="doctorado">
-                            Doctorado
-                        </label>
-
-                        <select
-                            id="doctorado"
-                            class="w3-select w3-border"
-                        ></select>
+                        >
 
                     </div>
 
@@ -405,6 +414,7 @@
 
                     <button
                         type="reset"
+                        id="limpiarDocente"
                         class="w3-button w3-light-grey"
                     >
                         Limpiar
@@ -424,8 +434,10 @@
     </footer>
 
 
-    <script src="mockData.js"></script>
-    <script src="script.js"></script>
+      <script 
+        type = "module"
+        src = "js/main.js"
+    ></script>
 
 </body>
 
