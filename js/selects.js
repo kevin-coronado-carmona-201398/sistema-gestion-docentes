@@ -451,15 +451,4 @@ export function initSelects() {
         "cursoAsignacion",
         "Seleccionar curso..."
     );
-
-    fillScheduleDays(
-        "diaCurso",
-        "Seleccionar día..."
-    );
-
-    fillScheduleHours(
-        "horaCurso",
-        "",
-        "Seleccionar hora..."
-    );
 }

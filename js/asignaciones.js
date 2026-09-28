@@ -15,7 +15,8 @@ import {
 } from "./utils.js";
 
 import {
-    initSelects
+    fillScheduleDays,
+    fillScheduleHours
 } from "./selects.js";
 
 // ============================================================
@@ -24,6 +25,254 @@ import {
 
 let selectedAcademyId = null;
 let selectedCourseId = null;
+let selectedScheduleIds = [];
+
+// ============================================================
+// RENDERIZAR HORARIOS SELECCIONADOS
+// ============================================================
+
+function renderSelectedSchedules() {
+
+    const container =
+        document.getElementById(
+            "horariosSeleccionadosAsignacion"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    if (selectedScheduleIds.length === 0) {
+
+        container.innerHTML = `
+            <p class="w3-small">
+                No se han agregado horarios.
+            </p>
+        `;
+
+        return;
+    }
+
+    const schedules =
+        selectedScheduleIds
+            .slice()
+            .sort(
+                (a, b) =>
+                    Number(a) - Number(b)
+            )
+            .map(
+                id =>
+                    appState.horarios.find(
+                        horario =>
+                            String(horario.id) ===
+                            String(id)
+                    )
+            )
+            .filter(Boolean);
+
+    container.innerHTML = `
+        <p class="w3-small">
+            <strong>Horarios seleccionados:</strong>
+        </p>
+
+        ${schedules.map(horario => `
+            <div class="w3-padding-small w3-border-bottom">
+
+                <span>
+                    ${esc(horario.dia)}
+                    ${esc(horario.horaInicio)}
+                    -${esc(horario.horaFin)}
+                </span>
+
+                <button
+                    type="button"
+                    class="w3-button w3-small w3-red w3-margin-left"
+                    onclick='removeSelectedSchedule(${JSON.stringify(String(horario.id))})'
+                >
+                    Quitar
+                </button>
+
+            </div>
+        `).join("")}
+    `;
+}
+
+
+// ============================================================
+// AGREGAR HORARIO
+// ============================================================
+
+function addSelectedSchedule() {
+
+    const daySelect =
+        document.getElementById(
+            "diaAsignacion"
+        );
+
+    const hourSelect =
+        document.getElementById(
+            "horaAsignacion"
+        );
+
+    if (!daySelect || !hourSelect) {
+        return;
+    }
+
+    const day =
+        daySelect.value;
+
+    const scheduleId =
+        hourSelect.value;
+
+    if (!day || !scheduleId) {
+
+        alert(
+            "Seleccione un día y una hora antes de agregar el horario."
+        );
+
+        return;
+    }
+
+    const schedule =
+        appState.horarios.find(
+            horario =>
+                String(horario.id) ===
+                String(scheduleId)
+        );
+
+    if (!schedule) {
+
+        alert(
+            "El horario seleccionado no es válido."
+        );
+
+        return;
+    }
+
+    if (schedule.dia !== day) {
+
+        alert(
+            "El horario seleccionado no corresponde al día elegido."
+        );
+
+        return;
+    }
+
+    if (
+        selectedScheduleIds.some(
+            id =>
+                String(id) ===
+                String(scheduleId)
+        )
+    ) {
+
+        alert(
+            "Ese horario ya fue agregado."
+        );
+
+        return;
+    }
+
+    selectedScheduleIds.push(
+        String(scheduleId)
+    );
+
+    renderSelectedSchedules();
+
+    hourSelect.value = "";
+
+}
+
+
+// ============================================================
+// QUITAR HORARIO
+// ============================================================
+
+function removeSelectedSchedule(id) {
+
+    selectedScheduleIds =
+        selectedScheduleIds.filter(
+            scheduleId =>
+                String(scheduleId) !==
+                String(id)
+        );
+
+    renderSelectedSchedules();
+
+}
+
+
+// ============================================================
+// LIMPIAR HORARIOS SELECCIONADOS
+// ============================================================
+
+function resetScheduleSelection() {
+
+    selectedScheduleIds = [];
+
+    renderSelectedSchedules();
+
+    const daySelect =
+        document.getElementById(
+            "diaAsignacion"
+        );
+
+    if (daySelect) {
+        daySelect.value = "";
+    }
+
+    fillScheduleHours(
+        "horaAsignacion",
+        "",
+        "Seleccionar hora..."
+    );
+
+}
+
+
+// ============================================================
+// CONFIGURAR SELECTOR DÍA → HORA
+// ============================================================
+
+function bindScheduleEvents() {
+
+    const daySelect =
+        document.getElementById(
+            "diaAsignacion"
+        );
+
+    const addButton =
+        document.getElementById(
+            "agregarHorarioAsignacion"
+        );
+
+    if (daySelect) {
+
+        daySelect.addEventListener(
+            "change",
+            () => {
+
+                fillScheduleHours(
+                    "horaAsignacion",
+                    daySelect.value,
+                    "Seleccionar hora..."
+                );
+
+            }
+        );
+
+    }
+
+    if (addButton) {
+
+        addButton.addEventListener(
+            "click",
+            addSelectedSchedule
+        );
+
+    }
+
+}
 
 // ============================================================
 // CARGAR CURSOS SEGÚN ACADEMIA
@@ -614,7 +863,7 @@ function renderAssigned() {
         tableBody.innerHTML = `
             <tr>
                 <td
-                    colspan="12"
+                    colspan="13"
                     class="w3-center"
                 >
                     Seleccione un curso para mostrar los docentes asignados.
@@ -625,10 +874,6 @@ function renderAssigned() {
         return;
     }
 
-    // --------------------------------------------------------
-    // Obtener asignaciones del curso seleccionado
-    // --------------------------------------------------------
-
     const assignments =
         appState.asignaciones.filter(
             asignacion =>
@@ -636,27 +881,12 @@ function renderAssigned() {
                 String(course.id)
         );
 
-    // --------------------------------------------------------
-    // Obtener los docentes asociados a esas asignaciones
-    // --------------------------------------------------------
-
-    const teachers =
-        assignments
-            .map(asignacion =>
-                appState.docentes.find(
-                    docente =>
-                        String(docente.id) ===
-                        String(asignacion.docenteId)
-                )
-            )
-            .filter(Boolean);
-
-    if (teachers.length === 0) {
+    if (assignments.length === 0) {
 
         tableBody.innerHTML = `
             <tr>
                 <td
-                    colspan="12"
+                    colspan="13"
                     class="w3-center"
                 >
                     No hay docentes asignados a este curso.
@@ -667,13 +897,22 @@ function renderAssigned() {
         return;
     }
 
-    // --------------------------------------------------------
-    // Renderizar tabla
-    // --------------------------------------------------------
-
     tableBody.innerHTML =
-        teachers
-            .map(docente => {
+        assignments
+            .map(asignacion => {
+
+                const docente =
+                    appState.docentes.find(
+                        item =>
+                            String(item.id) ===
+                            String(
+                                asignacion.docenteId
+                            )
+                    );
+
+                if (!docente) {
+                    return "";
+                }
 
                 const docenteAcademia =
                     academy(
@@ -713,6 +952,34 @@ function renderAssigned() {
                             "<br>"
                         )
                         : "—";
+
+                const schedules =
+                    Array.isArray(
+                        asignacion.horarioIds
+                    )
+                        ? asignacion.horarioIds
+                            .map(
+                                id =>
+                                    appState.horarios.find(
+                                        horario =>
+                                            String(
+                                                horario.id
+                                            ) ===
+                                            String(id)
+                                    )
+                            )
+                            .filter(Boolean)
+                        : [];
+
+                const scheduleText =
+                    schedules.length > 0
+                        ? schedules
+                            .map(
+                                horario =>
+                                    `${esc(horario.dia)} ${esc(horario.horaInicio)}-${esc(horario.horaFin)}`
+                            )
+                            .join("<br>")
+                        : "Sin horario";
 
                 return `
                     <tr>
@@ -794,11 +1061,14 @@ function renderAssigned() {
                         </td>
 
                         <td>
+                            ${scheduleText}
+                        </td>
+
+                        <td>
                             Asignado
                         </td>
 
                         <td>
-
                             <button
                                 type="button"
                                 class="w3-button w3-small w3-red"
@@ -809,7 +1079,6 @@ function renderAssigned() {
                             >
                                 Desasignar
                             </button>
-
                         </td>
 
                     </tr>
@@ -817,6 +1086,7 @@ function renderAssigned() {
 
             })
             .join("");
+
 }
 
 // ============================================================
@@ -837,36 +1107,15 @@ function renderAssignmentPage() {
 
 function findScheduleConflict(
     docenteId,
-    cursoId
+    newScheduleIds
 ) {
 
-    const cursoActual =
-        appState.cursos.find(
-            curso =>
-                String(curso.id) ===
-                String(cursoId)
-        );
-
-
-    if (!cursoActual) {
-        return null;
-    }
-
-
-    const currentScheduleIds =
-        Array.isArray(
-            cursoActual.horarioIds
-        )
-            ? cursoActual.horarioIds.map(
+    const normalizedNewSchedules =
+        new Set(
+            newScheduleIds.map(
                 id => String(id)
             )
-            : [];
-
-
-    if (currentScheduleIds.length === 0) {
-        return null;
-    }
-
+        );
 
     const assignments =
         appState.asignaciones.filter(
@@ -874,52 +1123,28 @@ function findScheduleConflict(
                 String(
                     asignacion.docenteId
                 ) ===
-                    String(docenteId) &&
-                String(
-                    asignacion.cursoId
-                ) !==
-                    String(cursoId)
+                    String(docenteId)
         );
-
 
     for (
         const assignment
         of assignments
     ) {
 
-        const otherCourse =
-            appState.cursos.find(
-                curso =>
-                    String(curso.id) ===
-                    String(
-                        assignment.cursoId
-                    )
-            );
-
-
-        if (!otherCourse) {
-            continue;
-        }
-
-
         const otherScheduleIds =
             Array.isArray(
-                otherCourse.horarioIds
+                assignment.horarioIds
             )
-                ? otherCourse.horarioIds.map(
+                ? assignment.horarioIds.map(
                     id => String(id)
                 )
                 : [];
 
-
         const conflictingScheduleId =
-            currentScheduleIds.find(
-                scheduleId =>
-                    otherScheduleIds.includes(
-                        scheduleId
-                    )
+            otherScheduleIds.find(
+                id =>
+                    normalizedNewSchedules.has(id)
             );
-
 
         if (
             conflictingScheduleId
@@ -932,6 +1157,14 @@ function findScheduleConflict(
                         String(docenteId)
                 );
 
+            const otherCourse =
+                appState.cursos.find(
+                    curso =>
+                        String(curso.id) ===
+                        String(
+                            assignment.cursoId
+                        )
+                );
 
             const horario =
                 appState.horarios.find(
@@ -942,20 +1175,15 @@ function findScheduleConflict(
                         )
                 );
 
-
             return {
                 docente,
                 otherCourse,
                 horario
             };
-
         }
-
     }
 
-
     return null;
-
 }
 
 // ============================================================
@@ -1023,47 +1251,56 @@ export async function assignCourse(
     }
 
     // --------------------------------------------------------
+    // VALIDAR QUE HAYA HORARIOS
+    // --------------------------------------------------------
+
+    if (
+        selectedScheduleIds.length === 0
+    ) {
+
+        alert(
+            "Seleccione al menos un horario antes de asignar al docente."
+        );
+
+        return;
+    }
+
+// --------------------------------------------------------
 // VALIDAR CONFLICTO DE HORARIO
 // --------------------------------------------------------
 
 const scheduleConflict =
     findScheduleConflict(
         docente.id,
-        curso.id
+        selectedScheduleIds
     );
 
+if (scheduleConflict) {
 
-    if (scheduleConflict) {
+    const docenteNombre =
+        scheduleConflict.docente
+            ? scheduleConflict.docente.nombre
+            : "Docente no identificado";
 
-        const docenteNombre =
-            scheduleConflict.docente
-                ? scheduleConflict.docente.nombre
-                : "Docente no identificado";
+    const cursoNombre =
+        scheduleConflict.otherCourse
+            ? scheduleConflict.otherCourse.nombre
+            : "Curso no identificado";
 
+    const horarioTexto =
+        scheduleConflict.horario
+            ? `${scheduleConflict.horario.dia} ${scheduleConflict.horario.horaInicio}-${scheduleConflict.horario.horaFin}`
+            : "Horario no identificado";
 
-        const cursoNombre =
-            scheduleConflict.otherCourse
-                ? scheduleConflict.otherCourse.nombre
-                : "Curso no identificado";
+    alert(
+        "No se puede asignar el docente porque ya tiene otro curso en el mismo horario.\n\n" +
+        `Docente: ${docenteNombre}\n` +
+        `Curso en conflicto: ${cursoNombre}\n` +
+        `Horario: ${horarioTexto}`
+    );
 
-
-        const horarioTexto =
-            scheduleConflict.horario
-                ? `${scheduleConflict.horario.dia} ${scheduleConflict.horario.horaInicio}-${scheduleConflict.horario.horaFin}`
-                : "Horario no identificado";
-
-
-        alert(
-            "No se puede asignar el docente porque ya tiene otro curso en el mismo horario.\n\n" +
-            `Docente: ${docenteNombre}\n` +
-            `Curso en conflicto: ${cursoNombre}\n` +
-            `Horario: ${horarioTexto}`
-        );
-
-
-        return;
-
-    }
+    return;
+}
 
     try {
                 
@@ -1074,7 +1311,12 @@ const scheduleConflict =
                         String(courseId),
 
                     docenteId:
-                        String(teacherId)
+                        String(teacherId),
+                    
+                    horarioIds:
+                    selectedScheduleIds.map(
+                        id => String(id)
+                    )
                 }
             );
 
@@ -1096,11 +1338,20 @@ const scheduleConflict =
                 newAssignment.docenteId
             );
 
+        newAssignment.horarioIds =
+            Array.isArray(
+                newAssignment.horarioIds
+            )
+                ? newAssignment.horarioIds.map(
+                    id => String(id)
+                )
+                : [];
 
         appState.asignaciones.push(
             newAssignment
         );
 
+        resetScheduleSelection();
         renderAssignmentPage();
 
     } catch (error) {
@@ -1206,6 +1457,25 @@ export async function unassignCourse(
 export function bindAssignmentEvents() {
 
     // ============================================================
+    //     INICIALIZAR SELECTORES DE HORARIOS
+    // ============================================================
+
+    fillScheduleDays(
+    "diaAsignacion",
+    "Seleccionar día..."
+    );
+
+    fillScheduleHours(
+        "horaAsignacion",
+        "",
+        "Seleccionar hora..."
+    );
+
+    bindScheduleEvents();
+
+    renderSelectedSchedules();
+
+    // ============================================================
     // CARGAR ACADEMIAS PARA ASIGNACIÓN
     // ============================================================
 
@@ -1278,6 +1548,8 @@ export function bindAssignmentEvents() {
 
                 selectedCourseId = null;
 
+                resetScheduleSelection();
+
                 fillAssignmentCourses();
 
                 renderAssignmentPage();
@@ -1297,13 +1569,32 @@ export function bindAssignmentEvents() {
                 selectedCourseId =
                     courseSelect.value || null;
 
+                resetScheduleSelection();
+
                 renderAssignmentPage();
 
             }
         );
 
     }
+    const orderSelect =
+        document.getElementById(
+            "ordenDominio"
+        );
 
+    if (orderSelect) {
+
+        orderSelect.addEventListener(
+            "change",
+            () => {
+
+                renderCandidates();
+
+            }
+        );
+
+    }
+    
     // --------------------------------------------------------
     // ACTUALIZAR CANDIDATOS DESPUÉS DE CAMBIAR DOMINIO
     // --------------------------------------------------------
@@ -1338,3 +1629,6 @@ window.assignCourse =
 
 window.unassignCourse =
     unassignCourse;
+
+window.removeSelectedSchedule =
+    removeSelectedSchedule;

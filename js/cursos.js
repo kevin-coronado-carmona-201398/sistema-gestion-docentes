@@ -20,450 +20,7 @@ import {
 
 import {
     initSelects,
-    fillScheduleHours
 } from "./selects.js";
-
-// ============================================================
-// HORARIOS SELECCIONADOS DEL CURSO
-// ============================================================
-
-let selectedScheduleIds = [];
-
-
-// ============================================================
-// RENDERIZAR HORARIOS SELECCIONADOS
-// ============================================================
-
-function renderSelectedSchedules() {
-
-    const container =
-        document.getElementById(
-            "horariosSeleccionadosCurso"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    if (selectedScheduleIds.length === 0) {
-
-        container.innerHTML = `
-            <p class="w3-small">
-                No se han agregado horarios.
-            </p>
-        `;
-
-        return;
-    }
-
-
-    const schedules =
-        selectedScheduleIds
-            .slice()
-            .sort(
-                (a, b) =>
-                    Number(a) -
-                    Number(b)
-            )
-            .map(
-                id =>
-                    appState.horarios.find(
-                        horario =>
-                            String(horario.id) ===
-                            String(id)
-                    )
-            )
-            .filter(Boolean);
-
-
-    container.innerHTML = `
-        <p class="w3-small">
-            <strong>Horarios seleccionados:</strong>
-        </p>
-
-        ${schedules.map(horario => `
-            <div class="w3-padding-small w3-border-bottom">
-
-                <span>
-                    ${esc(horario.dia)}
-                    ${esc(horario.horaInicio)}
-                    -${esc(horario.horaFin)}
-                </span>
-
-                <button
-                    type="button"
-                    class="w3-button w3-small w3-red w3-margin-left"
-                    onclick='removeSelectedSchedule(${JSON.stringify(String(horario.id))})'
-                >
-                    Quitar
-                </button>
-
-            </div>
-        `).join("")}
-    `;
-
-}
-
-
-// ============================================================
-// AGREGAR HORARIO
-// ============================================================
-
-function addSelectedSchedule() {
-
-    const daySelect =
-        document.getElementById(
-            "diaCurso"
-        );
-
-
-    const hourSelect =
-        document.getElementById(
-            "horaCurso"
-        );
-
-
-    if (!daySelect || !hourSelect) {
-        return;
-    }
-
-
-    const day =
-        daySelect.value;
-
-
-    const scheduleId =
-        hourSelect.value;
-
-
-    if (!day || !scheduleId) {
-
-        alert(
-            "Seleccione un día y una hora antes de agregar el horario."
-        );
-
-        return;
-    }
-
-
-    const schedule =
-        appState.horarios.find(
-            horario =>
-                String(horario.id) ===
-                String(scheduleId)
-        );
-
-
-    if (!schedule) {
-
-        alert(
-            "El horario seleccionado no es válido."
-        );
-
-        return;
-    }
-
-
-    if (schedule.dia !== day) {
-
-        alert(
-            "El horario seleccionado no corresponde al día elegido."
-        );
-
-        return;
-    }
-
-
-    if (
-        selectedScheduleIds.some(
-            id =>
-                String(id) ===
-                String(scheduleId)
-        )
-    ) {
-
-        alert(
-            "Ese horario ya fue agregado al curso."
-        );
-
-        return;
-    }
-
-
-    selectedScheduleIds.push(
-        String(scheduleId)
-    );
-
-
-    renderSelectedSchedules();
-
-
-    hourSelect.value = "";
-
-}
-
-
-// ============================================================
-// QUITAR HORARIO
-// ============================================================
-
-function removeSelectedSchedule(
-    id
-) {
-
-    selectedScheduleIds =
-        selectedScheduleIds.filter(
-            scheduleId =>
-                String(scheduleId) !==
-                String(id)
-        );
-
-
-    renderSelectedSchedules();
-
-}
-
-
-// ============================================================
-// LIMPIAR SELECCIÓN DE HORARIOS
-// ============================================================
-
-function resetScheduleSelection() {
-
-    selectedScheduleIds = [];
-
-
-    renderSelectedSchedules();
-
-
-    const daySelect =
-        document.getElementById(
-            "diaCurso"
-        );
-
-
-    if (daySelect) {
-        daySelect.value = "";
-    }
-
-
-    fillScheduleHours(
-        "horaCurso",
-        "",
-        "Seleccionar hora..."
-    );
-
-}
-
-
-// ============================================================
-// CONFIGURAR SELECTOR DÍA → HORA
-// ============================================================
-
-function bindScheduleEvents() {
-
-    const daySelect =
-        document.getElementById(
-            "diaCurso"
-        );
-
-
-    const hourSelect =
-        document.getElementById(
-            "horaCurso"
-        );
-
-
-    const addButton =
-        document.getElementById(
-            "agregarHorarioCurso"
-        );
-
-
-    if (daySelect) {
-
-        daySelect.addEventListener(
-            "change",
-            () => {
-
-                fillScheduleHours(
-                    "horaCurso",
-                    daySelect.value,
-                    "Seleccionar hora..."
-                );
-
-            }
-        );
-
-    }
-
-
-    if (addButton) {
-
-        addButton.addEventListener(
-            "click",
-            addSelectedSchedule
-        );
-
-    }
-
-}
-
-
-// ============================================================
-// COMPARAR LISTAS DE HORARIOS
-// ============================================================
-
-function sameScheduleIds(
-    first,
-    second
-) {
-
-    const firstIds =
-        Array.isArray(first)
-            ? first.map(String).sort()
-            : [];
-
-
-    const secondIds =
-        Array.isArray(second)
-            ? second.map(String).sort()
-            : [];
-
-
-    return (
-        firstIds.length ===
-            secondIds.length &&
-        firstIds.every(
-            (id, index) =>
-                id === secondIds[index]
-        )
-    );
-
-}
-
-
-// ============================================================
-// CONFLICTO DE HORARIO AL EDITAR CURSO
-// ============================================================
-
-function findScheduleConflict(
-    courseId,
-    newScheduleIds
-) {
-
-    const normalizedNewSchedules =
-        new Set(
-            newScheduleIds.map(
-                id => String(id)
-            )
-        );
-
-
-    const assignments =
-        appState.asignaciones.filter(
-            asignacion =>
-                String(asignacion.cursoId) ===
-                String(courseId)
-        );
-
-
-    for (const assignment of assignments) {
-
-        const otherAssignments =
-            appState.asignaciones.filter(
-                otherAssignment =>
-                    String(
-                        otherAssignment.docenteId
-                    ) ===
-                        String(
-                            assignment.docenteId
-                        ) &&
-                    String(
-                        otherAssignment.cursoId
-                    ) !==
-                        String(courseId)
-            );
-
-
-        for (
-            const otherAssignment
-            of otherAssignments
-        ) {
-
-            const otherCourse =
-                appState.cursos.find(
-                    curso =>
-                        String(curso.id) ===
-                        String(
-                            otherAssignment.cursoId
-                        )
-                );
-
-
-            if (!otherCourse) {
-                continue;
-            }
-
-
-            const otherScheduleIds =
-                Array.isArray(
-                    otherCourse.horarioIds
-                )
-                    ? otherCourse.horarioIds.map(
-                        id => String(id)
-                    )
-                    : [];
-
-
-            const conflictingScheduleId =
-                otherScheduleIds.find(
-                    id =>
-                        normalizedNewSchedules.has(
-                            id
-                        )
-                );
-
-
-            if (
-                conflictingScheduleId
-            ) {
-
-                const docente =
-                    appState.docentes.find(
-                        item =>
-                            String(item.id) ===
-                            String(
-                                assignment.docenteId
-                            )
-                    );
-
-                return {
-                    docente,
-                    otherCourse,
-                    horario
-                };
-
-            }
-
-        }
-
-    }
-
-
-    return null;
-
-}
-
-
-// ============================================================
-// FUNCIÓN GLOBAL PARA QUITAR HORARIO
-// ============================================================
-
-window.removeSelectedSchedule =
-    removeSelectedSchedule;
 
 // ============================================================
 // RENDERIZAR CURSOS
@@ -489,7 +46,7 @@ export function renderCourses() {
             <tr>
 
                 <td
-                    colspan="6"
+                    colspan="5"
                     class="w3-center"
                 >
                     No hay cursos registrados.
@@ -513,28 +70,7 @@ export function renderCourses() {
                             appState,
                             curso.academiaId
                         );
-                    
-                    const schedules =
-                        Array.isArray(curso.horarioIds)
-                            ? curso.horarioIds
-                                .map(
-                                    id =>
-                                        appState.horarios.find(
-                                            horario =>
-                                                String(horario.id) ===
-                                                String(id)
-                                        )
-                                )
-                                .filter(Boolean)
-                            : [];
-
-                    const horario =
-                        appState.horarios.find(
-                            item =>
-                                String(item.id) ===
-                                String(curso.horarioId)
-                            );
-        
+   
                     const teachers =
                         assignedTeachers(
                             appState,
@@ -569,19 +105,6 @@ export function renderCourses() {
                                         ? cursoAcademia.nombre
                                         : "Sin academia"
                                 )}
-                            </td>
-
-                            <td>
-                                ${
-                                    schedules.length
-                                        ? schedules
-                                            .map(
-                                                horario =>
-                                                    `${esc(horario.dia)} ${esc(horario.horaInicio)}-${esc(horario.horaFin)}`
-                                            )
-                                            .join("<br>")
-                                        : "Sin horario"
-                                }
                             </td>
 
                             <td>
@@ -675,19 +198,6 @@ export function editCourse(id) {
         "academiaCurso"
     ).value =
         curso.academiaId || "";
- 
-    selectedScheduleIds =
-        Array.isArray(curso.horarioIds)
-            ? [
-                ...new Set(
-                    curso.horarioIds.map(
-                        id => String(id)
-                    )
-                )
-            ]
-            : [];
-
-    renderSelectedSchedules();
 
     editState.courseId =
         String(curso.id);
@@ -749,7 +259,6 @@ export function cancelCourseEdit() {
 
 
     form.reset();
-    resetScheduleSelection();
 
     const submitButton =
         form.querySelector(
@@ -952,8 +461,7 @@ export function bindCourseEvents() {
 
             if (
                 !nombre ||
-                !academiaId ||
-                selectedScheduleIds.length === 0
+                !academiaId
             ) {
 
                 alert(
@@ -983,55 +491,6 @@ export function bindCourseEvents() {
                             )
                     )
                     : null;
-
-            if (
-                wasEditing &&
-                currentCourse &&
-                !sameScheduleIds(
-                    currentCourse.horarioIds,
-                    selectedScheduleIds
-                )
-            ) {
-
-                const scheduleConflict =
-                    findScheduleConflict(
-                        currentCourse.id,
-                        selectedScheduleIds
-                    );
-
-
-                if (scheduleConflict) {
-
-                    const docenteNombre =
-                        scheduleConflict.docente
-                            ? scheduleConflict.docente.nombre
-                            : "Docente no identificado";
-
-
-                    const cursoNombre =
-                        scheduleConflict.otherCourse
-                            ? scheduleConflict.otherCourse.nombre
-                            : "Curso no identificado";
-
-
-                    const horarioTexto =
-                        scheduleConflict.horario
-                            ? `${scheduleConflict.horario.dia} ${scheduleConflict.horario.horaInicio}-${scheduleConflict.horario.horaFin}`
-                            : "Horario no identificado";
-
-
-                    alert(
-                        "No se puede cambiar el horario del curso porque se generaría un conflicto.\n\n" +
-                        `Docente: ${docenteNombre}\n` +
-                        `Curso en conflicto: ${cursoNombre}\n` +
-                        `Horario: ${horarioTexto}`
-                    );
-
-                    return;
-
-                }
-
-            }
 
             // ------------------------------------------------
             // VALIDAR NOMBRE DUPLICADO
@@ -1124,11 +583,6 @@ export function bindCourseEvents() {
                     academiaId:
                         String(academiaId),
 
-                    horarioIds:
-                        selectedScheduleIds.map(
-                            id => String(id)
-                        )
-
                 };
 
                 // ============================================
@@ -1154,15 +608,6 @@ export function bindCourseEvents() {
                         String(
                             updatedCourse.academiaId
                         );
-
-                    updatedCourse.horarioIds =
-                        Array.isArray(
-                            updatedCourse.horarioIds
-                        )
-                            ? updatedCourse.horarioIds.map(
-                                id => String(id)
-                            )
-                            : [];
 
                     const index =
                         appState.cursos.findIndex(
@@ -1214,15 +659,6 @@ export function bindCourseEvents() {
                             newCourse.academiaId
                         );
 
-                    newCourse.horarioIds =
-                        Array.isArray(
-                            newCourse.horarioIds
-                        )
-                            ? newCourse.horarioIds.map(
-                                id => String(id)
-                            )
-                            : [];
-
                     appState.cursos.push(
                         newCourse
                     );
@@ -1241,7 +677,6 @@ export function bindCourseEvents() {
                 // ============================================
 
                 form.reset();
-                resetScheduleSelection();
 
                 const submitButton =
                     form.querySelector(
@@ -1326,7 +761,6 @@ export function bindCourseEvents() {
 
             }
         );
-    bindScheduleEvents();
 }
 
 // ============================================================

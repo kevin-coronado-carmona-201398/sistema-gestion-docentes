@@ -91,20 +91,13 @@
       "id": "1",
       "nombre": "Bases de Datos",
       "descripcion": "Diseño, administración y gestión de bases de datos.",
-      "academiaId": "1",
-      "horarioIds": [
-        "1",
-        "11"
-      ]
+      "academiaId": "1"
     },
     {
       "id": "2",
       "nombre": "Estructuras de Datos",
       "descripcion": "Estudio y aplicación de estructuras de datos.",
-      "academiaId": "1",
-      "horarioIds": [
-        "1"
-      ]
+      "academiaId": "1"
     },
     {
       "id": "3",
@@ -201,29 +194,56 @@
   ],
   "asignaciones": [
     {
-      "id": "2",
-      "cursoId": 4,
-      "docenteId": 3
-    },
-    {
       "cursoId": "3",
       "docenteId": "1",
-      "id": "LupEXSPIYDg"
+      "id": "LupEXSPIYDg",
+      "horarioIds": []
     },
     {
       "cursoId": "3",
       "docenteId": "2",
-      "id": "Rz09eBhWWnY"
-    },
-    {
-      "cursoId": "1",
-      "docenteId": "1",
-      "id": "m0KuL6mTUcs"
+      "id": "Rz09eBhWWnY",
+      "horarioIds": []
     },
     {
       "cursoId": "2",
       "docenteId": "2",
-      "id": "Zi8bfJQEc7Y"
+      "id": "Zi8bfJQEc7Y",
+      "horarioIds": [
+        "1"
+      ]
+    },
+    {
+      "cursoId": "1",
+      "docenteId": "1",
+      "horarioIds": [
+        "1"
+      ],
+      "id": "Hoao_reu9DI"
+    },
+    {
+      "cursoId": "1",
+      "docenteId": "2",
+      "horarioIds": [
+        "12"
+      ],
+      "id": "0kEOyLnaktQ"
+    },
+    {
+      "cursoId": "4",
+      "docenteId": "3",
+      "horarioIds": [
+        "1"
+      ],
+      "id": "qXgfjgqRMbc"
+    },
+    {
+      "cursoId": "4",
+      "docenteId": "4",
+      "horarioIds": [
+        "1"
+      ],
+      "id": "rxC4vogIQC0"
     }
   ],
   "licenciaturas": [

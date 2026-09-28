@@ -75,16 +75,11 @@ async function startApp() {
                 })
             );
 
-
-            appState.cursos = data.cursos.map(item => ({
-                ...item,
-                id: String(item.id),
-                academiaId: String(item.academiaId),
-                horarioIds: Array.isArray(item.horarioIds)
-                    ? item.horarioIds.map(id => String(id))
-                    : []
-            }));
-
+        appState.cursos = data.cursos.map(item => ({
+            ...item,
+            id: String(item.id),
+            academiaId: String(item.academiaId)
+        }));
 
         appState.dominios =
             data.dominios.map(
@@ -98,7 +93,6 @@ async function startApp() {
                 })
             );
 
-
         appState.asignaciones =
             data.asignaciones.map(
                 item => ({
@@ -107,7 +101,13 @@ async function startApp() {
                     docenteId:
                         String(item.docenteId),
                     cursoId:
-                        String(item.cursoId)
+                        String(item.cursoId),
+                    horarioIds:
+                        Array.isArray(item.horarioIds)
+                            ? item.horarioIds.map(
+                                id => String(id)
+                            )
+                            : []
                 })
             );
         
