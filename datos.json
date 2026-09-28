@@ -20,71 +20,71 @@
     }
   ],
   "docentes": [
-      {
-          "id": "1",
-          "numeroEmpleado": "EMP001",
-          "nombre": "Ana López Martínez",
-          "nivelAcademico": "Maestría",
-          "tituloAcademico": "Maestría en Ciencias de la Computación",
-          "especialidad": "Bases de datos y desarrollo de software",
-          "sni": "si",
-          "nivelSni": "Candidato",
-          "prodep": "si",
-          "certificaciones": "Oracle Database, Microsoft Azure",
-          "academiaId": 1
-      },
-      {
-          "id": "2",
-          "numeroEmpleado": "EMP002",
-          "nombre": "Carlos Hernández Pérez",
-          "nivelAcademico": "Doctorado",
-          "tituloAcademico": "Doctorado en Ciencias de la Computación",
-          "especialidad": "Inteligencia artificial y programación",
-          "sni": "si",
-          "nivelSni": "Nivel 1",
-          "prodep": "si",
-          "certificaciones": "AWS Certified Cloud Practitioner",
-          "academiaId": 1
-      },
-      {
-          "id": "3",
-          "numeroEmpleado": "EMP003",
-          "nombre": "María González Ramírez",
-          "nivelAcademico": "Maestría",
-          "tituloAcademico": "Maestría en Telecomunicaciones",
-          "especialidad": "Redes y telecomunicaciones",
-          "sni": "no",
-          "nivelSni": "",
-          "prodep": "si",
-          "certificaciones": "Cisco CCNA",
-          "academiaId": 2
-      },
-      {
-          "id": "4",
-          "numeroEmpleado": "EMP004",
-          "nombre": "Jorge Sánchez Torres",
-          "nivelAcademico": "Maestría",
-          "tituloAcademico": "Maestría en Telecomunicaciones",
-          "especialidad": "Redes inalámbricas e infraestructura",
-          "sni": "no",
-          "nivelSni": "",
-          "prodep": "no",
-          "certificaciones": "Cisco CCNA, Fortinet",
-          "academiaId": 2
-      },
-      {
-          "id": "5",
-          "numeroEmpleado": "EMP005",
-          "nombre": "Laura Martínez Díaz",
-          "nivelAcademico": "Doctorado",
-          "tituloAcademico": "Doctorado en Ingeniería",
-          "especialidad": "Ingeniería de software y análisis de sistemas",
-          "sni": "si",
-          "nivelSni": "Nivel 2",
-          "prodep": "si",
-          "certificaciones": "Scrum Master",
-          "academiaId": 3
-      }
+    {
+      "id": "1",
+      "numeroEmpleado": "EMP001",
+      "nombre": "Ana López Martínez",
+      "nivelAcademico": "Maestría",
+      "tituloAcademico": "Maestría en Ciencias de la Computación",
+      "especialidad": "Bases de datos y desarrollo de software",
+      "sni": "si",
+      "nivelSni": "Candidato",
+      "prodep": "si",
+      "certificaciones": "Oracle Database, Microsoft Azure",
+      "academiaId": 1
+    },
+    {
+      "id": "2",
+      "numeroEmpleado": "EMP002",
+      "nombre": "Carlos Hernández Pérez",
+      "nivelAcademico": "Doctorado",
+      "tituloAcademico": "Doctorado en Ciencias de la Computación",
+      "especialidad": "Inteligencia artificial y programación",
+      "sni": "si",
+      "nivelSni": "Nivel 1",
+      "prodep": "si",
+      "certificaciones": "AWS Certified Cloud Practitioner",
+      "academiaId": 1
+    },
+    {
+      "id": "3",
+      "numeroEmpleado": "EMP003",
+      "nombre": "María González Ramírez",
+      "nivelAcademico": "Maestría",
+      "tituloAcademico": "Maestría en Telecomunicaciones",
+      "especialidad": "Redes y telecomunicaciones",
+      "sni": "no",
+      "nivelSni": "",
+      "prodep": "si",
+      "certificaciones": "Cisco CCNA",
+      "academiaId": 2
+    },
+    {
+      "id": "4",
+      "numeroEmpleado": "EMP004",
+      "nombre": "Jorge Sánchez Torres",
+      "nivelAcademico": "Maestría",
+      "tituloAcademico": "Maestría en Telecomunicaciones",
+      "especialidad": "Redes inalámbricas e infraestructura",
+      "sni": "no",
+      "nivelSni": "",
+      "prodep": "no",
+      "certificaciones": "Cisco CCNA, Fortinet",
+      "academiaId": 2
+    },
+    {
+      "id": "5",
+      "numeroEmpleado": "EMP005",
+      "nombre": "Laura Martínez Díaz",
+      "nivelAcademico": "Doctorado",
+      "tituloAcademico": "Doctorado en Ingeniería",
+      "especialidad": "Ingeniería de software y análisis de sistemas",
+      "sni": "si",
+      "nivelSni": "Nivel 2",
+      "prodep": "si",
+      "certificaciones": "Scrum Master",
+      "academiaId": 3
+    }
   ],
   "cursos": [
     {
