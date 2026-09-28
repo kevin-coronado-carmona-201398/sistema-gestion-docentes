@@ -595,151 +595,228 @@ function renderCandidates() {
 // RENDERIZAR DOCENTES ASIGNADOS
 // ============================================================
 
-export function renderAssigned() {
+function renderAssigned() {
 
     const tableBody =
         document.getElementById(
             "tbodyAsignados"
         );
 
+    const course =
+        getSelectedCourse();
+
     if (!tableBody) {
         return;
     }
 
-    const curso =
-        getSelectedCourse();
-
-
-    if (!curso) {
+    if (!course) {
 
         tableBody.innerHTML = `
-
             <tr>
-
                 <td
-                    colspan="4"
+                    colspan="12"
                     class="w3-center"
                 >
-                    No hay asignaciones para mostrar.
+                    Seleccione un curso para mostrar los docentes asignados.
                 </td>
-
             </tr>
-
         `;
 
         return;
     }
 
-    const relations =
+    // --------------------------------------------------------
+    // Obtener asignaciones del curso seleccionado
+    // --------------------------------------------------------
+
+    const assignments =
         appState.asignaciones.filter(
             asignacion =>
-                String(
-                    asignacion.cursoId
-                ) ===
-                String(curso.id)
+                String(asignacion.cursoId) ===
+                String(course.id)
         );
 
+    // --------------------------------------------------------
+    // Obtener los docentes asociados a esas asignaciones
+    // --------------------------------------------------------
 
-    if (relations.length === 0) {
+    const teachers =
+        assignments
+            .map(asignacion =>
+                appState.docentes.find(
+                    docente =>
+                        String(docente.id) ===
+                        String(asignacion.docenteId)
+                )
+            )
+            .filter(Boolean);
+
+    if (teachers.length === 0) {
 
         tableBody.innerHTML = `
-
             <tr>
-
                 <td
-                    colspan="4"
+                    colspan="12"
                     class="w3-center"
                 >
                     No hay docentes asignados a este curso.
                 </td>
-
             </tr>
-
         `;
 
         return;
     }
 
+    // --------------------------------------------------------
+    // Renderizar tabla
+    // --------------------------------------------------------
+
     tableBody.innerHTML =
-        relations
-            .map(
-                relation => {
+        teachers
+            .map(docente => {
 
-                    const docente =
-                        appState.docentes.find(
-                            item =>
-                                String(item.id) ===
-                                String(
-                                    relation.docenteId
-                                )
-                        );
+                const docenteAcademia =
+                    academy(
+                        appState,
+                        docente.academiaId
+                    );
 
+                const domainLevel =
+                    getDomainLevel(
+                        docente.id,
+                        course.id
+                    );
 
-                    if (!docente) {
-                        return "";
-                    }
+                const sni =
+                    String(
+                        docente.sni || "no"
+                    )
+                        .trim()
+                        .toLowerCase();
 
+                const hasSni =
+                    sni === "si";
 
-                    const docenteAcademia =
-                        academy(
-                            appState,
-                            docente.academiaId
-                        );
+                const prodep =
+                    String(
+                        docente.prodep || "no"
+                    )
+                        .trim()
+                        .toLowerCase();
 
+                const certificationText =
+                    docente.certificaciones
+                        ? esc(
+                            docente.certificaciones
+                        ).replace(
+                            /\n/g,
+                            "<br>"
+                        )
+                        : "—";
 
-                    const nivel =
-                        getDomainLevel(
-                            docente.id,
-                            curso.id
-                        );
+                return `
+                    <tr>
 
-
-                    return `
-
-                        <tr>
-
-                            <td>
-                                ${esc(
-                                    docente.nombre
+                        <td>
+                            ${esc(
+                                docente.nombre
+                            )}
+                            <br>
+                            <span class="w3-small">
+                                N.º ${esc(
+                                    docente.numeroEmpleado
                                 )}
-                            </td>
+                            </span>
+                        </td>
 
-                            <td>
-                                ${esc(
-                                    docenteAcademia
-                                        ? docenteAcademia.nombre
-                                        : "Sin academia"
-                                )}
-                            </td>
+                        <td>
+                            ${esc(
+                                docenteAcademia
+                                    ? docenteAcademia.nombre
+                                    : "Sin academia"
+                            )}
+                        </td>
 
-                            <td>
-                                ${esc(
-                                    nivel === null
-                                        ? "Sin dominio"
-                                        : nivel
-                                )}
-                            </td>
+                        <td>
+                            ${esc(
+                                docente.nivelAcademico || "—"
+                            )}
+                        </td>
 
-                            <td>
+                        <td>
+                            ${esc(
+                                docente.tituloAcademico || "—"
+                            )}
+                        </td>
 
-                                <button
-                                    type="button"
-                                    class="w3-button w3-small w3-red"
-                                    onclick='unassignCourse(${JSON.stringify(curso.id)}, ${JSON.stringify(docente.id)})'
-                                >
-                                    Desasignar
-                                </button>
+                        <td>
+                            ${esc(
+                                docente.especialidad || "—"
+                            )}
+                        </td>
 
-                            </td>
+                        <td>
+                            ${
+                                prodep === "si"
+                                    ? "Sí"
+                                    : "No"
+                            }
+                        </td>
 
-                        </tr>
+                        <td>
+                            ${
+                                hasSni
+                                    ? "Sí"
+                                    : "No"
+                            }
+                        </td>
 
-                    `;
+                        <td>
+                            ${
+                                hasSni
+                                    ? esc(
+                                        docente.nivelSni || "Sin nivel"
+                                    )
+                                    : "—"
+                            }
+                        </td>
 
-                }
-            )
+                        <td>
+                            ${certificationText}
+                        </td>
+
+                        <td>
+                            ${
+                                domainLevel !== null
+                                    ? `${domainLevel}/10`
+                                    : "Sin registrar"
+                            }
+                        </td>
+
+                        <td>
+                            Asignado
+                        </td>
+
+                        <td>
+
+                            <button
+                                type="button"
+                                class="w3-button w3-small w3-red"
+                                onclick='unassignCourse(
+                                    ${JSON.stringify(course.id)},
+                                    ${JSON.stringify(docente.id)}
+                                )'
+                            >
+                                Desasignar
+                            </button>
+
+                        </td>
+
+                    </tr>
+                `;
+
+            })
             .join("");
-
 }
 
 // ============================================================
@@ -751,6 +828,133 @@ function renderAssignmentPage() {
     renderCourseDetails();
     renderCandidates();
     renderAssigned();
+
+}
+
+// ============================================================
+// VERIFICAR CONFLICTOS DE HORARIO
+// ============================================================
+
+function findScheduleConflict(
+    docenteId,
+    cursoId
+) {
+
+    const cursoActual =
+        appState.cursos.find(
+            curso =>
+                String(curso.id) ===
+                String(cursoId)
+        );
+
+
+    if (!cursoActual) {
+        return null;
+    }
+
+
+    const currentScheduleIds =
+        Array.isArray(
+            cursoActual.horarioIds
+        )
+            ? cursoActual.horarioIds.map(
+                id => String(id)
+            )
+            : [];
+
+
+    if (currentScheduleIds.length === 0) {
+        return null;
+    }
+
+
+    const assignments =
+        appState.asignaciones.filter(
+            asignacion =>
+                String(
+                    asignacion.docenteId
+                ) ===
+                    String(docenteId) &&
+                String(
+                    asignacion.cursoId
+                ) !==
+                    String(cursoId)
+        );
+
+
+    for (
+        const assignment
+        of assignments
+    ) {
+
+        const otherCourse =
+            appState.cursos.find(
+                curso =>
+                    String(curso.id) ===
+                    String(
+                        assignment.cursoId
+                    )
+            );
+
+
+        if (!otherCourse) {
+            continue;
+        }
+
+
+        const otherScheduleIds =
+            Array.isArray(
+                otherCourse.horarioIds
+            )
+                ? otherCourse.horarioIds.map(
+                    id => String(id)
+                )
+                : [];
+
+
+        const conflictingScheduleId =
+            currentScheduleIds.find(
+                scheduleId =>
+                    otherScheduleIds.includes(
+                        scheduleId
+                    )
+            );
+
+
+        if (
+            conflictingScheduleId
+        ) {
+
+            const docente =
+                appState.docentes.find(
+                    item =>
+                        String(item.id) ===
+                        String(docenteId)
+                );
+
+
+            const horario =
+                appState.horarios.find(
+                    item =>
+                        String(item.id) ===
+                        String(
+                            conflictingScheduleId
+                        )
+                );
+
+
+            return {
+                docente,
+                otherCourse,
+                horario
+            };
+
+        }
+
+    }
+
+
+    return null;
 
 }
 
@@ -818,8 +1022,51 @@ export async function assignCourse(
         return;
     }
 
-    try {
+    // --------------------------------------------------------
+// VALIDAR CONFLICTO DE HORARIO
+// --------------------------------------------------------
 
+const scheduleConflict =
+    findScheduleConflict(
+        docente.id,
+        curso.id
+    );
+
+
+    if (scheduleConflict) {
+
+        const docenteNombre =
+            scheduleConflict.docente
+                ? scheduleConflict.docente.nombre
+                : "Docente no identificado";
+
+
+        const cursoNombre =
+            scheduleConflict.otherCourse
+                ? scheduleConflict.otherCourse.nombre
+                : "Curso no identificado";
+
+
+        const horarioTexto =
+            scheduleConflict.horario
+                ? `${scheduleConflict.horario.dia} ${scheduleConflict.horario.horaInicio}-${scheduleConflict.horario.horaFin}`
+                : "Horario no identificado";
+
+
+        alert(
+            "No se puede asignar el docente porque ya tiene otro curso en el mismo horario.\n\n" +
+            `Docente: ${docenteNombre}\n` +
+            `Curso en conflicto: ${cursoNombre}\n` +
+            `Horario: ${horarioTexto}`
+        );
+
+
+        return;
+
+    }
+
+    try {
+                
         const newAssignment =
             await createAssignment(
                 {
@@ -831,20 +1078,24 @@ export async function assignCourse(
                 }
             );
 
+
         newAssignment.id =
             String(
                 newAssignment.id
             );
+
 
         newAssignment.cursoId =
             String(
                 newAssignment.cursoId
             );
 
+
         newAssignment.docenteId =
             String(
                 newAssignment.docenteId
             );
+
 
         appState.asignaciones.push(
             newAssignment

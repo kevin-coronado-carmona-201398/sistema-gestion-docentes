@@ -54,6 +54,8 @@ export async function loadDataFromAPI() {
         cursos,
         dominios,
         asignaciones,
+        horarios,
+        
         licenciaturas,
         maestrias,
         doctorados,
@@ -66,6 +68,7 @@ export async function loadDataFromAPI() {
         fetchResource("cursos"),
         fetchResource("dominios"),
         fetchResource("asignaciones"),
+        fetchResource("horarios"),
 
         fetchResource("licenciaturas"),
         fetchResource("maestrias"),
@@ -75,7 +78,6 @@ export async function loadDataFromAPI() {
 
     ]);
 
-
     return {
 
         academias,
@@ -83,6 +85,7 @@ export async function loadDataFromAPI() {
         cursos,
         dominios,
         asignaciones,
+        horarios,
 
         licenciaturas,
         maestrias,

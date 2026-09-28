@@ -1052,18 +1052,12 @@ app.patch(
             if (
                 sni === "si"
             ) {
-
                 if (!nivelSni) {
-
                     return res.status(400).json({
-
                         error:
                             "Debe especificar el nivel SNI cuando el docente pertenece al SNI."
-
                     });
-
                 }
-
 
                 const validSniLevel =
                     data.nivelesSNI.some(
@@ -1074,70 +1068,47 @@ app.patch(
                             nivelSni.toLowerCase()
                     );
 
-
                 if (!validSniLevel) {
-
                     return res.status(400).json({
-
                         error:
                             "El nivel SNI seleccionado no es válido."
-
                     });
-
                 }
-
             }
-
 
             // ------------------------------------------------
             // ACTUALIZAR
             // ------------------------------------------------
 
             const updatedTeacher = {
-
                 ...currentTeacher,
-
                 numeroEmpleado,
-
                 nombre,
-
                 nivelAcademico,
-
                 tituloAcademico,
-
                 especialidad,
-
                 academiaId,
-
                 sni,
-
                 nivelSni:
                     sni === "si"
                         ? nivelSni
                         : "",
-
                 prodep,
-
                 certificaciones
-
             };
-
 
             data.docentes[
                 teacherIndex
             ] =
                 updatedTeacher;
 
-
             await writeData(
                 data
             );
 
-
             res.json(
                 updatedTeacher
             );
-
 
         } catch (error) {
 
@@ -1146,16 +1117,11 @@ app.patch(
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudo actualizar el docente."
-
             });
-
         }
-
     }
 );
 
@@ -1168,10 +1134,8 @@ app.delete(
     async (req, res) => {
 
         try {
-
             const data =
                 await readData();
-
 
             const teacherIndex =
                 data.docentes.findIndex(
@@ -1184,26 +1148,19 @@ app.delete(
                         )
                 );
 
-
             if (
                 teacherIndex === -1
             ) {
-
                 return res.status(404).json({
-
                     error:
                         "El docente no existe."
-
                 });
-
             }
-
 
             const docente =
                 data.docentes[
                     teacherIndex
                 ];
-
 
             const hasDomains =
                 data.dominios.some(
@@ -1216,7 +1173,6 @@ app.delete(
                         )
                 );
 
-
             const hasAssignments =
                 data.asignaciones.some(
                     asignacion =>
@@ -1228,53 +1184,38 @@ app.delete(
                         )
                 );
 
-
             if (
                 hasDomains ||
                 hasAssignments
             ) {
-
                 return res.status(409).json({
-
                     error:
                         "No se puede eliminar el docente porque tiene dominios o asignaciones asociadas."
-
                 });
-
             }
-
 
             data.docentes.splice(
                 teacherIndex,
                 1
             );
 
-
             await writeData(
                 data
             );
 
-
             res.status(204).send();
 
-
         } catch (error) {
-
             console.error(
                 "Error al eliminar docente:",
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudo eliminar el docente."
-
             });
-
         }
-
     }
 );
 
@@ -1285,34 +1226,22 @@ app.delete(
 app.get(
     "/cursos",
     async (req, res) => {
-
         try {
-
             const data =
                 await readData();
-
-
             res.json(
                 data.cursos
             );
-
         } catch (error) {
-
             console.error(
                 "Error al leer cursos:",
                 error
             );
-
-
             res.status(500).json({
-
                 error:
                     "No se pudieron cargar los cursos."
-
             });
-
         }
-
     }
 );
 
@@ -1323,45 +1252,34 @@ app.get(
 app.post(
     "/cursos",
     async (req, res) => {
-
         try {
-
             const data =
                 await readData();
-
 
             const nombre =
                 String(
                     req.body.nombre || ""
                 ).trim();
 
-
             const descripcion =
                 String(
                     req.body.descripcion || ""
                 ).trim();
-
 
             const academiaId =
                 String(
                     req.body.academiaId || ""
                 ).trim();
 
-
             if (
                 !nombre ||
                 !academiaId
             ) {
-
                 return res.status(400).json({
-
                     error:
                         "El nombre del curso y la academia son obligatorios."
-
                 });
-
             }
-
 
             const academyExists =
                 data.academias.some(
@@ -1372,67 +1290,46 @@ app.post(
                         academiaId
                 );
 
-
             if (!academyExists) {
-
                 return res.status(400).json({
-
                     error:
                         "La academia seleccionada no existe."
-
                 });
-
             }
 
-
             const newCourse = {
-
                 id:
                     nextId(
                         data.cursos
                     ),
-
                 nombre,
-
                 descripcion,
-
                 academiaId
-
             };
-
 
             data.cursos.push(
                 newCourse
             );
 
-
             await writeData(
                 data
             );
-
 
             res.status(201).json(
                 newCourse
             );
 
-
         } catch (error) {
-
             console.error(
                 "Error al crear curso:",
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudo crear el curso."
-
             });
-
         }
-
     }
 );
 
@@ -1443,12 +1340,9 @@ app.post(
 app.patch(
     "/cursos/:id",
     async (req, res) => {
-
         try {
-
             const data =
                 await readData();
-
 
             const courseIndex =
                 data.cursos.findIndex(
@@ -1461,26 +1355,19 @@ app.patch(
                         )
                 );
 
-
             if (
                 courseIndex === -1
             ) {
-
                 return res.status(404).json({
-
                     error:
                         "El curso no existe."
-
                 });
-
             }
-
 
             const currentCourse =
                 data.cursos[
                     courseIndex
                 ];
-
 
             const nombre =
                 req.body.nombre !== undefined
@@ -1489,14 +1376,12 @@ app.patch(
                     ).trim()
                     : currentCourse.nombre;
 
-
             const descripcion =
                 req.body.descripcion !== undefined
                     ? String(
                         req.body.descripcion
                     ).trim()
                     : currentCourse.descripcion;
-
 
             const academiaId =
                 req.body.academiaId !== undefined
@@ -1507,21 +1392,15 @@ app.patch(
                         currentCourse.academiaId
                     );
 
-
             if (
                 !nombre ||
                 !academiaId
             ) {
-
                 return res.status(400).json({
-
                     error:
                         "El nombre del curso y la academia son obligatorios."
-
                 });
-
             }
-
 
             const academyExists =
                 data.academias.some(
@@ -1532,18 +1411,14 @@ app.patch(
                         academiaId
                 );
 
-
             if (!academyExists) {
 
                 return res.status(400).json({
-
                     error:
                         "La academia seleccionada no existe."
-
                 });
 
             }
-
 
             // ------------------------------------------------
             // CAMBIO DE ACADEMIA
@@ -1556,7 +1431,6 @@ app.patch(
                 String(
                     academiaId
                 );
-
 
             if (academyChanged) {
 
@@ -1571,7 +1445,6 @@ app.patch(
                             )
                     );
 
-
                 const hasAssignments =
                     data.asignaciones.some(
                         asignacion =>
@@ -1583,52 +1456,36 @@ app.patch(
                             )
                     );
 
-
                 if (
                     hasDomains ||
                     hasAssignments
                 ) {
-
                     return res.status(409).json({
-
                         error:
                             "No se puede cambiar de academia un curso que tiene dominios o asignaciones asociadas."
-
                     });
-
                 }
-
             }
 
-
             const updatedCourse = {
-
                 ...currentCourse,
-
                 nombre,
-
                 descripcion,
-
                 academiaId
-
             };
-
 
             data.cursos[
                 courseIndex
             ] =
                 updatedCourse;
 
-
             await writeData(
                 data
             );
 
-
             res.json(
                 updatedCourse
             );
-
 
         } catch (error) {
 
@@ -1637,16 +1494,11 @@ app.patch(
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudo actualizar el curso."
-
             });
-
         }
-
     }
 );
 
@@ -1663,7 +1515,6 @@ app.delete(
             const data =
                 await readData();
 
-
             const courseIndex =
                 data.cursos.findIndex(
                     curso =>
@@ -1674,7 +1525,6 @@ app.delete(
                             req.params.id
                         )
                 );
-
 
             if (
                 courseIndex === -1
@@ -1689,12 +1539,10 @@ app.delete(
 
             }
 
-
             const curso =
                 data.cursos[
                     courseIndex
                 ];
-
 
             const hasDomains =
                 data.dominios.some(
@@ -1707,7 +1555,6 @@ app.delete(
                         )
                 );
 
-
             const hasAssignments =
                 data.asignaciones.some(
                     asignacion =>
@@ -1718,7 +1565,6 @@ app.delete(
                             curso.id
                         )
                 );
-
 
             if (
                 hasDomains ||
@@ -1734,20 +1580,16 @@ app.delete(
 
             }
 
-
             data.cursos.splice(
                 courseIndex,
                 1
             );
 
-
             await writeData(
                 data
             );
 
-
             res.status(204).send();
-
 
         } catch (error) {
 
@@ -1755,7 +1597,6 @@ app.delete(
                 "Error al eliminar curso:",
                 error
             );
-
 
             res.status(500).json({
 
@@ -1820,24 +1661,20 @@ app.post(
             const data =
                 await readData();
 
-
             const docenteId =
                 String(
                     req.body.docenteId || ""
                 ).trim();
-
 
             const cursoId =
                 String(
                     req.body.cursoId || ""
                 ).trim();
 
-
             const nivel =
                 Number(
                     req.body.nivel
                 );
-
 
             // ------------------------------------------------
             // VALIDAR NIVEL
@@ -1848,16 +1685,11 @@ app.post(
                 nivel < 1 ||
                 nivel > 10
             ) {
-
                 return res.status(400).json({
-
                     error:
                         "El nivel de dominio debe ser un número entero entre 1 y 10."
-
                 });
-
             }
-
 
             const docente =
                 data.docentes.find(
@@ -1868,7 +1700,6 @@ app.post(
                         docenteId
                 );
 
-
             const curso =
                 data.cursos.find(
                     item =>
@@ -1878,21 +1709,15 @@ app.post(
                         cursoId
                 );
 
-
             if (
                 !docente ||
                 !curso
             ) {
-
                 return res.status(404).json({
-
                     error:
                         "El docente o el curso no existe."
-
                 });
-
             }
-
 
             // ------------------------------------------------
             // MISMA ACADEMIA
@@ -1916,7 +1741,6 @@ app.post(
 
             }
 
-
             // ------------------------------------------------
             // RELACIÓN ÚNICA
             // ------------------------------------------------
@@ -1934,49 +1758,34 @@ app.post(
                         cursoId
                 );
 
-
             if (relationExists) {
-
                 return res.status(409).json({
-
                     error:
                         "Ya existe un dominio registrado para este docente y este curso."
-
                 });
-
             }
 
-
             const newDomain = {
-
                 id:
                     nextId(
                         data.dominios
                     ),
-
                 docenteId,
-
                 cursoId,
-
                 nivel
-
             };
-
 
             data.dominios.push(
                 newDomain
             );
 
-
             await writeData(
                 data
             );
 
-
             res.status(201).json(
                 newDomain
             );
-
 
         } catch (error) {
 
@@ -1985,16 +1794,11 @@ app.post(
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudo crear el dominio."
-
             });
-
         }
-
     }
 );
 
@@ -2011,7 +1815,6 @@ app.patch(
             const data =
                 await readData();
 
-
             const domainIndex =
                 data.dominios.findIndex(
                     dominio =>
@@ -2023,26 +1826,20 @@ app.patch(
                         )
                 );
 
-
             if (
                 domainIndex === -1
             ) {
-
                 return res.status(404).json({
-
                     error:
                         "El dominio no existe."
-
                 });
 
             }
-
 
             const currentDomain =
                 data.dominios[
                     domainIndex
                 ];
-
 
             const docenteId =
                 req.body.docenteId !== undefined
@@ -2053,7 +1850,6 @@ app.patch(
                         currentDomain.docenteId
                     );
 
-
             const cursoId =
                 req.body.cursoId !== undefined
                     ? String(
@@ -2063,7 +1859,6 @@ app.patch(
                         currentDomain.cursoId
                     );
 
-
             const nivel =
                 req.body.nivel !== undefined
                     ? Number(
@@ -2072,7 +1867,6 @@ app.patch(
                     : Number(
                         currentDomain.nivel
                     );
-
 
             if (
                 !Number.isInteger(nivel) ||
@@ -2089,7 +1883,6 @@ app.patch(
 
             }
 
-
             const docente =
                 data.docentes.find(
                     item =>
@@ -2098,7 +1891,6 @@ app.patch(
                         ) ===
                         docenteId
                 );
-
 
             const curso =
                 data.cursos.find(
@@ -2124,7 +1916,6 @@ app.patch(
 
             }
 
-
             if (
                 String(
                     docente.academiaId
@@ -2142,7 +1933,6 @@ app.patch(
                 });
 
             }
-
 
             const duplicateRelation =
                 data.dominios.some(
@@ -2164,27 +1954,17 @@ app.patch(
             ) {
 
                 return res.status(409).json({
-
                     error:
                         "Ya existe otro dominio para este docente y este curso."
-
                 });
-
             }
 
-
             const updatedDomain = {
-
                 ...currentDomain,
-
                 docenteId,
-
                 cursoId,
-
                 nivel
-
             };
-
 
             data.dominios[
                 domainIndex
@@ -2195,7 +1975,6 @@ app.patch(
             await writeData(
                 data
             );
-
 
             res.json(
                 updatedDomain
@@ -2209,16 +1988,13 @@ app.patch(
                 error
             );
 
-
             res.status(500).json({
 
                 error:
                     "No se pudo actualizar el dominio."
 
             });
-
         }
-
     }
 );
 
@@ -2235,7 +2011,6 @@ app.delete(
             const data =
                 await readData();
 
-
             const domainIndex =
                 data.dominios.findIndex(
                     dominio =>
@@ -2246,7 +2021,6 @@ app.delete(
                             req.params.id
                         )
                 );
-
 
             if (
                 domainIndex === -1
@@ -2261,40 +2035,54 @@ app.delete(
 
             }
 
-
             data.dominios.splice(
                 domainIndex,
                 1
             );
 
-
             await writeData(
                 data
             );
 
-
             res.status(204).send();
 
-
         } catch (error) {
-
             console.error(
                 "Error al eliminar dominio:",
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudo eliminar el dominio."
-
             });
-
         }
-
     }
 );
+
+// ============================================================
+// GET HORARIOS
+// ============================================================
+
+app.get("/horarios", async (req, res) => {
+
+    try {
+
+        const data = await readData();
+
+        res.json(data.horarios);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            error: "No se pudieron cargar los horarios."
+        });
+
+    }
+
+});
 
 // ============================================================
 // GET ASIGNACIONES
@@ -2321,16 +2109,11 @@ app.get(
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudieron cargar las asignaciones."
-
             });
-
         }
-
     }
 );
 
@@ -2347,18 +2130,15 @@ app.post(
             const data =
                 await readData();
 
-
             const cursoId =
                 String(
                     req.body.cursoId || ""
                 ).trim();
 
-
             const docenteId =
                 String(
                     req.body.docenteId || ""
                 ).trim();
-
 
             const curso =
                 data.cursos.find(
@@ -2369,7 +2149,6 @@ app.post(
                         cursoId
                 );
 
-
             const docente =
                 data.docentes.find(
                     item =>
@@ -2379,21 +2158,17 @@ app.post(
                         docenteId
                 );
 
-
             if (
                 !curso ||
                 !docente
             ) {
-
                 return res.status(404).json({
 
                     error:
                         "El docente o el curso no existe."
 
                 });
-
             }
-
 
             // ------------------------------------------------
             // MISMA ACADEMIA
@@ -2417,7 +2192,6 @@ app.post(
 
             }
 
-
             // ------------------------------------------------
             // EVITAR DUPLICADOS
             // ------------------------------------------------
@@ -2435,49 +2209,37 @@ app.post(
                         docenteId
                 );
 
-
             if (
                 alreadyAssigned
             ) {
-
                 return res.status(409).json({
 
                     error:
                         "El docente ya está asignado a este curso."
-
                 });
-
             }
 
-
             const newAssignment = {
-
                 id:
                     nextId(
                         data.asignaciones
                     ),
 
                 cursoId,
-
                 docenteId
-
             };
-
 
             data.asignaciones.push(
                 newAssignment
             );
 
-
             await writeData(
                 data
             );
 
-
             res.status(201).json(
                 newAssignment
             );
-
 
         } catch (error) {
 
@@ -2486,16 +2248,13 @@ app.post(
                 error
             );
 
-
             res.status(500).json({
 
                 error:
                     "No se pudo crear la asignación."
 
             });
-
         }
-
     }
 );
 
@@ -2506,12 +2265,9 @@ app.post(
 app.delete(
     "/asignaciones/:id",
     async (req, res) => {
-
         try {
-
             const data =
                 await readData();
-
 
             const assignmentIndex =
                 data.asignaciones.findIndex(
@@ -2524,34 +2280,27 @@ app.delete(
                         )
                 );
 
-
             if (
                 assignmentIndex === -1
             ) {
-
                 return res.status(404).json({
 
                     error:
                         "La asignación no existe."
 
                 });
-
             }
-
 
             data.asignaciones.splice(
                 assignmentIndex,
                 1
             );
 
-
             await writeData(
                 data
             );
 
-
             res.status(204).send();
-
 
         } catch (error) {
 
@@ -2560,16 +2309,11 @@ app.delete(
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudo eliminar la asignación."
-
             });
-
         }
-
     }
 );
 
@@ -2586,7 +2330,6 @@ app.get(
             const data =
                 await readData();
 
-
             res.json(
                 data.licenciaturas
             );
@@ -2598,16 +2341,13 @@ app.get(
                 error
             );
 
-
             res.status(500).json({
 
                 error:
                     "No se pudieron cargar las licenciaturas."
 
             });
-
         }
-
     }
 );
 
@@ -2618,12 +2358,9 @@ app.get(
 app.get(
     "/maestrias",
     async (req, res) => {
-
         try {
-
             const data =
                 await readData();
-
 
             res.json(
                 data.maestrias
@@ -2658,10 +2395,8 @@ app.get(
     async (req, res) => {
 
         try {
-
             const data =
                 await readData();
-
 
             res.json(
                 data.doctorados
@@ -2674,16 +2409,11 @@ app.get(
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudieron cargar los doctorados."
-
             });
-
         }
-
     }
 );
 
@@ -2700,28 +2430,21 @@ app.get(
             const data =
                 await readData();
 
-
             res.json(
                 data.nivelesSNI
             );
 
         } catch (error) {
-
             console.error(
                 "Error al leer niveles SNI:",
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudieron cargar los niveles SNI."
-
             });
-
         }
-
     }
 );
 
@@ -2732,7 +2455,6 @@ app.get(
 app.get(
     "/especialidades",
     async (req, res) => {
-
         try {
 
             const data =
@@ -2742,7 +2464,6 @@ app.get(
             res.json(
                 data.especialidades
             );
-
         } catch (error) {
 
             console.error(
@@ -2750,14 +2471,10 @@ app.get(
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudieron cargar las especialidades."
-
             });
-
         }
 
     }

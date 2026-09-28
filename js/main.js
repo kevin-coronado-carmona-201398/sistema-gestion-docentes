@@ -76,15 +76,14 @@ async function startApp() {
             );
 
 
-        appState.cursos =
-            data.cursos.map(
-                item => ({
-                    ...item,
-                    id: String(item.id),
-                    academiaId:
-                        String(item.academiaId)
-                })
-            );
+            appState.cursos = data.cursos.map(item => ({
+                ...item,
+                id: String(item.id),
+                academiaId: String(item.academiaId),
+                horarioIds: Array.isArray(item.horarioIds)
+                    ? item.horarioIds.map(id => String(id))
+                    : []
+            }));
 
 
         appState.dominios =
@@ -111,7 +110,11 @@ async function startApp() {
                         String(item.cursoId)
                 })
             );
-
+        
+        appState.horarios = data.horarios.map(item => ({
+            ...item,
+            id: String(item.id)
+        }));
 
         appState.licenciaturas =
             data.licenciaturas;
