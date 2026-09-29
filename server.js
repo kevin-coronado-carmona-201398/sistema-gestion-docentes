@@ -4,6 +4,12 @@ const path = require("node:path");
 
 const app = express();
 
+const AppDaoBetterSQLite =
+    require("./db/daoBetterSqlite3.mjs").default;
+
+const ModelAcademias =
+    require("./db/model.academias.mjs").default;
+
 const PORT = 3000;
 
 const DATA_PATH =
@@ -12,6 +18,19 @@ const DATA_PATH =
         "datos.json"
     );
 
+// ============================================================
+// SQLITE
+// ============================================================
+
+const controllerDB =
+    new AppDaoBetterSQLite(
+        "./db/app.db"
+    );
+
+const modelAcademias =
+    new ModelAcademias(
+        controllerDB
+    );
 
 // ============================================================
 // MIDDLEWARE

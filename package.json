@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/kevin-coronado-carmona-201398/sistema-gestion-docentes#readme",
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
     "express": "^5.2.1",
     "json-server": "^1.0.0-beta.15"
   }
