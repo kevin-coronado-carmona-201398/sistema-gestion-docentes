@@ -1,22 +1,33 @@
 const express = require("express");
-const fs = require("node:fs/promises");
 const path = require("node:path");
 
 const app = express();
 
 const AppDaoBetterSQLite =
-    require("./db/daoBetterSqlite3.mjs").default;
+    require("./db/DaoBetterSqlite3.mjs").default;
 
 const ModelAcademias =
     require("./db/model.academias.mjs").default;
 
-const PORT = 3000;
+const ModelDocentes =
+    require("./db/model.docentes.mjs").default;
 
-const DATA_PATH =
-    path.join(
-        __dirname,
-        "datos.json"
-    );
+const ModelCursos =
+    require("./db/model.cursos.mjs").default;
+
+const ModelDominios =
+    require("./db/model.dominios.mjs").default;
+
+const ModelHorarios =
+    require("./db/model.horarios.mjs").default;
+
+const ModelAsignaciones =
+    require("./db/model.asignaciones.mjs").default;
+
+const ModelCatalogos =
+    require("./db/model.catalogos.mjs").default;
+
+const PORT = 3000;
 
 // ============================================================
 // SQLITE
@@ -24,11 +35,45 @@ const DATA_PATH =
 
 const controllerDB =
     new AppDaoBetterSQLite(
-        "./db/app.db"
+        path.join(
+            __dirname,
+            "db",
+            "app.db"
+        )
     );
 
 const modelAcademias =
     new ModelAcademias(
+        controllerDB
+    );
+
+const modelDocentes =
+    new ModelDocentes(
+        controllerDB
+    );
+
+const modelCursos =
+    new ModelCursos(
+        controllerDB
+    );
+
+const modelDominios =
+    new ModelDominios(
+        controllerDB
+    );
+
+const modelHorarios =
+    new ModelHorarios(
+        controllerDB
+    );
+
+const modelAsignaciones =
+    new ModelAsignaciones(
+        controllerDB
+    );
+
+const modelCatalogos =
+    new ModelCatalogos(
         controllerDB
     );
 
@@ -40,10 +85,9 @@ app.use(
     express.json()
 );
 
-
-// ------------------------------------------------------------
+// ============================================================
 // CORS
-// ------------------------------------------------------------
+// ============================================================
 
 app.use(
     (req, res, next) => {
@@ -78,72 +122,8 @@ app.use(
     }
 );
 
-
 // ============================================================
-// LEER DATOS
-// ============================================================
-
-async function readData() {
-
-    const fileContent =
-        await fs.readFile(
-            DATA_PATH,
-            "utf-8"
-        );
-
-    return JSON.parse(
-        fileContent
-    );
-
-}
-
-// ============================================================
-// ESCRIBIR DATOS
-// ============================================================
-
-async function writeData(data) {
-
-    await fs.writeFile(
-        DATA_PATH,
-        JSON.stringify(
-            data,
-            null,
-            2
-        ),
-        "utf-8"
-    );
-}
-
-// ============================================================
-// GENERAR NUEVO ID
-// ============================================================
-
-function nextId(collection) {
-
-    const numericIds =
-        collection
-            .map(
-                item =>
-                    Number(item.id)
-            )
-            .filter(
-                id =>
-                    Number.isFinite(id)
-            );
-
-    if (numericIds.length === 0) {
-        return "1";
-    }
-
-    return String(
-        Math.max(
-            ...numericIds
-        ) + 1
-    );
-}
-
-// ============================================================
-// NORMALIZAR SI / NO
+// VALIDAR SI / NO
 // ============================================================
 
 function normalizeYesNo(
@@ -161,8 +141,8 @@ function normalizeYesNo(
     return normalized === "si"
         ? "si"
         : "no";
-}
 
+}
 
 // ============================================================
 // VALIDAR NIVEL ACADÉMICO
@@ -171,6 +151,7 @@ function normalizeYesNo(
 function isValidAcademicLevel(
     value
 ) {
+
     return [
         "Licenciatura",
         "Maestría",
@@ -178,6 +159,7 @@ function isValidAcademicLevel(
     ].includes(
         value
     );
+
 }
 
 // ============================================================
@@ -195,387 +177,289 @@ app.get(
     }
 );
 
-
 // ============================================================
-// GET ACADEMIAS
+// ACADEMIAS
 // ============================================================
 
 app.get(
     "/academias",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
             res.json(
-                data.academias
+                modelAcademias.getAll()
             );
+
         } catch (error) {
+
             console.error(
                 "Error al leer academias:",
                 error
             );
+
             res.status(500).json({
                 error:
                     "No se pudieron cargar las academias."
             });
 
         }
+
     }
 );
 
-// ============================================================
-// POST ACADEMIA
-// ============================================================
-
 app.post(
     "/academias",
-    async (req, res) => {
+    (req, res) => {
+
         try {
-            const data =
-                await readData();
+
             const nombre =
                 String(
                     req.body.nombre || ""
                 ).trim();
-            const clave =
+
+            const claveOriginal =
                 String(
                     req.body.clave || ""
-                ).trim();
+                );
+
+            const clave =
+                claveOriginal.trim();
+
             const descripcion =
                 String(
                     req.body.descripcion || ""
                 ).trim();
 
-            // ------------------------------------------------
-            // VALIDAR CAMPOS OBLIGATORIOS
-            // ------------------------------------------------
-
             if (
                 !nombre ||
                 !clave
             ) {
+
                 return res.status(400).json({
                     error:
                         "El nombre y la clave de la academia son obligatorios."
                 });
+
             }
 
-            // ------------------------------------------------
-            // VALIDAR CLAVE
-            // ------------------------------------------------
+            if (
+                /\s/.test(claveOriginal)
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        "La clave no puede contener espacios."
+                });
+
+            }
 
             if (
                 !/^[a-zA-Z0-9]{1,10}$/.test(
                     clave
                 )
             ) {
-                return res.status(400).json({
 
+                return res.status(400).json({
                     error:
                         "La clave debe contener únicamente caracteres alfanuméricos y tener máximo 10 caracteres."
-
                 });
+
             }
 
-            // ------------------------------------------------
-            // VALIDAR CLAVE ÚNICA
-            // ------------------------------------------------
-
-            const claveExiste =
-                data.academias.some(
-                    academia =>
-                        String(
-                            academia.clave
-                        )
-                            .toLowerCase() ===
-                        clave.toLowerCase()
+            const academy =
+                modelAcademias.create(
+                    nombre,
+                    clave,
+                    descripcion
                 );
 
-            if (claveExiste) {
-                return res.status(409).json({
-                    error:
-                        "La clave de academia ya existe."
-                });
-            }
-
-            // ------------------------------------------------
-            // CREAR ACADEMIA
-            // ------------------------------------------------
-
-            const newAcademy = {
-                id:
-                    nextId(
-                        data.academias
-                    ),
-                nombre,
-                clave,
-                descripcion
-            };
-
-            data.academias.push(
-                newAcademy
-            );
-
-            await writeData(
-                data
-            );
-
             res.status(201).json(
-                newAcademy
+                academy
             );
 
         } catch (error) {
+
             console.error(
                 "Error al crear academia:",
                 error
             );
+
+            if (
+                error.message ===
+                "La clave de academia ya existe."
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
+
             res.status(500).json({
                 error:
                     "No se pudo crear la academia."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// PATCH ACADEMIA
-// ============================================================
-
 app.patch(
     "/academias/:id",
-    async (req, res) => {
-        try {
-            const data =
-                await readData();
+    (req, res) => {
 
-            const academyIndex =
-                data.academias.findIndex(
-                    academia =>
-                        String(
-                            academia.id
-                        ) ===
-                        String(
-                            req.params.id
-                        )
+        try {
+
+            const id =
+                Number(
+                    req.params.id
                 );
 
-            if (
-                academyIndex === -1
-            ) {
+            const current =
+                modelAcademias.get(
+                    id
+                );
+
+            if (!current) {
+
                 return res.status(404).json({
                     error:
                         "La academia no existe."
                 });
-            }
 
-            const currentAcademy =
-                data.academias[
-                    academyIndex
-                ];
+            }
 
             const nombre =
                 req.body.nombre !== undefined
                     ? String(
                         req.body.nombre
                     ).trim()
-                    : currentAcademy.nombre;
+                    : current.nombre;
 
             const clave =
                 req.body.clave !== undefined
                     ? String(
                         req.body.clave
                     ).trim()
-                    : currentAcademy.clave;
+                    : current.clave;
 
             const descripcion =
                 req.body.descripcion !== undefined
                     ? String(
                         req.body.descripcion
                     ).trim()
-                    : currentAcademy.descripcion;
-
-            // ------------------------------------------------
-            // VALIDAR CAMPOS
-            // ------------------------------------------------
+                    : (
+                        current.descripcion ||
+                        ""
+                    );
 
             if (
                 !nombre ||
                 !clave
             ) {
+
                 return res.status(400).json({
                     error:
                         "El nombre y la clave de la academia son obligatorios."
                 });
-            }
 
-            // ------------------------------------------------
-            // VALIDAR CLAVE
-            // ------------------------------------------------
+            }
 
             if (
                 !/^[a-zA-Z0-9]{1,10}$/.test(
                     clave
                 )
             ) {
+
                 return res.status(400).json({
                     error:
                         "La clave debe contener únicamente caracteres alfanuméricos y tener máximo 10 caracteres."
                 });
+
             }
 
-            // ------------------------------------------------
-            // VALIDAR CLAVE ÚNICA
-            // ------------------------------------------------
-
-            const duplicateKey =
-                data.academias.some(
-                    (academia, index) =>
-                        index !== academyIndex &&
-                        String(
-                            academia.clave
-                        )
-                            .toLowerCase() ===
-                        clave.toLowerCase()
+            const academy =
+                modelAcademias.update(
+                    id,
+                    nombre,
+                    clave,
+                    descripcion
                 );
 
-            if (duplicateKey) {
-                return res.status(409).json({
-                    error:
-                        "La clave de academia ya existe."
-                });
-            }
-
-            // ------------------------------------------------
-            // ACTUALIZAR
-            // ------------------------------------------------
-
-            const updatedAcademy = {
-                ...currentAcademy,
-                nombre,
-                clave,
-                descripcion
-            };
-
-            data.academias[
-                academyIndex
-            ] =
-                updatedAcademy;
-            await writeData(
-                data
-            );
-
             res.json(
-                updatedAcademy
+                academy
             );
 
         } catch (error) {
+
+            if (
+                error.message ===
+                "La clave de academia ya existe."
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
+
             console.error(
                 "Error al actualizar academia:",
                 error
             );
+
             res.status(500).json({
                 error:
                     "No se pudo actualizar la academia."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// DELETE ACADEMIA
-// ============================================================
-
 app.delete(
     "/academias/:id",
-    async (req, res) => {
+    (req, res) => {
+
         try {
-            const data =
-                await readData();
-            const academyIndex =
-                data.academias.findIndex(
-                    academia =>
-                        String(
-                            academia.id
-                        ) ===
-                        String(
-                            req.params.id
-                        )
+
+            const deleted =
+                modelAcademias.remove(
+                    Number(
+                        req.params.id
+                    )
                 );
 
-            if (
-                academyIndex === -1
-            ) {
+            if (!deleted) {
+
                 return res.status(404).json({
                     error:
                         "La academia no existe."
                 });
+
             }
-
-            const academy =
-                data.academias[
-                    academyIndex
-                ];
-
-            // ------------------------------------------------
-            // COMPROBAR DOCENTES
-            // ------------------------------------------------
-
-            const hasTeachers =
-                data.docentes.some(
-                    docente =>
-                        String(
-                            docente.academiaId
-                        ) ===
-                        String(
-                            academy.id
-                        )
-                );
-
-            // ------------------------------------------------
-            // COMPROBAR CURSOS
-            // ------------------------------------------------
-
-            const hasCourses =
-                data.cursos.some(
-                    curso =>
-                        String(
-                            curso.academiaId
-                        ) ===
-                        String(
-                            academy.id
-                        )
-                );
-
-            if (
-                hasTeachers ||
-                hasCourses
-            ) {
-                return res.status(409).json({
-
-                    error:
-                        "No se puede eliminar la academia porque tiene docentes o cursos asociados."
-
-                });
-            }
-
-            // ------------------------------------------------
-            // ELIMINAR
-            // ------------------------------------------------
-
-            data.academias.splice(
-                academyIndex,
-                1
-            );
-
-            await writeData(
-                data
-            );
 
             res.status(204).send();
 
         } catch (error) {
+
+            if (
+                error.code ===
+                "HAS_RELATIONS"
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
 
             console.error(
                 "Error al eliminar academia:",
@@ -586,26 +470,28 @@ app.delete(
                 error:
                     "No se pudo eliminar la academia."
             });
+
         }
+
     }
 );
 
 // ============================================================
-// GET DOCENTES
+// DOCENTES
 // ============================================================
 
 app.get(
     "/docentes",
-    async (req, res) => {
+    (req, res) => {
+
         try {
-            const data =
-                await readData();
 
             res.json(
-                data.docentes
+                modelDocentes.getAll()
             );
 
         } catch (error) {
+
             console.error(
                 "Error al leer docentes:",
                 error
@@ -615,20 +501,17 @@ app.get(
                 error:
                     "No se pudieron cargar los docentes."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// POST DOCENTE
-// ============================================================
-
 app.post(
     "/docentes",
-    async (req, res) => {
+    (req, res) => {
+
         try {
-            const data =
-                await readData();
 
             const numeroEmpleado =
                 String(
@@ -656,9 +539,9 @@ app.post(
                 ).trim();
 
             const academiaId =
-                String(
-                    req.body.academiaId || ""
-                ).trim();
+                Number(
+                    req.body.academiaId
+                );
 
             const sni =
                 normalizeYesNo(
@@ -680,10 +563,6 @@ app.post(
                     req.body.certificaciones || ""
                 ).trim();
 
-            // ------------------------------------------------
-            // CAMPOS OBLIGATORIOS
-            // ------------------------------------------------
-
             if (
                 !numeroEmpleado ||
                 !nombre ||
@@ -691,161 +570,108 @@ app.post(
                 !tituloAcademico ||
                 !academiaId
             ) {
+
                 return res.status(400).json({
                     error:
                         "Número de empleado, nombre, nivel académico, título obtenido y academia son obligatorios."
                 });
-            }
 
-            // ------------------------------------------------
-            // NIVEL ACADÉMICO
-            // ------------------------------------------------
+            }
 
             if (
                 !isValidAcademicLevel(
                     nivelAcademico
                 )
             ) {
+
                 return res.status(400).json({
                     error:
                         "El nivel académico debe ser Licenciatura, Maestría o Doctorado."
                 });
-            }
-
-            // ------------------------------------------------
-            // ACADEMIA
-            // ------------------------------------------------
-
-            const academyExists =
-                data.academias.some(
-                    academia =>
-                        String(
-                            academia.id
-                        ) ===
-                        academiaId
-                );
-
-            if (!academyExists) {
-                return res.status(400).json({
-                    error:
-                        "La academia seleccionada no existe."
-                });
-            }
-
-            // ------------------------------------------------
-            // VALIDAR NOMBRE ÚNICO DENTRO DE LA ACADEMIA
-            // ------------------------------------------------
-
-            const duplicateCourse =
-                data.cursos.some(
-                    curso =>
-                        String(curso.academiaId) ===
-                            String(academiaId) &&
-                        String(curso.nombre)
-                            .trim()
-                            .toLowerCase() ===
-                            nombre.toLowerCase()
-                );
-
-            if (duplicateCourse) {
-
-                return res.status(409).json({
-
-                    error:
-                        "Ya existe un curso con ese nombre dentro de la academia seleccionada."
-
-                });
 
             }
-
-            // ------------------------------------------------
-            // NÚMERO DE EMPLEADO ÚNICO
-            // ------------------------------------------------
-
-            const employeeExists =
-                data.docentes.some(
-                    docente =>
-                        String(
-                            docente.numeroEmpleado
-                        )
-                            .toLowerCase() ===
-                        numeroEmpleado.toLowerCase()
-                );
-
-            if (employeeExists) {
-                return res.status(409).json({
-                    error:
-                        "El número de empleado ya existe."
-                });
-            }
-
-            // ------------------------------------------------
-            // SNI
-            // ------------------------------------------------
 
             if (
-                sni === "si"
+                sni === "si" &&
+                !nivelSni
             ) {
-                if (!nivelSni) {
-                    return res.status(400).json({
-                        error:
-                            "Debe especificar el nivel SNI cuando el docente pertenece al SNI."
-                    });
-                }
 
-                const validSniLevel =
-                    data.nivelesSNI.some(
-                        nivel =>
-                            String(
-                                nivel.nombre
-                            ).toLowerCase() ===
-                            nivelSni.toLowerCase()
-                    );
+                return res.status(400).json({
+                    error:
+                        "Debe especificar el nivel SNI cuando el docente pertenece al SNI."
+                });
 
-                if (!validSniLevel) {
-                    return res.status(400).json({
-                        error:
-                            "El nivel SNI seleccionado no es válido."
-                    });
-                }
             }
 
-            // ------------------------------------------------
-            // CREAR DOCENTE
-            // ------------------------------------------------
+            const teacher =
+                modelDocentes.create({
 
-            const newTeacher = {
-                id:
-                    nextId(
-                        data.docentes
-                    ),
-                numeroEmpleado,
-                nombre,
-                nivelAcademico,
-                tituloAcademico,
-                especialidad,
-                academiaId,
-                sni,
-                nivelSni:
-                    sni === "si"
-                        ? nivelSni
-                        : "",
-                prodep,
-                certificaciones
-            };
+                    numeroEmpleado,
 
-            data.docentes.push(
-                newTeacher
-            );
+                    nombre,
 
-            await writeData(
-                data
-            );
+                    nivelAcademico,
+
+                    tituloAcademico,
+
+                    especialidad,
+
+                    academiaId,
+
+                    sni,
+
+                    nivelSni:
+                        sni === "si"
+                            ? nivelSni
+                            : "",
+
+                    prodep,
+
+                    certificaciones
+
+                });
 
             res.status(201).json(
-                newTeacher
+                teacher
             );
+
         } catch (error) {
+
+            if (
+                error.code ===
+                "DUPLICATE_EMPLOYEE"
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
+
+            if (
+                error.code ===
+                "ACADEMY_NOT_FOUND"
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        error.message
+                });
+
+            }
+
+            if (
+                error.code ===
+                "INVALID_SNI"
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        error.message
+                });
+
+            }
 
             console.error(
                 "Error al crear docente:",
@@ -856,88 +682,82 @@ app.post(
                 error:
                     "No se pudo crear el docente."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// PATCH DOCENTE
-// ============================================================
-
 app.patch(
     "/docentes/:id",
-    async (req, res) => {
-        try {
-            const data =
-                await readData();
+    (req, res) => {
 
-            const teacherIndex =
-                data.docentes.findIndex(
-                    docente =>
-                        String(
-                            docente.id
-                        ) ===
-                        String(
-                            req.params.id
-                        )
+        try {
+
+            const id =
+                Number(
+                    req.params.id
                 );
 
-            if (
-                teacherIndex === -1
-            ) {
+            const current =
+                modelDocentes.get(
+                    id
+                );
+
+            if (!current) {
+
                 return res.status(404).json({
                     error:
                         "El docente no existe."
                 });
-            }
 
-            const currentTeacher =
-                data.docentes[
-                    teacherIndex
-                ];
+            }
 
             const numeroEmpleado =
                 req.body.numeroEmpleado !== undefined
                     ? String(
                         req.body.numeroEmpleado
                     ).trim()
-                    : currentTeacher.numeroEmpleado;
+                    : current.numeroEmpleado;
 
             const nombre =
                 req.body.nombre !== undefined
                     ? String(
                         req.body.nombre
                     ).trim()
-                    : currentTeacher.nombre;
+                    : current.nombre;
 
             const nivelAcademico =
                 req.body.nivelAcademico !== undefined
                     ? String(
                         req.body.nivelAcademico
                     ).trim()
-                    : currentTeacher.nivelAcademico;
+                    : current.nivelAcademico;
 
             const tituloAcademico =
                 req.body.tituloAcademico !== undefined
                     ? String(
                         req.body.tituloAcademico
                     ).trim()
-                    : currentTeacher.tituloAcademico;
+                    : current.tituloAcademico;
 
             const especialidad =
                 req.body.especialidad !== undefined
                     ? String(
                         req.body.especialidad
                     ).trim()
-                    : currentTeacher.especialidad;
+                    : (
+                        current.especialidad ||
+                        ""
+                    );
 
             const academiaId =
                 req.body.academiaId !== undefined
-                    ? String(
+                    ? Number(
                         req.body.academiaId
-                    ).trim()
-                    : String(
-                        currentTeacher.academiaId
+                    )
+                    : Number(
+                        current.academiaId
                     );
 
             const sni =
@@ -946,7 +766,7 @@ app.patch(
                         req.body.sni
                     )
                     : normalizeYesNo(
-                        currentTeacher.sni
+                        current.sni
                     );
 
             const nivelSni =
@@ -955,7 +775,8 @@ app.patch(
                         req.body.nivelSni
                     ).trim()
                     : (
-                        currentTeacher.nivelSni || ""
+                        current.nivelSni ||
+                        ""
                     );
 
             const prodep =
@@ -964,7 +785,7 @@ app.patch(
                         req.body.prodep
                     )
                     : normalizeYesNo(
-                        currentTeacher.prodep
+                        current.prodep
                     );
 
             const certificaciones =
@@ -972,11 +793,10 @@ app.patch(
                     ? String(
                         req.body.certificaciones
                     ).trim()
-                    : currentTeacher.certificaciones;
-
-            // ------------------------------------------------
-            // VALIDACIONES BÁSICAS
-            // ------------------------------------------------
+                    : (
+                        current.certificaciones ||
+                        ""
+                    );
 
             if (
                 !numeroEmpleado ||
@@ -985,10 +805,12 @@ app.patch(
                 !tituloAcademico ||
                 !academiaId
             ) {
+
                 return res.status(400).json({
                     error:
                         "Número de empleado, nombre, nivel académico, título obtenido y academia son obligatorios."
                 });
+
             }
 
             if (
@@ -996,193 +818,110 @@ app.patch(
                     nivelAcademico
                 )
             ) {
+
                 return res.status(400).json({
                     error:
                         "El nivel académico no es válido."
                 });
-            }
-
-            // ------------------------------------------------
-            // ACADEMIA EXISTENTE
-            // ------------------------------------------------
-
-            const academyExists =
-                data.academias.some(
-                    academia =>
-                        String(
-                            academia.id
-                        ) ===
-                        academiaId
-                );
-
-            if (!academyExists) {
-                return res.status(400).json({
-                    error:
-                        "La academia seleccionada no existe."
-                });
-            }
-
-            // ------------------------------------------------
-            // VALIDAR NOMBRE ÚNICO DENTRO DE LA ACADEMIA
-            // ------------------------------------------------
-
-            const duplicateCourse =
-                data.cursos.some(
-                    (curso, index) =>
-                        index !== courseIndex &&
-                        String(curso.academiaId) ===
-                            String(academiaId) &&
-                        String(curso.nombre)
-                            .trim()
-                            .toLowerCase() ===
-                            nombre.toLowerCase()
-                );
-
-            if (duplicateCourse) {
-
-                return res.status(409).json({
-
-                    error:
-                        "Ya existe un curso con ese nombre dentro de la academia seleccionada."
-
-                });
 
             }
-
-            // ------------------------------------------------
-            // NÚMERO DE EMPLEADO ÚNICO
-            // ------------------------------------------------
-
-            const employeeExists =
-                data.docentes.some(
-                    (docente, index) =>
-                        index !== teacherIndex &&
-                        String(
-                            docente.numeroEmpleado
-                        )
-                            .toLowerCase() ===
-                        numeroEmpleado.toLowerCase()
-                );
-
-            if (employeeExists) {
-                return res.status(409).json({
-                    error:
-                        "El número de empleado ya existe."
-                });
-            }
-
-            // ------------------------------------------------
-            // CAMBIO DE ACADEMIA
-            // ------------------------------------------------
-
-            const academyChanged =
-                String(
-                    currentTeacher.academiaId
-                ) !==
-                String(
-                    academiaId
-                );
-
-            if (academyChanged) {
-                const hasDomains =
-                    data.dominios.some(
-                        dominio =>
-                            String(
-                                dominio.docenteId
-                            ) ===
-                            String(
-                                currentTeacher.id
-                            )
-                    );
-
-                const hasAssignments =
-                    data.asignaciones.some(
-                        asignacion =>
-                            String(
-                                asignacion.docenteId
-                            ) ===
-                            String(
-                                currentTeacher.id
-                            )
-                    );
-
-                if (
-                    hasDomains ||
-                    hasAssignments
-                ) {
-                    return res.status(409).json({
-                        error:
-                            "No se puede cambiar de academia a un docente que tiene dominios o asignaciones asociadas."
-                    });
-                }
-            }
-
-            // ------------------------------------------------
-            // SNI
-            // ------------------------------------------------
 
             if (
-                sni === "si"
+                sni === "si" &&
+                !nivelSni
             ) {
-                if (!nivelSni) {
-                    return res.status(400).json({
-                        error:
-                            "Debe especificar el nivel SNI cuando el docente pertenece al SNI."
-                    });
-                }
 
-                const validSniLevel =
-                    data.nivelesSNI.some(
-                        nivel =>
-                            String(
-                                nivel.nombre
-                            ).toLowerCase() ===
-                            nivelSni.toLowerCase()
-                    );
+                return res.status(400).json({
+                    error:
+                        "Debe especificar el nivel SNI cuando el docente pertenece al SNI."
+                });
 
-                if (!validSniLevel) {
-                    return res.status(400).json({
-                        error:
-                            "El nivel SNI seleccionado no es válido."
-                    });
-                }
             }
 
-            // ------------------------------------------------
-            // ACTUALIZAR
-            // ------------------------------------------------
+            const teacher =
+                modelDocentes.update(
+                    id,
+                    {
 
-            const updatedTeacher = {
-                ...currentTeacher,
-                numeroEmpleado,
-                nombre,
-                nivelAcademico,
-                tituloAcademico,
-                especialidad,
-                academiaId,
-                sni,
-                nivelSni:
-                    sni === "si"
-                        ? nivelSni
-                        : "",
-                prodep,
-                certificaciones
-            };
+                        numeroEmpleado,
 
-            data.docentes[
-                teacherIndex
-            ] =
-                updatedTeacher;
+                        nombre,
 
-            await writeData(
-                data
-            );
+                        nivelAcademico,
+
+                        tituloAcademico,
+
+                        especialidad,
+
+                        academiaId,
+
+                        sni,
+
+                        nivelSni:
+                            sni === "si"
+                                ? nivelSni
+                                : "",
+
+                        prodep,
+
+                        certificaciones
+
+                    }
+                );
 
             res.json(
-                updatedTeacher
+                teacher
             );
 
         } catch (error) {
+
+            if (
+                error.code ===
+                "DUPLICATE_EMPLOYEE"
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
+
+            if (
+                error.code ===
+                "ACADEMY_NOT_FOUND"
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        error.message
+                });
+
+            }
+
+            if (
+                error.code ===
+                "INVALID_SNI"
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        error.message
+                });
+
+            }
+
+            if (
+                error.code ===
+                "HAS_RELATIONS"
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
 
             console.error(
                 "Error al actualizar docente:",
@@ -1193,91 +932,50 @@ app.patch(
                 error:
                     "No se pudo actualizar el docente."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// DELETE DOCENTE
-// ============================================================
-
 app.delete(
     "/docentes/:id",
-    async (req, res) => {
+    (req, res) => {
 
         try {
-            const data =
-                await readData();
 
-            const teacherIndex =
-                data.docentes.findIndex(
-                    docente =>
-                        String(
-                            docente.id
-                        ) ===
-                        String(
-                            req.params.id
-                        )
+            const deleted =
+                modelDocentes.remove(
+                    Number(
+                        req.params.id
+                    )
                 );
 
-            if (
-                teacherIndex === -1
-            ) {
+            if (!deleted) {
+
                 return res.status(404).json({
                     error:
                         "El docente no existe."
                 });
+
             }
-
-            const docente =
-                data.docentes[
-                    teacherIndex
-                ];
-
-            const hasDomains =
-                data.dominios.some(
-                    dominio =>
-                        String(
-                            dominio.docenteId
-                        ) ===
-                        String(
-                            docente.id
-                        )
-                );
-
-            const hasAssignments =
-                data.asignaciones.some(
-                    asignacion =>
-                        String(
-                            asignacion.docenteId
-                        ) ===
-                        String(
-                            docente.id
-                        )
-                );
-
-            if (
-                hasDomains ||
-                hasAssignments
-            ) {
-                return res.status(409).json({
-                    error:
-                        "No se puede eliminar el docente porque tiene dominios o asignaciones asociadas."
-                });
-            }
-
-            data.docentes.splice(
-                teacherIndex,
-                1
-            );
-
-            await writeData(
-                data
-            );
 
             res.status(204).send();
 
         } catch (error) {
+
+            if (
+                error.code ===
+                "HAS_RELATIONS"
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
+
             console.error(
                 "Error al eliminar docente:",
                 error
@@ -1287,46 +985,48 @@ app.delete(
                 error:
                     "No se pudo eliminar el docente."
             });
+
         }
+
     }
 );
 
 // ============================================================
-// GET CURSOS
+// CURSOS
 // ============================================================
 
 app.get(
     "/cursos",
-    async (req, res) => {
+    (req, res) => {
+
         try {
-            const data =
-                await readData();
+
             res.json(
-                data.cursos
+                modelCursos.getAll()
             );
+
         } catch (error) {
+
             console.error(
                 "Error al leer cursos:",
                 error
             );
+
             res.status(500).json({
                 error:
                     "No se pudieron cargar los cursos."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// POST CURSO
-// ============================================================
-
 app.post(
     "/cursos",
-    async (req, res) => {
+    (req, res) => {
+
         try {
-            const data =
-                await readData();
 
             const nombre =
                 String(
@@ -1339,59 +1039,59 @@ app.post(
                 ).trim();
 
             const academiaId =
-                String(
-                    req.body.academiaId || ""
-                ).trim();
+                Number(
+                    req.body.academiaId
+                );
 
             if (
                 !nombre ||
                 !academiaId
             ) {
+
                 return res.status(400).json({
                     error:
                         "El nombre del curso y la academia son obligatorios."
                 });
+
             }
 
-            const academyExists =
-                data.academias.some(
-                    academia =>
-                        String(
-                            academia.id
-                        ) ===
-                        academiaId
+            const course =
+                modelCursos.create(
+                    nombre,
+                    descripcion,
+                    academiaId
                 );
 
-            if (!academyExists) {
-                return res.status(400).json({
-                    error:
-                        "La academia seleccionada no existe."
-                });
-            }
-
-            const newCourse = {
-                id:
-                    nextId(
-                        data.cursos
-                    ),
-                nombre,
-                descripcion,
-                academiaId
-            };
-
-            data.cursos.push(
-                newCourse
-            );
-
-            await writeData(
-                data
-            );
-
             res.status(201).json(
-                newCourse
+                course
             );
 
         } catch (error) {
+
+            if (
+                error.code ===
+                "ACADEMY_NOT_FOUND"
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        error.message
+                });
+
+            }
+
+            if (
+                error.code ===
+                "DUPLICATE_COURSE"
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
+
             console.error(
                 "Error al crear curso:",
                 error
@@ -1401,165 +1101,124 @@ app.post(
                 error:
                     "No se pudo crear el curso."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// PATCH CURSO
-// ============================================================
-
 app.patch(
     "/cursos/:id",
-    async (req, res) => {
-        try {
-            const data =
-                await readData();
+    (req, res) => {
 
-            const courseIndex =
-                data.cursos.findIndex(
-                    curso =>
-                        String(
-                            curso.id
-                        ) ===
-                        String(
-                            req.params.id
-                        )
+        try {
+
+            const id =
+                Number(
+                    req.params.id
                 );
 
-            if (
-                courseIndex === -1
-            ) {
+            const current =
+                modelCursos.get(
+                    id
+                );
+
+            if (!current) {
+
                 return res.status(404).json({
                     error:
                         "El curso no existe."
                 });
-            }
 
-            const currentCourse =
-                data.cursos[
-                    courseIndex
-                ];
+            }
 
             const nombre =
                 req.body.nombre !== undefined
                     ? String(
                         req.body.nombre
                     ).trim()
-                    : currentCourse.nombre;
+                    : current.nombre;
 
             const descripcion =
                 req.body.descripcion !== undefined
                     ? String(
                         req.body.descripcion
                     ).trim()
-                    : currentCourse.descripcion;
+                    : (
+                        current.descripcion ||
+                        ""
+                    );
 
             const academiaId =
                 req.body.academiaId !== undefined
-                    ? String(
+                    ? Number(
                         req.body.academiaId
-                    ).trim()
-                    : String(
-                        currentCourse.academiaId
+                    )
+                    : Number(
+                        current.academiaId
                     );
 
             if (
                 !nombre ||
                 !academiaId
             ) {
+
                 return res.status(400).json({
                     error:
                         "El nombre del curso y la academia son obligatorios."
                 });
+
             }
 
-            const academyExists =
-                data.academias.some(
-                    academia =>
-                        String(
-                            academia.id
-                        ) ===
-                        academiaId
+            const course =
+                modelCursos.update(
+                    id,
+                    nombre,
+                    descripcion,
+                    academiaId
                 );
 
-            if (!academyExists) {
+            res.json(
+                course
+            );
+
+        } catch (error) {
+
+            if (
+                error.code ===
+                "ACADEMY_NOT_FOUND"
+            ) {
 
                 return res.status(400).json({
                     error:
-                        "La academia seleccionada no existe."
+                        error.message
                 });
 
             }
 
-            // ------------------------------------------------
-            // CAMBIO DE ACADEMIA
-            // ------------------------------------------------
+            if (
+                error.code ===
+                "DUPLICATE_COURSE"
+            ) {
 
-            const academyChanged =
-                String(
-                    currentCourse.academiaId
-                ) !==
-                String(
-                    academiaId
-                );
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
 
-            if (academyChanged) {
-
-                const hasDomains =
-                    data.dominios.some(
-                        dominio =>
-                            String(
-                                dominio.cursoId
-                            ) ===
-                            String(
-                                currentCourse.id
-                            )
-                    );
-
-                const hasAssignments =
-                    data.asignaciones.some(
-                        asignacion =>
-                            String(
-                                asignacion.cursoId
-                            ) ===
-                            String(
-                                currentCourse.id
-                            )
-                    );
-
-                if (
-                    hasDomains ||
-                    hasAssignments
-                ) {
-                    return res.status(409).json({
-                        error:
-                            "No se puede cambiar de academia un curso que tiene dominios o asignaciones asociadas."
-                    });
-                }
             }
 
-            const updatedCourse = {
-                ...currentCourse,
-                nombre,
-                descripcion,
-                academiaId
-            };
+            if (
+                error.code ===
+                "HAS_RELATIONS"
+            ) {
 
-            data.cursos[
-                courseIndex
-            ] =
-                updatedCourse;
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
 
-            await writeData(
-                data
-            );
-
-            res.json(
-                updatedCourse
-            );
-
-        } catch (error) {
+            }
 
             console.error(
                 "Error al actualizar curso:",
@@ -1570,100 +1229,49 @@ app.patch(
                 error:
                     "No se pudo actualizar el curso."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// DELETE CURSO
-// ============================================================
-
 app.delete(
     "/cursos/:id",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
-
-            const courseIndex =
-                data.cursos.findIndex(
-                    curso =>
-                        String(
-                            curso.id
-                        ) ===
-                        String(
-                            req.params.id
-                        )
+            const deleted =
+                modelCursos.remove(
+                    Number(
+                        req.params.id
+                    )
                 );
 
-            if (
-                courseIndex === -1
-            ) {
+            if (!deleted) {
 
                 return res.status(404).json({
-
                     error:
                         "El curso no existe."
-
                 });
 
             }
-
-            const curso =
-                data.cursos[
-                    courseIndex
-                ];
-
-            const hasDomains =
-                data.dominios.some(
-                    dominio =>
-                        String(
-                            dominio.cursoId
-                        ) ===
-                        String(
-                            curso.id
-                        )
-                );
-
-            const hasAssignments =
-                data.asignaciones.some(
-                    asignacion =>
-                        String(
-                            asignacion.cursoId
-                        ) ===
-                        String(
-                            curso.id
-                        )
-                );
-
-            if (
-                hasDomains ||
-                hasAssignments
-            ) {
-
-                return res.status(409).json({
-
-                    error:
-                        "No se puede eliminar el curso porque tiene dominios o asignaciones asociadas."
-
-                });
-
-            }
-
-            data.cursos.splice(
-                courseIndex,
-                1
-            );
-
-            await writeData(
-                data
-            );
 
             res.status(204).send();
 
         } catch (error) {
+
+            if (
+                error.code ===
+                "HAS_RELATIONS"
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
 
             console.error(
                 "Error al eliminar curso:",
@@ -1671,10 +1279,8 @@ app.delete(
             );
 
             res.status(500).json({
-
                 error:
                     "No se pudo eliminar el curso."
-
             });
 
         }
@@ -1683,21 +1289,17 @@ app.delete(
 );
 
 // ============================================================
-// GET DOMINIOS
+// DOMINIOS
 // ============================================================
 
 app.get(
     "/dominios",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
-
-
             res.json(
-                data.dominios
+                modelDominios.getAll()
             );
 
         } catch (error) {
@@ -1707,12 +1309,9 @@ app.get(
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudieron cargar los dominios."
-
             });
 
         }
@@ -1720,146 +1319,88 @@ app.get(
     }
 );
 
-// ============================================================
-// POST DOMINIO
-// ============================================================
-
 app.post(
     "/dominios",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
-
             const docenteId =
-                String(
-                    req.body.docenteId || ""
-                ).trim();
+                Number(
+                    req.body.docenteId
+                );
 
             const cursoId =
-                String(
-                    req.body.cursoId || ""
-                ).trim();
+                Number(
+                    req.body.cursoId
+                );
 
             const nivel =
                 Number(
                     req.body.nivel
                 );
 
-            // ------------------------------------------------
-            // VALIDAR NIVEL
-            // ------------------------------------------------
-
             if (
                 !Number.isInteger(nivel) ||
                 nivel < 1 ||
                 nivel > 10
             ) {
+
                 return res.status(400).json({
                     error:
                         "El nivel de dominio debe ser un número entero entre 1 y 10."
                 });
+
             }
 
-            const docente =
-                data.docentes.find(
-                    item =>
-                        String(
-                            item.id
-                        ) ===
-                        docenteId
+            const domain =
+                modelDominios.create(
+                    docenteId,
+                    cursoId,
+                    nivel
                 );
-
-            const curso =
-                data.cursos.find(
-                    item =>
-                        String(
-                            item.id
-                        ) ===
-                        cursoId
-                );
-
-            if (
-                !docente ||
-                !curso
-            ) {
-                return res.status(404).json({
-                    error:
-                        "El docente o el curso no existe."
-                });
-            }
-
-            // ------------------------------------------------
-            // MISMA ACADEMIA
-            // ------------------------------------------------
-
-            if (
-                String(
-                    docente.academiaId
-                ) !==
-                String(
-                    curso.academiaId
-                )
-            ) {
-
-                return res.status(409).json({
-
-                    error:
-                        "El docente y el curso deben pertenecer a la misma academia."
-
-                });
-
-            }
-
-            // ------------------------------------------------
-            // RELACIÓN ÚNICA
-            // ------------------------------------------------
-
-            const relationExists =
-                data.dominios.some(
-                    dominio =>
-                        String(
-                            dominio.docenteId
-                        ) ===
-                        docenteId &&
-                        String(
-                            dominio.cursoId
-                        ) ===
-                        cursoId
-                );
-
-            if (relationExists) {
-                return res.status(409).json({
-                    error:
-                        "Ya existe un dominio registrado para este docente y este curso."
-                });
-            }
-
-            const newDomain = {
-                id:
-                    nextId(
-                        data.dominios
-                    ),
-                docenteId,
-                cursoId,
-                nivel
-            };
-
-            data.dominios.push(
-                newDomain
-            );
-
-            await writeData(
-                data
-            );
 
             res.status(201).json(
-                newDomain
+                domain
             );
 
         } catch (error) {
+
+            if (
+                error.code ===
+                "NOT_FOUND"
+            ) {
+
+                return res.status(404).json({
+                    error:
+                        error.message
+                });
+
+            }
+
+            if (
+                error.code ===
+                "ACADEMY_MISMATCH"
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
+
+            if (
+                error.code ===
+                "DUPLICATE_DOMAIN"
+            ) {
+
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
+
+            }
 
             console.error(
                 "Error al crear dominio:",
@@ -1870,37 +1411,30 @@ app.post(
                 error:
                     "No se pudo crear el dominio."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// PATCH DOMINIO
-// ============================================================
-
 app.patch(
     "/dominios/:id",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
-
-            const domainIndex =
-                data.dominios.findIndex(
-                    dominio =>
-                        String(
-                            dominio.id
-                        ) ===
-                        String(
-                            req.params.id
-                        )
+            const id =
+                Number(
+                    req.params.id
                 );
 
-            if (
-                domainIndex === -1
-            ) {
+            const current =
+                modelDominios.get(
+                    id
+                );
+
+            if (!current) {
+
                 return res.status(404).json({
                     error:
                         "El dominio no existe."
@@ -1908,27 +1442,22 @@ app.patch(
 
             }
 
-            const currentDomain =
-                data.dominios[
-                    domainIndex
-                ];
-
             const docenteId =
                 req.body.docenteId !== undefined
-                    ? String(
+                    ? Number(
                         req.body.docenteId
-                    ).trim()
-                    : String(
-                        currentDomain.docenteId
+                    )
+                    : Number(
+                        current.docenteId
                     );
 
             const cursoId =
                 req.body.cursoId !== undefined
-                    ? String(
+                    ? Number(
                         req.body.cursoId
-                    ).trim()
-                    : String(
-                        currentDomain.cursoId
+                    )
+                    : Number(
+                        current.cursoId
                     );
 
             const nivel =
@@ -1937,7 +1466,7 @@ app.patch(
                         req.body.nivel
                     )
                     : Number(
-                        currentDomain.nivel
+                        current.nivel
                     );
 
             if (
@@ -1947,113 +1476,61 @@ app.patch(
             ) {
 
                 return res.status(400).json({
-
                     error:
                         "El nivel de dominio debe ser un número entero entre 1 y 10."
-
                 });
 
             }
 
-            const docente =
-                data.docentes.find(
-                    item =>
-                        String(
-                            item.id
-                        ) ===
-                        docenteId
+            const domain =
+                modelDominios.update(
+                    id,
+                    docenteId,
+                    cursoId,
+                    nivel
                 );
 
-            const curso =
-                data.cursos.find(
-                    item =>
-                        String(
-                            item.id
-                        ) ===
-                        cursoId
-                );
+            res.json(
+                domain
+            );
 
+        } catch (error) {
 
             if (
-                !docente ||
-                !curso
+                error.code ===
+                "NOT_FOUND"
             ) {
 
                 return res.status(404).json({
-
                     error:
-                        "El docente o el curso no existe."
-
+                        error.message
                 });
 
             }
 
             if (
-                String(
-                    docente.academiaId
-                ) !==
-                String(
-                    curso.academiaId
-                )
+                error.code ===
+                "ACADEMY_MISMATCH"
             ) {
 
                 return res.status(409).json({
-
                     error:
-                        "El docente y el curso deben pertenecer a la misma academia."
-
+                        error.message
                 });
 
             }
-
-            const duplicateRelation =
-                data.dominios.some(
-                    (dominio, index) =>
-                        index !== domainIndex &&
-                        String(
-                            dominio.docenteId
-                        ) ===
-                        docenteId &&
-                        String(
-                            dominio.cursoId
-                        ) ===
-                        cursoId
-                );
-
 
             if (
-                duplicateRelation
+                error.code ===
+                "DUPLICATE_DOMAIN"
             ) {
 
                 return res.status(409).json({
                     error:
-                        "Ya existe otro dominio para este docente y este curso."
+                        error.message
                 });
+
             }
-
-            const updatedDomain = {
-                ...currentDomain,
-                docenteId,
-                cursoId,
-                nivel
-            };
-
-            data.dominios[
-                domainIndex
-            ] =
-                updatedDomain;
-
-
-            await writeData(
-                data
-            );
-
-            res.json(
-                updatedDomain
-            );
-
-
-        } catch (error) {
 
             console.error(
                 "Error al actualizar dominio:",
@@ -2061,64 +1538,41 @@ app.patch(
             );
 
             res.status(500).json({
-
                 error:
                     "No se pudo actualizar el dominio."
-
             });
+
         }
+
     }
 );
 
-// ============================================================
-// DELETE DOMINIO
-// ============================================================
-
 app.delete(
     "/dominios/:id",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
-
-            const domainIndex =
-                data.dominios.findIndex(
-                    dominio =>
-                        String(
-                            dominio.id
-                        ) ===
-                        String(
-                            req.params.id
-                        )
+            const deleted =
+                modelDominios.remove(
+                    Number(
+                        req.params.id
+                    )
                 );
 
-            if (
-                domainIndex === -1
-            ) {
+            if (!deleted) {
 
                 return res.status(404).json({
-
                     error:
                         "El dominio no existe."
-
                 });
 
             }
 
-            data.dominios.splice(
-                domainIndex,
-                1
-            );
-
-            await writeData(
-                data
-            );
-
             res.status(204).send();
 
         } catch (error) {
+
             console.error(
                 "Error al eliminar dominio:",
                 error
@@ -2128,50 +1582,55 @@ app.delete(
                 error:
                     "No se pudo eliminar el dominio."
             });
+
         }
+
     }
 );
 
 // ============================================================
-// GET HORARIOS
+// HORARIOS
 // ============================================================
 
-app.get("/horarios", async (req, res) => {
+app.get(
+    "/horarios",
+    (req, res) => {
 
-    try {
+        try {
 
-        const data = await readData();
+            res.json(
+                modelHorarios.getAll()
+            );
 
-        res.json(data.horarios);
+        } catch (error) {
 
-    } catch (error) {
+            console.error(
+                "Error al leer horarios:",
+                error
+            );
 
-        console.error(error);
+            res.status(500).json({
+                error:
+                    "No se pudieron cargar los horarios."
+            });
 
-        res.status(500).json({
-            error: "No se pudieron cargar los horarios."
-        });
+        }
 
     }
-
-});
+);
 
 // ============================================================
-// GET ASIGNACIONES
+// ASIGNACIONES
 // ============================================================
 
 app.get(
     "/asignaciones",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
-
-
             res.json(
-                data.asignaciones
+                modelAsignaciones.getAll()
             );
 
         } catch (error) {
@@ -2185,323 +1644,128 @@ app.get(
                 error:
                     "No se pudieron cargar las asignaciones."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// POST ASIGNACIÓN
-// ============================================================
-
 app.post(
     "/asignaciones",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
-
-
             const cursoId =
-                String(
-                    req.body.cursoId || ""
-                ).trim();
-
+                Number(
+                    req.body.cursoId
+                );
 
             const docenteId =
-                String(
-                    req.body.docenteId || ""
-                ).trim();
-
-
-            // ------------------------------------------------
-            // NORMALIZAR HORARIOS
-            // ------------------------------------------------
+                Number(
+                    req.body.docenteId
+                );
 
             const horarioIds =
                 Array.isArray(
                     req.body.horarioIds
                 )
-                    ? [
-                        ...new Set(
-                            req.body.horarioIds.map(
-                                id => String(id)
-                            )
-                        )
-                    ]
+                    ? req.body.horarioIds
                     : [];
 
+            const assignment =
+                modelAsignaciones.create(
+                    cursoId,
+                    docenteId,
+                    horarioIds
+                );
 
-            // ------------------------------------------------
-            // VALIDAR HORARIOS
-            // ------------------------------------------------
+            res.status(201).json(
+                assignment
+            );
+
+        } catch (error) {
 
             if (
-                horarioIds.length === 0
+                error.code ===
+                "NO_SCHEDULE"
             ) {
 
                 return res.status(400).json({
-
                     error:
-                        "Debe seleccionar al menos un horario para la asignación."
-
+                        error.message
                 });
 
             }
 
-
-            // ------------------------------------------------
-            // BUSCAR CURSO Y DOCENTE
-            // ------------------------------------------------
-
-            const curso =
-                data.cursos.find(
-                    item =>
-                        String(item.id) ===
-                        cursoId
-                );
-
-
-            const docente =
-                data.docentes.find(
-                    item =>
-                        String(item.id) ===
-                        docenteId
-                );
-
-
             if (
-                !curso ||
-                !docente
+                error.code ===
+                "NOT_FOUND"
             ) {
 
                 return res.status(404).json({
-
                     error:
-                        "El docente o el curso no existe."
-
+                        error.message
                 });
 
             }
 
-
-            // ------------------------------------------------
-            // MISMA ACADEMIA
-            // ------------------------------------------------
-
             if (
-                String(curso.academiaId) !==
-                String(docente.academiaId)
+                error.code ===
+                "ACADEMY_MISMATCH"
             ) {
 
                 return res.status(409).json({
-
                     error:
-                        "No se puede asignar un docente de una academia diferente al curso."
-
+                        error.message
                 });
 
             }
 
-
-            // ------------------------------------------------
-            // VALIDAR QUE LOS HORARIOS EXISTAN
-            // ------------------------------------------------
-
-            const invalidSchedule =
-                horarioIds.find(
-                    horarioId =>
-                        !data.horarios.some(
-                            horario =>
-                                String(horario.id) ===
-                                String(horarioId)
-                        )
-                );
-
-
             if (
-                invalidSchedule !==
-                undefined
+                error.code ===
+                "INVALID_SCHEDULE"
             ) {
 
                 return res.status(400).json({
-
                     error:
-                        `El horario con ID ${invalidSchedule} no existe.`
-
+                        error.message
                 });
 
             }
 
-
-            // ------------------------------------------------
-            // EVITAR DUPLICADOS
-            // ------------------------------------------------
-
-            const alreadyAssigned =
-                data.asignaciones.some(
-                    asignacion =>
-                        String(
-                            asignacion.cursoId
-                        ) ===
-                        cursoId &&
-                        String(
-                            asignacion.docenteId
-                        ) ===
-                        docenteId
-                );
-
-
             if (
-                alreadyAssigned
+                error.code ===
+                "DUPLICATE_ASSIGNMENT"
             ) {
 
                 return res.status(409).json({
-
                     error:
-                        "El docente ya está asignado a este curso."
-
+                        error.message
                 });
 
             }
 
-
-            // ------------------------------------------------
-            // VERIFICAR CONFLICTOS DE HORARIO
-            // ------------------------------------------------
-
-            const teacherAssignments =
-                data.asignaciones.filter(
-                    asignacion =>
-                        String(
-                            asignacion.docenteId
-                        ) ===
-                        docenteId
-                );
-
-
-            for (
-                const assignment
-                of teacherAssignments
+            if (
+                error.code ===
+                "SCHEDULE_CONFLICT"
             ) {
 
-                const existingScheduleIds =
-                    Array.isArray(
-                        assignment.horarioIds
-                    )
-                        ? assignment.horarioIds.map(
-                            id => String(id)
-                        )
-                        : [];
-
-
-                const conflictingScheduleId =
-                    horarioIds.find(
-                        horarioId =>
-                            existingScheduleIds.includes(
-                                String(horarioId)
-                            )
-                    );
-
-
-                if (
-                    conflictingScheduleId !==
-                    undefined
-                ) {
-
-                    const conflictingCourse =
-                        data.cursos.find(
-                            cursoItem =>
-                                String(
-                                    cursoItem.id
-                                ) ===
-                                String(
-                                    assignment.cursoId
-                                )
-                        );
-
-
-                    const horario =
-                        data.horarios.find(
-                            horarioItem =>
-                                String(
-                                    horarioItem.id
-                                ) ===
-                                String(
-                                    conflictingScheduleId
-                                )
-                        );
-
-
-                    const horarioTexto =
-                        horario
-                            ? `${horario.dia} ${horario.horaInicio}-${horario.horaFin}`
-                            : `ID ${conflictingScheduleId}`;
-
-
-                    return res.status(409).json({
-
-                        error:
-                            "No se puede asignar el docente porque ya tiene otro curso en el mismo horario." +
-                            ` Curso en conflicto: ${conflictingCourse?.nombre || "No identificado"}.` +
-                            ` Horario: ${horarioTexto}.`
-
-                    });
-
-                }
+                return res.status(409).json({
+                    error:
+                        error.message
+                });
 
             }
-
-
-            // ------------------------------------------------
-            // CREAR ASIGNACIÓN
-            // ------------------------------------------------
-
-            const newAssignment = {
-
-                id:
-                    nextId(
-                        data.asignaciones
-                    ),
-
-                cursoId,
-
-                docenteId,
-
-                horarioIds
-
-            };
-
-
-            data.asignaciones.push(
-                newAssignment
-            );
-
-
-            await writeData(
-                data
-            );
-
-
-            res.status(201).json(
-                newAssignment
-            );
-
-
-        } catch (error) {
 
             console.error(
                 "Error al crear asignación:",
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudo crear la asignación."
-
             });
 
         }
@@ -2509,47 +1773,27 @@ app.post(
     }
 );
 
-// ============================================================
-// DELETE ASIGNACIÓN
-// ============================================================
-
 app.delete(
     "/asignaciones/:id",
-    async (req, res) => {
-        try {
-            const data =
-                await readData();
+    (req, res) => {
 
-            const assignmentIndex =
-                data.asignaciones.findIndex(
-                    asignacion =>
-                        String(
-                            asignacion.id
-                        ) ===
-                        String(
-                            req.params.id
-                        )
+        try {
+
+            const deleted =
+                modelAsignaciones.remove(
+                    Number(
+                        req.params.id
+                    )
                 );
 
-            if (
-                assignmentIndex === -1
-            ) {
-                return res.status(404).json({
+            if (!deleted) {
 
+                return res.status(404).json({
                     error:
                         "La asignación no existe."
-
                 });
+
             }
-
-            data.asignaciones.splice(
-                assignmentIndex,
-                1
-            );
-
-            await writeData(
-                data
-            );
 
             res.status(204).send();
 
@@ -2564,25 +1808,25 @@ app.delete(
                 error:
                     "No se pudo eliminar la asignación."
             });
+
         }
+
     }
 );
 
 // ============================================================
-// GET LICENCIATURAS
+// CATÁLOGOS
 // ============================================================
 
 app.get(
     "/licenciaturas",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
-
             res.json(
-                data.licenciaturas
+                modelCatalogos
+                    .getLicenciaturas()
             );
 
         } catch (error) {
@@ -2593,28 +1837,24 @@ app.get(
             );
 
             res.status(500).json({
-
                 error:
                     "No se pudieron cargar las licenciaturas."
-
             });
+
         }
+
     }
 );
 
-// ============================================================
-// GET MAESTRÍAS
-// ============================================================
-
 app.get(
     "/maestrias",
-    async (req, res) => {
+    (req, res) => {
+
         try {
-            const data =
-                await readData();
 
             res.json(
-                data.maestrias
+                modelCatalogos
+                    .getMaestrias()
             );
 
         } catch (error) {
@@ -2624,12 +1864,9 @@ app.get(
                 error
             );
 
-
             res.status(500).json({
-
                 error:
                     "No se pudieron cargar las maestrías."
-
             });
 
         }
@@ -2637,20 +1874,15 @@ app.get(
     }
 );
 
-// ============================================================
-// GET DOCTORADOS
-// ============================================================
-
 app.get(
     "/doctorados",
-    async (req, res) => {
+    (req, res) => {
 
         try {
-            const data =
-                await readData();
 
             res.json(
-                data.doctorados
+                modelCatalogos
+                    .getDoctorados()
             );
 
         } catch (error) {
@@ -2664,28 +1896,25 @@ app.get(
                 error:
                     "No se pudieron cargar los doctorados."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// GET NIVELES SNI
-// ============================================================
-
 app.get(
     "/nivelesSNI",
-    async (req, res) => {
+    (req, res) => {
 
         try {
 
-            const data =
-                await readData();
-
             res.json(
-                data.nivelesSNI
+                modelCatalogos
+                    .getNivelesSNI()
             );
 
         } catch (error) {
+
             console.error(
                 "Error al leer niveles SNI:",
                 error
@@ -2695,26 +1924,23 @@ app.get(
                 error:
                     "No se pudieron cargar los niveles SNI."
             });
+
         }
+
     }
 );
 
-// ============================================================
-// GET ESPECIALIDADES
-// ============================================================
-
 app.get(
     "/especialidades",
-    async (req, res) => {
+    (req, res) => {
+
         try {
 
-            const data =
-                await readData();
-
-
             res.json(
-                data.especialidades
+                modelCatalogos
+                    .getEspecialidades()
             );
+
         } catch (error) {
 
             console.error(
@@ -2726,6 +1952,7 @@ app.get(
                 error:
                     "No se pudieron cargar las especialidades."
             });
+
         }
 
     }

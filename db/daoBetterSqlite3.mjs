@@ -1,26 +1,14 @@
 import Database from "better-sqlite3";
 
-// ============================================================
-// DAO GENERAL PARA SQLITE
-// ============================================================
-
 class AppDaoBetterSQLite {
 
     constructor(dbFilePath) {
 
-        this.dbName =
-            dbFilePath;
-
+        this.dbName = dbFilePath;
         this.db = null;
-
         this.dbOpen = false;
 
     }
-
-
-    // ========================================================
-    // ABRIR BASE DE DATOS
-    // ========================================================
 
     open() {
 
@@ -37,14 +25,13 @@ class AppDaoBetterSQLite {
             "journal_mode = WAL"
         );
 
+        this.db.pragma(
+            "foreign_keys = ON"
+        );
+
         this.dbOpen = true;
 
     }
-
-
-    // ========================================================
-    // EJECUTAR INSERT / UPDATE / DELETE
-    // ========================================================
 
     run(
         sql,
@@ -52,15 +39,15 @@ class AppDaoBetterSQLite {
     ) {
 
         if (!this.dbOpen) {
+
             throw new Error(
                 "La base de datos no está abierta."
             );
+
         }
 
         const statement =
-            this.db.prepare(
-                sql
-            );
+            this.db.prepare(sql);
 
         return statement.run(
             ...params
@@ -68,26 +55,21 @@ class AppDaoBetterSQLite {
 
     }
 
-
-    // ========================================================
-    // OBTENER UN REGISTRO
-    // ========================================================
-
     get(
         sql,
         params = []
     ) {
 
         if (!this.dbOpen) {
+
             throw new Error(
                 "La base de datos no está abierta."
             );
+
         }
 
         const statement =
-            this.db.prepare(
-                sql
-            );
+            this.db.prepare(sql);
 
         return statement.get(
             ...params
@@ -95,26 +77,21 @@ class AppDaoBetterSQLite {
 
     }
 
-
-    // ========================================================
-    // OBTENER VARIOS REGISTROS
-    // ========================================================
-
     all(
         sql,
         params = []
     ) {
 
         if (!this.dbOpen) {
+
             throw new Error(
                 "La base de datos no está abierta."
             );
+
         }
 
         const statement =
-            this.db.prepare(
-                sql
-            );
+            this.db.prepare(sql);
 
         return statement.all(
             ...params
@@ -122,10 +99,26 @@ class AppDaoBetterSQLite {
 
     }
 
+    transaction(
+        callback
+    ) {
 
-    // ========================================================
-    // CERRAR BASE DE DATOS
-    // ========================================================
+        if (!this.dbOpen) {
+
+            throw new Error(
+                "La base de datos no está abierta."
+            );
+
+        }
+
+        const transaction =
+            this.db.transaction(
+                callback
+            );
+
+        return transaction();
+
+    }
 
     close() {
 
@@ -137,7 +130,6 @@ class AppDaoBetterSQLite {
             this.db.close();
 
             this.db = null;
-
             this.dbOpen = false;
 
         }
@@ -145,6 +137,5 @@ class AppDaoBetterSQLite {
     }
 
 }
-
 
 export default AppDaoBetterSQLite;
