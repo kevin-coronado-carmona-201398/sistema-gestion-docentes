@@ -84,6 +84,19 @@
       "prodep": "si",
       "certificaciones": "Scrum Master",
       "academiaId": 3
+    },
+    {
+      "id": "6",
+      "numeroEmpleado": "099280",
+      "nombre": "prueba",
+      "nivelAcademico": "Licenciatura",
+      "tituloAcademico": "prueba",
+      "especialidad": "prueba",
+      "academiaId": "1",
+      "sni": "no",
+      "nivelSni": "",
+      "prodep": "no",
+      "certificaciones": ""
     }
   ],
   "cursos": [
@@ -194,26 +207,6 @@
   ],
   "asignaciones": [
     {
-      "cursoId": "3",
-      "docenteId": "1",
-      "id": "LupEXSPIYDg",
-      "horarioIds": []
-    },
-    {
-      "cursoId": "3",
-      "docenteId": "2",
-      "id": "Rz09eBhWWnY",
-      "horarioIds": []
-    },
-    {
-      "cursoId": "2",
-      "docenteId": "2",
-      "id": "Zi8bfJQEc7Y",
-      "horarioIds": [
-        "1"
-      ]
-    },
-    {
       "cursoId": "1",
       "docenteId": "1",
       "horarioIds": [
@@ -244,6 +237,14 @@
         "1"
       ],
       "id": "rxC4vogIQC0"
+    },
+    {
+      "id": "1",
+      "cursoId": "6",
+      "docenteId": "5",
+      "horarioIds": [
+        "18"
+      ]
     }
   ],
   "licenciaturas": [

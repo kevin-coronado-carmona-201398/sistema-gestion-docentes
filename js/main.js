@@ -137,10 +137,6 @@ async function startApp() {
         
         window.appState = appState;
 
-        console.log(
-            "Datos cargados desde JSON Server."
-        );
-
         initSelects();
 
         renderAcademies();
@@ -163,12 +159,6 @@ async function startApp() {
             "Error al iniciar la aplicación:",
             error
         );
-
-
-        alert(
-            `Error al conectar con JSON Server:\n\n${error.message}`
-        );
-
     }
 
 }

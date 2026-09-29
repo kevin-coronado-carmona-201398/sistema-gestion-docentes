@@ -4,7 +4,7 @@ const path = require("node:path");
 
 const app = express();
 
-const PORT = 3001;
+const PORT = 3000;
 
 const DATA_PATH =
     path.join(
@@ -714,6 +714,32 @@ app.post(
             }
 
             // ------------------------------------------------
+            // VALIDAR NOMBRE ÚNICO DENTRO DE LA ACADEMIA
+            // ------------------------------------------------
+
+            const duplicateCourse =
+                data.cursos.some(
+                    curso =>
+                        String(curso.academiaId) ===
+                            String(academiaId) &&
+                        String(curso.nombre)
+                            .trim()
+                            .toLowerCase() ===
+                            nombre.toLowerCase()
+                );
+
+            if (duplicateCourse) {
+
+                return res.status(409).json({
+
+                    error:
+                        "Ya existe un curso con ese nombre dentro de la academia seleccionada."
+
+                });
+
+            }
+
+            // ------------------------------------------------
             // NÚMERO DE EMPLEADO ÚNICO
             // ------------------------------------------------
 
@@ -975,6 +1001,33 @@ app.patch(
                     error:
                         "La academia seleccionada no existe."
                 });
+            }
+
+            // ------------------------------------------------
+            // VALIDAR NOMBRE ÚNICO DENTRO DE LA ACADEMIA
+            // ------------------------------------------------
+
+            const duplicateCourse =
+                data.cursos.some(
+                    (curso, index) =>
+                        index !== courseIndex &&
+                        String(curso.academiaId) ===
+                            String(academiaId) &&
+                        String(curso.nombre)
+                            .trim()
+                            .toLowerCase() ===
+                            nombre.toLowerCase()
+                );
+
+            if (duplicateCourse) {
+
+                return res.status(409).json({
+
+                    error:
+                        "Ya existe un curso con ese nombre dentro de la academia seleccionada."
+
+                });
+
             }
 
             // ------------------------------------------------
@@ -2130,57 +2183,97 @@ app.post(
             const data =
                 await readData();
 
+
             const cursoId =
                 String(
                     req.body.cursoId || ""
                 ).trim();
+
 
             const docenteId =
                 String(
                     req.body.docenteId || ""
                 ).trim();
 
+
+            // ------------------------------------------------
+            // NORMALIZAR HORARIOS
+            // ------------------------------------------------
+
+            const horarioIds =
+                Array.isArray(
+                    req.body.horarioIds
+                )
+                    ? [
+                        ...new Set(
+                            req.body.horarioIds.map(
+                                id => String(id)
+                            )
+                        )
+                    ]
+                    : [];
+
+
+            // ------------------------------------------------
+            // VALIDAR HORARIOS
+            // ------------------------------------------------
+
+            if (
+                horarioIds.length === 0
+            ) {
+
+                return res.status(400).json({
+
+                    error:
+                        "Debe seleccionar al menos un horario para la asignación."
+
+                });
+
+            }
+
+
+            // ------------------------------------------------
+            // BUSCAR CURSO Y DOCENTE
+            // ------------------------------------------------
+
             const curso =
                 data.cursos.find(
                     item =>
-                        String(
-                            item.id
-                        ) ===
+                        String(item.id) ===
                         cursoId
                 );
+
 
             const docente =
                 data.docentes.find(
                     item =>
-                        String(
-                            item.id
-                        ) ===
+                        String(item.id) ===
                         docenteId
                 );
+
 
             if (
                 !curso ||
                 !docente
             ) {
+
                 return res.status(404).json({
 
                     error:
                         "El docente o el curso no existe."
 
                 });
+
             }
+
 
             // ------------------------------------------------
             // MISMA ACADEMIA
             // ------------------------------------------------
 
             if (
-                String(
-                    curso.academiaId
-                ) !==
-                String(
-                    docente.academiaId
-                )
+                String(curso.academiaId) !==
+                String(docente.academiaId)
             ) {
 
                 return res.status(409).json({
@@ -2191,6 +2284,37 @@ app.post(
                 });
 
             }
+
+
+            // ------------------------------------------------
+            // VALIDAR QUE LOS HORARIOS EXISTAN
+            // ------------------------------------------------
+
+            const invalidSchedule =
+                horarioIds.find(
+                    horarioId =>
+                        !data.horarios.some(
+                            horario =>
+                                String(horario.id) ===
+                                String(horarioId)
+                        )
+                );
+
+
+            if (
+                invalidSchedule !==
+                undefined
+            ) {
+
+                return res.status(400).json({
+
+                    error:
+                        `El horario con ID ${invalidSchedule} no existe.`
+
+                });
+
+            }
+
 
             // ------------------------------------------------
             // EVITAR DUPLICADOS
@@ -2209,37 +2333,142 @@ app.post(
                         docenteId
                 );
 
+
             if (
                 alreadyAssigned
             ) {
+
                 return res.status(409).json({
 
                     error:
                         "El docente ya está asignado a este curso."
+
                 });
+
             }
 
+
+            // ------------------------------------------------
+            // VERIFICAR CONFLICTOS DE HORARIO
+            // ------------------------------------------------
+
+            const teacherAssignments =
+                data.asignaciones.filter(
+                    asignacion =>
+                        String(
+                            asignacion.docenteId
+                        ) ===
+                        docenteId
+                );
+
+
+            for (
+                const assignment
+                of teacherAssignments
+            ) {
+
+                const existingScheduleIds =
+                    Array.isArray(
+                        assignment.horarioIds
+                    )
+                        ? assignment.horarioIds.map(
+                            id => String(id)
+                        )
+                        : [];
+
+
+                const conflictingScheduleId =
+                    horarioIds.find(
+                        horarioId =>
+                            existingScheduleIds.includes(
+                                String(horarioId)
+                            )
+                    );
+
+
+                if (
+                    conflictingScheduleId !==
+                    undefined
+                ) {
+
+                    const conflictingCourse =
+                        data.cursos.find(
+                            cursoItem =>
+                                String(
+                                    cursoItem.id
+                                ) ===
+                                String(
+                                    assignment.cursoId
+                                )
+                        );
+
+
+                    const horario =
+                        data.horarios.find(
+                            horarioItem =>
+                                String(
+                                    horarioItem.id
+                                ) ===
+                                String(
+                                    conflictingScheduleId
+                                )
+                        );
+
+
+                    const horarioTexto =
+                        horario
+                            ? `${horario.dia} ${horario.horaInicio}-${horario.horaFin}`
+                            : `ID ${conflictingScheduleId}`;
+
+
+                    return res.status(409).json({
+
+                        error:
+                            "No se puede asignar el docente porque ya tiene otro curso en el mismo horario." +
+                            ` Curso en conflicto: ${conflictingCourse?.nombre || "No identificado"}.` +
+                            ` Horario: ${horarioTexto}.`
+
+                    });
+
+                }
+
+            }
+
+
+            // ------------------------------------------------
+            // CREAR ASIGNACIÓN
+            // ------------------------------------------------
+
             const newAssignment = {
+
                 id:
                     nextId(
                         data.asignaciones
                     ),
 
                 cursoId,
-                docenteId
+
+                docenteId,
+
+                horarioIds
+
             };
+
 
             data.asignaciones.push(
                 newAssignment
             );
 
+
             await writeData(
                 data
             );
 
+
             res.status(201).json(
                 newAssignment
             );
+
 
         } catch (error) {
 
@@ -2248,13 +2477,16 @@ app.post(
                 error
             );
 
+
             res.status(500).json({
 
                 error:
                     "No se pudo crear la asignación."
 
             });
+
         }
+
     }
 );
 
