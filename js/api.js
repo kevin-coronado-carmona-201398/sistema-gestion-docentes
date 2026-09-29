@@ -54,6 +54,8 @@ export async function loadDataFromAPI() {
         cursos,
         dominios,
         asignaciones,
+        horarios,
+        
         licenciaturas,
         maestrias,
         doctorados,
@@ -66,6 +68,7 @@ export async function loadDataFromAPI() {
         fetchResource("cursos"),
         fetchResource("dominios"),
         fetchResource("asignaciones"),
+        fetchResource("horarios"),
 
         fetchResource("licenciaturas"),
         fetchResource("maestrias"),
@@ -75,7 +78,6 @@ export async function loadDataFromAPI() {
 
     ]);
 
-
     return {
 
         academias,
@@ -83,6 +85,7 @@ export async function loadDataFromAPI() {
         cursos,
         dominios,
         asignaciones,
+        horarios,
 
         licenciaturas,
         maestrias,
@@ -387,21 +390,43 @@ export async function updateDomain(id, data) {
 
 export async function createAssignment(data) {
 
-    const response = await fetch(
-        `${API_URL}/asignaciones`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        }
-    );
+    const response =
+        await fetch(
+            `${API_URL}/asignaciones`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(data)
+            }
+        );
+
 
     if (!response.ok) {
 
+        let message =
+            `asignaciones: HTTP ${response.status} - ${response.statusText}`;
+
+        try {
+
+            const errorData =
+                await response.json();
+
+            if (errorData.error) {
+                message =
+                    errorData.error;
+            }
+
+        } catch {
+            // Se conserva el mensaje HTTP
+            // si la respuesta no contiene JSON.
+        }
+
         throw new Error(
-            `asignaciones: HTTP ${response.status} - ${response.statusText}`
+            message
         );
 
     }

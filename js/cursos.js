@@ -19,7 +19,7 @@ import {
 
 
 import {
-    initSelects
+    initSelects,
 } from "./selects.js";
 
 // ============================================================
@@ -70,14 +70,12 @@ export function renderCourses() {
                             appState,
                             curso.academiaId
                         );
-
-
+   
                     const teachers =
                         assignedTeachers(
                             appState,
                             curso.id
                         );
-
 
                     const estado =
                         teachers.length > 0
@@ -201,7 +199,6 @@ export function editCourse(id) {
     ).value =
         curso.academiaId || "";
 
-
     editState.courseId =
         String(curso.id);
 
@@ -262,7 +259,6 @@ export function cancelCourseEdit() {
 
 
     form.reset();
-
 
     const submitButton =
         form.querySelector(
@@ -457,7 +453,7 @@ export function bindCourseEvents() {
                         "academiaCurso"
                     )
                     .value;
-
+  
 
             // ------------------------------------------------
             // VALIDACIÓN
@@ -474,7 +470,6 @@ export function bindCourseEvents() {
 
                 return;
             }
-
 
             const wasEditing =
                 Boolean(
@@ -496,7 +491,6 @@ export function bindCourseEvents() {
                             )
                     )
                     : null;
-
 
             // ------------------------------------------------
             // VALIDAR NOMBRE DUPLICADO
@@ -585,11 +579,11 @@ export function bindCourseEvents() {
 
                     nombre,
                     descripcion,
+
                     academiaId:
-                        String(academiaId)
+                        String(academiaId),
 
                 };
-
 
                 // ============================================
                 // ACTUALIZAR
@@ -615,7 +609,6 @@ export function bindCourseEvents() {
                             updatedCourse.academiaId
                         );
 
-
                     const index =
                         appState.cursos.findIndex(
                             item =>
@@ -633,10 +626,8 @@ export function bindCourseEvents() {
 
                     }
 
-
                     editState.courseId =
                         null;
-
 
                     console.log(
                         "Curso actualizado:",
@@ -668,7 +659,6 @@ export function bindCourseEvents() {
                             newCourse.academiaId
                         );
 
-
                     appState.cursos.push(
                         newCourse
                     );
@@ -687,7 +677,6 @@ export function bindCourseEvents() {
                 // ============================================
 
                 form.reset();
-
 
                 const submitButton =
                     form.querySelector(
@@ -772,7 +761,6 @@ export function bindCourseEvents() {
 
             }
         );
-
 }
 
 // ============================================================

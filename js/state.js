@@ -9,6 +9,7 @@ export const appState = {
     cursos: [],
     dominios: [],
     asignaciones: [],
+    horarios: [],
 
     licenciaturas: [],
     maestrias: [],

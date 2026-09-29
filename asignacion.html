@@ -185,6 +185,90 @@
 
         </section>
 
+        
+        <!-- ==================================================
+            HORARIOS DE LA ASIGNACIÓN
+            ================================================== -->
+
+        <section class="card">
+
+            <h3>
+                Horarios de la asignación
+            </h3>
+
+            <p class="w3-small">
+                Seleccione los horarios que tendrá la asignación.
+                Al pulsar "Asignar", estos horarios se asociarán
+                al docente seleccionado.
+            </p>
+
+
+            <div class="form-grid-2">
+
+                <div class="form-group">
+
+                    <label for="diaAsignacion">
+                        Día
+                    </label>
+
+                    <select
+                        id="diaAsignacion"
+                        class="w3-select w3-border"
+                    >
+
+                        <option value="">
+                            Seleccionar día...
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="horaAsignacion">
+                        Hora
+                    </label>
+
+                    <select
+                        id="horaAsignacion"
+                        class="w3-select w3-border"
+                        disabled
+                    >
+
+                        <option value="">
+                            Seleccionar hora...
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="agregarHorarioAsignacion"
+                class="w3-button w3-border w3-margin-top"
+            >
+                Agregar horario
+            </button>
+
+
+            <div
+                id="horariosSeleccionadosAsignacion"
+                class="w3-margin-top"
+            >
+
+                <p class="w3-small">
+                    No se han agregado horarios.
+                </p>
+
+            </div>
+
+        </section>
 
         <!-- ==================================================
              DOCENTES CANDIDATOS
@@ -236,7 +320,7 @@
                         <tr>
 
                             <td
-                                colspan="5"
+                                colspan="12"
                                 class="w3-center"
                             >
                                 Seleccione un curso para mostrar candidatos.
@@ -252,7 +336,78 @@
 
         </section>
 
+        <!-- ==================================================
+            DOCENTES ASIGNADOS
+            ================================================== -->
 
+        <section class="card">
+
+            <h3>
+                Docentes asignados al curso
+            </h3>
+
+
+            <div class="table-wrap">
+
+                <table class="w3-table-all">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Docente</th>
+
+                            <th>Academia</th>
+
+                            <th>Grado académico</th>
+
+                            <th>Título obtenido</th>
+
+                            <th>Especialidad</th>
+
+                            <th>PRODEP</th>
+
+                            <th>SNI</th>
+
+                            <th>Nivel SNI</th>
+
+                            <th>Certificaciones</th>
+
+                            <th>Nivel de dominio</th>
+
+                            <th>Horarios</th>
+
+                            <th>Estado</th>
+
+                            <th>Acción</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="tbodyAsignados">
+
+                        <tr>
+
+                            <td
+                                colspan="13"
+                                class="w3-center"
+                            >
+                                Seleccione un curso para mostrar los docentes asignados.
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    
         <!-- ==================================================
              REGISTRAR / MODIFICAR DOMINIO
              ================================================== -->
@@ -345,76 +500,6 @@
             </form>
 
         </section>
-
-
-        <!-- ==================================================
-             DOCENTES ASIGNADOS
-             ================================================== -->
-
-        <section class="card">
-
-            <h3>
-                Docentes asignados al curso
-            </h3>
-
-
-            <div class="table-wrap">
-
-                <table class="w3-table-all">
-                    <thead>
-
-                        <tr>
-
-                            <th>Docente</th>
-
-                            <th>Academia</th>
-
-                            <th>Grado académico</th>
-
-                            <th>Título obtenido</th>
-
-                            <th>Especialidad</th>
-
-                            <th>PRODEP</th>
-
-                            <th>SNI</th>
-
-                            <th>Nivel SNI</th>
-
-                            <th>Certificaciones</th>
-
-                            <th>Nivel de dominio</th>
-
-                            <th>Estado</th>
-
-                            <th>Acción</th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody id="tbodyAsignados">
-
-                        <tr>
-
-                            <td
-                                colspan="4"
-                                class="w3-center"
-                            >
-                                No hay asignaciones para mostrar.
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </section>
-
     </main>
 
 

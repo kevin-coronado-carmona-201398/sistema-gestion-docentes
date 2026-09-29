@@ -75,17 +75,11 @@ async function startApp() {
                 })
             );
 
-
-        appState.cursos =
-            data.cursos.map(
-                item => ({
-                    ...item,
-                    id: String(item.id),
-                    academiaId:
-                        String(item.academiaId)
-                })
-            );
-
+        appState.cursos = data.cursos.map(item => ({
+            ...item,
+            id: String(item.id),
+            academiaId: String(item.academiaId)
+        }));
 
         appState.dominios =
             data.dominios.map(
@@ -99,7 +93,6 @@ async function startApp() {
                 })
             );
 
-
         appState.asignaciones =
             data.asignaciones.map(
                 item => ({
@@ -108,10 +101,20 @@ async function startApp() {
                     docenteId:
                         String(item.docenteId),
                     cursoId:
-                        String(item.cursoId)
+                        String(item.cursoId),
+                    horarioIds:
+                        Array.isArray(item.horarioIds)
+                            ? item.horarioIds.map(
+                                id => String(id)
+                            )
+                            : []
                 })
             );
-
+        
+        appState.horarios = data.horarios.map(item => ({
+            ...item,
+            id: String(item.id)
+        }));
 
         appState.licenciaturas =
             data.licenciaturas;
@@ -133,10 +136,6 @@ async function startApp() {
             data.especialidades;
         
         window.appState = appState;
-
-        console.log(
-            "Datos cargados desde JSON Server."
-        );
 
         initSelects();
 
@@ -160,12 +159,6 @@ async function startApp() {
             "Error al iniciar la aplicación:",
             error
         );
-
-
-        alert(
-            `Error al conectar con JSON Server:\n\n${error.message}`
-        );
-
     }
 
 }

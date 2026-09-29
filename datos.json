@@ -84,6 +84,19 @@
       "prodep": "si",
       "certificaciones": "Scrum Master",
       "academiaId": 3
+    },
+    {
+      "id": "6",
+      "numeroEmpleado": "099280",
+      "nombre": "prueba",
+      "nivelAcademico": "Licenciatura",
+      "tituloAcademico": "prueba",
+      "especialidad": "prueba",
+      "academiaId": "1",
+      "sni": "no",
+      "nivelSni": "",
+      "prodep": "no",
+      "certificaciones": ""
     }
   ],
   "cursos": [
@@ -91,13 +104,13 @@
       "id": "1",
       "nombre": "Bases de Datos",
       "descripcion": "Diseño, administración y gestión de bases de datos.",
-      "academiaId": 1
+      "academiaId": "1"
     },
     {
       "id": "2",
       "nombre": "Estructuras de Datos",
       "descripcion": "Estudio y aplicación de estructuras de datos.",
-      "academiaId": 1
+      "academiaId": "1"
     },
     {
       "id": "3",
@@ -194,29 +207,44 @@
   ],
   "asignaciones": [
     {
-      "id": "2",
-      "cursoId": 4,
-      "docenteId": 3
-    },
-    {
-      "cursoId": "3",
+      "cursoId": "1",
       "docenteId": "1",
-      "id": "LupEXSPIYDg"
-    },
-    {
-      "cursoId": "3",
-      "docenteId": "2",
-      "id": "Rz09eBhWWnY"
+      "horarioIds": [
+        "1"
+      ],
+      "id": "Hoao_reu9DI"
     },
     {
       "cursoId": "1",
-      "docenteId": "1",
-      "id": "m0KuL6mTUcs"
+      "docenteId": "2",
+      "horarioIds": [
+        "12"
+      ],
+      "id": "0kEOyLnaktQ"
     },
     {
-      "cursoId": "2",
-      "docenteId": "2",
-      "id": "Zi8bfJQEc7Y"
+      "cursoId": "4",
+      "docenteId": "3",
+      "horarioIds": [
+        "1"
+      ],
+      "id": "qXgfjgqRMbc"
+    },
+    {
+      "cursoId": "4",
+      "docenteId": "4",
+      "horarioIds": [
+        "1"
+      ],
+      "id": "rxC4vogIQC0"
+    },
+    {
+      "id": "1",
+      "cursoId": "6",
+      "docenteId": "5",
+      "horarioIds": [
+        "18"
+      ]
     }
   ],
   "licenciaturas": [
@@ -311,6 +339,183 @@
     {
       "id": "5",
       "nombre": "Ingeniería de software y análisis de sistemas"
+    }
+  ],
+  "horarios": [
+    {
+      "id": "1",
+      "clave": "HL1",
+      "dia": "Lunes",
+      "horaInicio": "07:00",
+      "horaFin": "09:00"
+    },
+    {
+      "id": "2",
+      "clave": "HL2",
+      "dia": "Lunes",
+      "horaInicio": "09:00",
+      "horaFin": "11:00"
+    },
+    {
+      "id": "3",
+      "clave": "HL3",
+      "dia": "Lunes",
+      "horaInicio": "11:00",
+      "horaFin": "13:00"
+    },
+    {
+      "id": "4",
+      "clave": "HL4",
+      "dia": "Lunes",
+      "horaInicio": "13:00",
+      "horaFin": "15:00"
+    },
+    {
+      "id": "5",
+      "clave": "HL5",
+      "dia": "Lunes",
+      "horaInicio": "15:00",
+      "horaFin": "17:00"
+    },
+    {
+      "id": "6",
+      "clave": "HMa1",
+      "dia": "Martes",
+      "horaInicio": "07:00",
+      "horaFin": "09:00"
+    },
+    {
+      "id": "7",
+      "clave": "HMa2",
+      "dia": "Martes",
+      "horaInicio": "09:00",
+      "horaFin": "11:00"
+    },
+    {
+      "id": "8",
+      "clave": "HMa3",
+      "dia": "Martes",
+      "horaInicio": "11:00",
+      "horaFin": "13:00"
+    },
+    {
+      "id": "9",
+      "clave": "HMa4",
+      "dia": "Martes",
+      "horaInicio": "13:00",
+      "horaFin": "15:00"
+    },
+    {
+      "id": "10",
+      "clave": "HMa5",
+      "dia": "Martes",
+      "horaInicio": "15:00",
+      "horaFin": "17:00"
+    },
+    {
+      "id": "11",
+      "clave": "HMi1",
+      "dia": "Miércoles",
+      "horaInicio": "07:00",
+      "horaFin": "09:00"
+    },
+    {
+      "id": "12",
+      "clave": "HMi2",
+      "dia": "Miércoles",
+      "horaInicio": "09:00",
+      "horaFin": "11:00"
+    },
+    {
+      "id": "13",
+      "clave": "HMi3",
+      "dia": "Miércoles",
+      "horaInicio": "11:00",
+      "horaFin": "13:00"
+    },
+    {
+      "id": "14",
+      "clave": "HMi4",
+      "dia": "Miércoles",
+      "horaInicio": "13:00",
+      "horaFin": "15:00"
+    },
+    {
+      "id": "15",
+      "clave": "HMi5",
+      "dia": "Miércoles",
+      "horaInicio": "15:00",
+      "horaFin": "17:00"
+    },
+    {
+      "id": "16",
+      "clave": "HJ1",
+      "dia": "Jueves",
+      "horaInicio": "07:00",
+      "horaFin": "09:00"
+    },
+    {
+      "id": "17",
+      "clave": "HJ2",
+      "dia": "Jueves",
+      "horaInicio": "09:00",
+      "horaFin": "11:00"
+    },
+    {
+      "id": "18",
+      "clave": "HJ3",
+      "dia": "Jueves",
+      "horaInicio": "11:00",
+      "horaFin": "13:00"
+    },
+    {
+      "id": "19",
+      "clave": "HJ4",
+      "dia": "Jueves",
+      "horaInicio": "13:00",
+      "horaFin": "15:00"
+    },
+    {
+      "id": "20",
+      "clave": "HJ5",
+      "dia": "Jueves",
+      "horaInicio": "15:00",
+      "horaFin": "17:00"
+    },
+    {
+      "id": "21",
+      "clave": "HV1",
+      "dia": "Viernes",
+      "horaInicio": "07:00",
+      "horaFin": "09:00"
+    },
+    {
+      "id": "22",
+      "clave": "HV2",
+      "dia": "Viernes",
+      "horaInicio": "09:00",
+      "horaFin": "11:00"
+    },
+    {
+      "id": "23",
+      "clave": "HV3",
+      "dia": "Viernes",
+      "horaInicio": "11:00",
+      "horaFin": "13:00"
+    },
+    {
+      "id": "24",
+      "clave": "HV4",
+      "dia": "Viernes",
+      "horaInicio": "13:00",
+      "horaFin": "15:00"
+    },
+    {
+      "id": "25",
+      "clave": "HV5",
+      "dia": "Viernes",
+      "horaInicio": "15:00",
+      "horaFin": "17:00"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
