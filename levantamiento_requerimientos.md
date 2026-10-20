@@ -1,1381 +1,542 @@
 # Levantamiento de Requerimientos de Software
-## Sistema de Gestión de Información Académica y Profesional de Docentes
-### Proyecto: Desarrollo Rápido de Aplicaciones (RAD)
 
----
-# 1. Resumen del Sistema
-
-El sistema propuesto es una aplicación de gestión de información de docentes, cuyo propósito es centralizar los datos académicos, profesionales y administrativos del personal docente para apoyar procesos de asignación de cursos, secuencias académicas, proyectos, academias, aulas y laboratorios.
-
-El sistema no realizará asignaciones automáticas de docentes. Su función principal será proporcionar información estructurada y realizar una evaluación automática de elegibilidad que permita al administrador identificar qué docentes cumplen con los criterios establecidos para impartir un determinado curso. La decisión final de asignación será realizada manualmente por el administrador.
-
-El sistema permitirá considerar información como grados académicos, especialidad, competencias, certificaciones, SNI/SNII, perfil PRODEP, pertenencia a academias y nivel de dominio de los cursos.
-
-El alcance conceptual cubre siete dominios funcionales:
-
-1. Docentes.
-2. Cursos.
-3. Secuencias académicas.
-4. Proyectos.
-5. Academias.
-6. Espacios físicos (aulas y laboratorios).
-7. Recursos y equipamiento.
-
-La primera versión del sistema contará únicamente con un usuario operativo de tipo **Administrador** y no implementará autenticación.
+## Sistema de Gestión de Información Académica de Docentes
 
 ---
 
-# 2. Alcance
+## 1. Propósito del documento
 
-## Incluido
+Este documento describe el alcance, las funciones, las reglas de negocio, los datos y las restricciones de la versión actual del Sistema de Gestión de Información Académica de Docentes. Su objetivo es establecer una referencia verificable para el desarrollo, las pruebas y la presentación del proyecto.
 
-### Gestión de docentes
+## 2. Descripción general
 
-- Registro y consulta de información de docentes.
-- Actualización de información de docentes.
-- Búsqueda y filtrado de docentes.
-- Registro de grados académicos.
-- Registro de certificaciones.
-- Registro de competencias y capacidades.
-- Registro de especialidad.
-- Registro de información de SNI/SNII.
-- Registro de información de perfil PRODEP.
-- Registro del nivel de dominio de un docente sobre cursos.
+El sistema es una aplicación web local para registrar y consultar información básica de docentes, academias y cursos. También permite registrar el nivel de dominio de un docente sobre un curso y crear asignaciones manuales de docentes a cursos con bloques de horario predefinidos.
 
-### Gestión de cursos
+La aplicación ayuda al administrador a consultar la información registrada y a revisar candidatos para un curso. **No ejecuta un algoritmo completo de elegibilidad basado en competencias y certificaciones ni asigna docentes automáticamente.** La selección final corresponde al administrador.
 
-- Registro y consulta de cursos.
-- Definición de requisitos de cursos.
-- Clasificación de requisitos como obligatorios o recomendados.
-- Definición del nivel mínimo de dominio requerido.
-- Determinación automática de docentes elegibles.
-- Consulta de candidatos para impartir un curso.
-- Registro manual de asignaciones docente-curso.
+La versión actual se concentra en cinco módulos operativos: academias, docentes, cursos, dominios y asignaciones. Incluye, además, catálogos de apoyo y una lista fija de bloques horarios.
 
-### Gestión de academias
+## 3. Alcance del prototipo
 
-- Registro de academias.
-- Asociación de docentes con academias.
-- Asociación de cursos con academias.
-- Consulta de integrantes y cursos asociados.
+### 3.1 Funciones incluidas
 
-### Gestión de secuencias académicas
+- Registrar, consultar, actualizar y eliminar academias, sujeto a las restricciones de integridad.
+- Registrar, consultar, actualizar y eliminar docentes, sujeto a las restricciones de integridad.
+- Registrar, consultar, actualizar y eliminar cursos, sujeto a las restricciones de integridad.
+- Registrar, consultar, actualizar y eliminar el nivel de dominio de un docente sobre un curso.
+- Consultar los catálogos de grados académicos, niveles SNI y especialidades utilizados por los formularios.
+- Consultar los bloques horarios disponibles.
+- Crear y consultar asignaciones manuales de docentes a cursos.
+- Asociar uno o varios bloques horarios a cada asignación.
+- Eliminar asignaciones y permitir que los bloques asociados se liberen.
+- Validar en el servidor las reglas principales de integridad antes de guardar cambios.
+- Persistir la información en una base de datos SQLite local.
 
-- Registro de secuencias.
-- Asociación de cursos.
-- Definición del orden de los cursos.
-- Definición de relaciones de precedencia entre cursos.
+### 3.2 Funciones fuera del alcance de esta versión
 
-### Gestión de proyectos académicos
+Las siguientes funciones pertenecen al diseño conceptual o a posibles ampliaciones. No deben presentarse como implementadas en el prototipo actual:
 
-- Registro de proyectos.
-- Asociación obligatoria de un proyecto con un curso.
-- Asociación de docentes participantes.
-- Designación de un docente responsable.
-- Asociación de espacios físicos.
-- Asociación de recursos y equipamiento.
+- Autenticación, cuentas de usuario, sesiones, roles y permisos.
+- Elegibilidad automática mediante competencias, requisitos de cursos o certificaciones vigentes.
+- Administración de competencias y requisitos obligatorios o recomendados.
+- Registro separado de múltiples grados académicos y certificaciones con fechas de vigencia por docente.
+- Pertenencia de un docente a varias academias.
+- Asociación de un curso con varias academias.
+- Secuencias académicas y relaciones de precedencia entre cursos.
+- Gestión de proyectos académicos y de docentes responsables o participantes.
+- Registro de aulas, laboratorios, recursos y equipamiento.
+- Reservación de espacios físicos.
+- Gestión de estudiantes, periodos escolares, nómina o recursos humanos.
+- Notificaciones, reportes estadísticos avanzados e integración con sistemas externos.
+- Auditoría histórica de cambios y desactivación lógica generalizada de registros.
 
-### Gestión de espacios físicos
+## 4. Usuarios y entorno operativo
 
-- Registro de aulas y laboratorios.
-- Registro de capacidad.
-- Registro de estado.
-- Registro de equipamiento y recursos disponibles.
-- Asociación de cursos y proyectos con espacios.
+### 4.1 Usuario previsto
 
-### Gestión de recursos
-
-- Registro de recursos y equipamiento.
-- Control de cantidad.
-- Asociación de recursos con espacios.
-- Asociación de recursos con proyectos.
-
-### Diseño
-
-- Generación de diagramas Mermaid del modelo conceptual.
-- Diseño de la interfaz y navegación mediante Excalidraw.
-
----
-
-## Explícitamente fuera de alcance por ahora
-
-- Gestión de estudiantes como entidad plena.
-- Sistema de autenticación e inicio de sesión.
-- Administración de múltiples tipos de usuario.
-- Sistema de permisos basado en roles.
-- Sistema de reservación de horarios de aulas/laboratorios.
-- Gestión de horarios y bloques temporales.
-- Evaluación docente.
-- Nómina o gestión de recursos humanos.
-- Notificaciones automáticas.
-- Reportes estadísticos avanzados.
-- Integración con sistemas externos.
-- Asignación automática de docentes.
-- Gestión histórica de múltiples periodos escolares.
-
-La primera versión representará únicamente el **estado académico actual**.
-
----
-
-# 3. Usuario del Sistema
-
-La primera versión del sistema contará con un único usuario operativo:
-
-| Usuario | Estado | Objetivo principal |
+| Usuario | Funciones | Estado |
 |---|---|---|
-| Administrador | Confirmado para la primera versión | Gestionar docentes, cursos, academias, secuencias, proyectos, espacios, recursos y asignaciones |
+| Administrador operativo | Gestionar academias, docentes, cursos, dominios y asignaciones | Único perfil previsto para el prototipo; no se implementa inicio de sesión |
 
-No se implementarán actualmente los roles de Coordinador académico, Jefe de academia o Docente como usuarios independientes del sistema.
+El sistema no verifica la identidad de quien lo utiliza. La ausencia de autenticación limita su uso previsto a un entorno académico controlado y de demostración; no implica que el servidor deba exponerse a una red pública.
 
-El término "Administrador" representa al usuario que opera la aplicación y concentra las funciones necesarias para el prototipo.
+### 4.2 Entorno técnico
 
-## 3.1 Administrador
+| Componente | Tecnología |
+|---|---|
+| Interfaz | HTML, CSS, JavaScript y W3.CSS |
+| Servidor | Node.js y Express |
+| Acceso a datos | `better-sqlite3` mediante un DAO y modelos separados |
+| Base de datos | SQLite, archivo `db/app.db` |
+| Comunicación | Solicitudes HTTP desde la interfaz a la API local |
+| Ejecución habitual | API en `http://localhost:3000` e interfaz servida por separado durante el desarrollo |
 
-**Consulta:** toda la información disponible en el sistema.
+## 5. Requerimientos funcionales
 
-**Crea:**
+Los siguientes requerimientos describen la versión actual. La prioridad indica su importancia dentro del prototipo, no una promesa de disponibilidad fuera de su alcance.
 
-- Docentes.
-- Grados académicos.
-- Certificaciones.
-- Competencias.
-- Cursos.
-- Requisitos.
-- Academias.
-- Secuencias.
-- Proyectos.
-- Aulas.
-- Laboratorios.
-- Recursos.
+### 5.1 Gestión de academias
 
-**Modifica:** cualquier entidad disponible.
+#### RF-ACA-01 — Consultar academias
+El sistema deberá permitir consultar las academias registradas y sus datos principales.
 
-**Elimina:** se priorizará la desactivación de registros cuando existan relaciones dependientes, en lugar de eliminar físicamente información que pueda afectar la integridad del sistema.
+**Prioridad:** Alta.  
+**Criterio de aceptación:** la consulta devuelve los registros existentes sin modificar la base de datos.
 
-**Restricciones:** no existen restricciones funcionales dentro del sistema para esta primera versión.
+#### RF-ACA-02 — Registrar academia
+El sistema deberá permitir registrar una academia con nombre, clave y descripción.
 
-### Autenticación
+**Prioridad:** Alta.  
+**Criterios de aceptación:**
+- El nombre y la clave son obligatorios.
+- La clave contiene únicamente letras ASCII sin acentos y números, no contiene espacios y tiene entre 1 y 10 caracteres.
+- La clave no puede duplicarse, sin distinguir entre mayúsculas y minúsculas.
+- Una solicitud inválida se rechaza con un mensaje comprensible.
 
-No se implementará autenticación en la primera versión.
+#### RF-ACA-03 — Actualizar academia
+El sistema deberá permitir modificar los datos de una academia existente y conservar su identificador.
 
-El sistema asumirá que el usuario que accede a la aplicación es el administrador autorizado.
+**Prioridad:** Alta.  
+**Criterio de aceptación:** el sistema rechaza una clave duplicada y no modifica la academia si la validación falla.
 
-La implementación de usuarios, contraseñas, sesiones y permisos queda fuera del alcance actual.
+#### RF-ACA-04 — Eliminar academia
+El sistema deberá permitir eliminar una academia únicamente cuando no tenga docentes ni cursos asociados.
 
----
+**Prioridad:** Media.  
+**Criterio de aceptación:** si existen dependencias, la operación se rechaza y se informa el motivo.
 
-# 4. Requerimientos Funcionales
+### 5.2 Gestión de docentes
 
-## Gestión de docentes
-
-### RF-001 — Registrar docente
-
-**Descripción:** El sistema deberá permitir al administrador registrar un docente capturando número de empleado, nombre completo, especialidad, grados académicos, información de SNI/SNII, perfil PRODEP y certificaciones.
-
-**Actor responsable:** Administrador.
-
-**Prioridad:** Alta.
-
-**Datos involucrados:** entidad Docente y entidades relacionadas.
-
-**Precondiciones:** ninguna relacionada con autenticación.
-
-**Resultado esperado:** el docente queda registrado y disponible para su asociación con cursos, proyectos y academias.
-
----
-
-### RF-002 — Consultar docente
-
-**Descripción:** El sistema deberá permitir consultar la información completa de un docente, incluyendo su perfil académico y profesional.
-
-**Actor:** Administrador.
+#### RF-DOC-01 — Consultar docentes
+El sistema deberá mostrar los docentes registrados y sus principales datos académicos y administrativos.
 
 **Prioridad:** Alta.
 
----
+#### RF-DOC-02 — Registrar docente
+El sistema deberá permitir registrar un docente mediante número de empleado, nombre, nivel y título académico, especialidad, información SNI, perfil PRODEP, certificaciones y academia.
 
-### RF-003 — Actualizar información de docente
+**Prioridad:** Alta.  
+**Criterios de aceptación:**
+- Número de empleado, nombre, nivel académico, título académico y academia son obligatorios.
+- El número de empleado no se puede duplicar.
+- El nivel académico debe corresponder a una opción reconocida por el sistema.
+- Si el docente pertenece al SNI, debe especificarse su nivel.
+- La academia indicada debe existir.
 
-**Descripción:** El sistema deberá permitir modificar los datos de un docente previamente registrado.
+#### RF-DOC-03 — Actualizar docente
+El sistema deberá permitir modificar la información de un docente existente.
 
-**Actor:** Administrador.
+**Prioridad:** Alta.  
+**Criterios de aceptación:** se conservan las reglas de validación del registro y no se permite duplicar el número de empleado.
 
-**Prioridad:** Alta.
+#### RF-DOC-04 — Eliminar docente
+El sistema deberá permitir eliminar un docente cuando no existan dominios o asignaciones que dependan de él.
 
----
+**Prioridad:** Media.  
+**Criterio de aceptación:** si existen relaciones dependientes, la eliminación se rechaza y la información permanece intacta.
 
-### RF-004 — Buscar y filtrar docentes
+### 5.3 Gestión de cursos
 
-**Descripción:** El sistema deberá permitir buscar y filtrar docentes utilizando criterios como:
-
-- Número de empleado.
-- Nombre.
-- Especialidad.
-- Grado académico.
-- Certificación.
-- Competencia.
-- Academia.
-- Curso.
-
-**Actor:** Administrador.
-
-**Prioridad:** Alta.
-
----
-
-### RF-005 — Consultar grados académicos de un docente
-
-**Descripción:** El sistema deberá permitir consultar los grados académicos asociados a un docente, incluyendo licenciatura, maestría y doctorado.
-
-**Prioridad:** Media.
-
----
-
-### RF-006 — Consultar certificaciones de un docente
-
-**Descripción:** El sistema deberá permitir consultar las certificaciones asociadas a un docente, incluyendo su vigencia cuando corresponda.
-
-**Prioridad:** Media.
-
----
-
-### RF-007 — Consultar SNI/SNII y PRODEP
-
-**Descripción:** El sistema deberá permitir consultar el estatus de SNI/SNII y perfil PRODEP de un docente.
-
-Para SNI/SNII se podrá almacenar:
-
-- Estatus.
-- Nivel.
-- Área, cuando corresponda.
-- Fecha de inicio de vigencia.
-- Fecha de fin de vigencia.
-
-Para PRODEP se podrá almacenar:
-
-- Estatus.
-- Tipo o modalidad.
-- Fecha de inicio de vigencia.
-- Fecha de fin de vigencia.
-
-**Prioridad:** Media.
-
----
-
-### RF-008 — Asociar competencias/capacidades con un docente
-
-**Descripción:** El sistema deberá permitir asociar una o más competencias o capacidades a un docente.
-
-Las competencias serán registradas de manera explícita y podrán utilizarse como requisitos para los cursos.
-
-**Actor:** Administrador.
+#### RF-CUR-01 — Consultar cursos
+El sistema deberá mostrar los cursos registrados, su descripción y la academia a la que pertenecen.
 
 **Prioridad:** Alta.
 
----
+#### RF-CUR-02 — Registrar curso
+El sistema deberá permitir registrar un curso mediante nombre, descripción y academia.
 
-### RF-009 — Registrar nivel de dominio de un docente sobre un curso
+**Prioridad:** Alta.  
+**Criterios de aceptación:** el nombre y la academia son obligatorios; la academia debe existir; no se permite repetir el mismo nombre dentro de una misma academia.
 
-**Descripción:** El sistema deberá permitir registrar el nivel de dominio de un docente sobre un curso en una escala de 0 a 10.
+#### RF-CUR-03 — Actualizar curso
+El sistema deberá permitir modificar la información de un curso existente.
 
-El nivel será capturado manualmente por el administrador.
+**Prioridad:** Alta.  
+**Criterios de aceptación:** se validan nuevamente el nombre y la academia; no se admiten duplicados dentro de la misma academia.
 
-**Actor:** Administrador.
+#### RF-CUR-04 — Eliminar curso
+El sistema deberá permitir eliminar un curso cuando no existan dominios o asignaciones que dependan de él.
 
-**Prioridad:** Alta.
+**Prioridad:** Media.  
+**Criterio de aceptación:** si hay relaciones dependientes, la eliminación se rechaza.
 
----
+### 5.4 Gestión de dominios
 
-## Gestión de cursos
-
-### RF-010 — Registrar curso
-
-**Descripción:** El sistema deberá permitir registrar un curso o asignatura con su nombre, clave, descripción y nivel mínimo de dominio requerido.
-
-**Actor:** Administrador.
-
-**Prioridad:** Alta.
-
----
-
-### RF-011 — Definir requisitos de un curso
-
-**Descripción:** El sistema deberá permitir definir las competencias necesarias para impartir un curso, diferenciando entre:
-
-- Requisitos obligatorios.
-- Requisitos recomendados.
-
-También deberá permitir establecer el nivel mínimo de dominio requerido para el curso.
-
-**Actor:** Administrador.
+#### RF-DOM-01 — Consultar dominios
+El sistema deberá mostrar los niveles de dominio registrados entre docentes y cursos.
 
 **Prioridad:** Alta.
 
----
+#### RF-DOM-02 — Registrar dominio
+El sistema deberá permitir registrar el nivel de dominio de un docente sobre un curso.
 
-### RF-012 — Consultar candidatos elegibles para un curso
+**Prioridad:** Alta.  
+**Criterios de aceptación:**
+- El nivel es un número entero de 1 a 10.
+- El docente y el curso deben existir.
+- El docente y el curso deben pertenecer a la misma academia.
+- Solo puede existir un registro para cada pareja docente-curso.
 
-**Descripción:** El sistema deberá permitir consultar la lista de docentes que cumplen los requisitos obligatorios de un curso determinado.
+#### RF-DOM-03 — Actualizar dominio
+El sistema deberá permitir cambiar el docente, el curso o el nivel de un registro de dominio, respetando las reglas de integridad.
 
-La lista podrá mostrar:
+**Prioridad:** Media.
 
-- Nivel de dominio.
-- Especialidad.
-- Grados académicos.
-- Competencias.
-- Certificaciones.
-- Academia o academias a las que pertenece.
-- SNI/SNII.
-- PRODEP.
+#### RF-DOM-04 — Eliminar dominio
+El sistema deberá permitir eliminar un registro de dominio existente.
+
+**Prioridad:** Media.
+
+### 5.5 Gestión de horarios y asignaciones
+
+#### RF-ASI-01 — Consultar bloques horarios
+El sistema deberá proporcionar los bloques horarios predefinidos disponibles para las asignaciones.
+
+**Prioridad:** Alta.  
+**Criterio de aceptación:** los bloques muestran día y hora de inicio y fin; no se administran desde la interfaz actual.
+
+#### RF-ASI-02 — Consultar candidatos para asignación
+El sistema deberá permitir consultar docentes candidatos para un curso y utilizar la información de academia y dominio registrada como apoyo para la decisión del administrador.
+
+**Prioridad:** Alta.  
+**Aclaración:** ordenar o mostrar candidatos no equivale a una evaluación automática completa de elegibilidad.
+
+#### RF-ASI-03 — Registrar asignación
+El sistema deberá permitir que el administrador asigne manualmente un docente a un curso y seleccione uno o varios bloques horarios.
+
+**Prioridad:** Alta.  
+**Criterios de aceptación:**
+- El curso y el docente deben existir y pertenecer a la misma academia.
+- La pareja curso-docente no puede asignarse más de una vez.
+- Debe seleccionarse al menos un bloque horario válido.
+- Un docente no puede tener el mismo bloque horario en dos asignaciones diferentes.
+- Si la operación no cumple las reglas, no se registra parcialmente.
+
+#### RF-ASI-04 — Consultar asignaciones
+El sistema deberá mostrar las asignaciones registradas, sus cursos, docentes y bloques horarios asociados.
 
 **Prioridad:** Alta.
 
----
-
-### RF-013 — Determinar elegibilidad de un docente para un curso
-
-**Descripción:** El sistema deberá determinar automáticamente si un docente cumple las condiciones necesarias para impartir un curso.
-
-Un docente será considerado elegible cuando:
-
-1. Cumpla todos los requisitos obligatorios.
-2. Su nivel de dominio sea igual o superior al nivel mínimo requerido por el curso.
-3. Las certificaciones obligatorias requeridas se encuentren vigentes.
-
-**Prioridad:** Alta.
-
----
-
-### RF-014 — Registrar asignación de docente a curso
-
-**Descripción:** El sistema deberá permitir al administrador registrar manualmente la asignación de un docente a un curso después de consultar los candidatos elegibles.
-
-El sistema deberá validar nuevamente que el docente cumpla los requisitos obligatorios antes de registrar la asignación.
-
-**Prioridad:** Alta.
-
----
-
-## Gestión de secuencias académicas
-
-### RF-015 — Registrar secuencia académica
-
-**Descripción:** El sistema deberá permitir crear una secuencia académica compuesta por un conjunto ordenado de cursos.
+#### RF-ASI-05 — Eliminar asignación
+El sistema deberá permitir eliminar una asignación existente y retirar los vínculos con sus bloques horarios.
 
 **Prioridad:** Media.
 
----
+### 5.6 Catálogos
+
+#### RF-CAT-01 — Consultar catálogos académicos
+El sistema deberá permitir consultar los catálogos utilizados por los formularios: licenciaturas, maestrías, doctorados, niveles SNI y especialidades.
+
+**Prioridad:** Media.  
+**Restricción:** los catálogos se consultan; su administración desde la interfaz no forma parte de esta versión.
+
+## 6. Reglas de negocio
+
+| ID | Regla |
+|---|---|
+| RN-01 | La clave de academia es obligatoria, única y alfanumérica; su longitud máxima es de 10 caracteres y no admite espacios. |
+| RN-02 | El número de empleado de un docente es único. |
+| RN-03 | Cada docente registrado pertenece a una sola academia. |
+| RN-04 | Cada curso registrado pertenece a una sola academia. |
+| RN-05 | No puede repetirse el nombre de un curso dentro de la misma academia. |
+| RN-06 | Un registro de dominio relaciona un único docente con un único curso. |
+| RN-07 | El nivel de dominio es un entero entre 1 y 10; el valor 0 no se admite en la versión actual. |
+| RN-08 | El docente y el curso de un dominio deben pertenecer a la misma academia. |
+| RN-09 | Una asignación relaciona un curso y un docente; la misma pareja no se puede registrar más de una vez. |
+| RN-10 | El curso y el docente asignados deben pertenecer a la misma academia. |
+| RN-11 | Toda asignación debe tener al menos un bloque horario válido. |
+| RN-12 | Un mismo docente no puede tener el mismo bloque horario en dos asignaciones distintas. |
+| RN-13 | La restricción de horario se aplica al docente; dos docentes diferentes pueden utilizar el mismo bloque horario. |
+| RN-14 | Una academia no se puede eliminar mientras tenga docentes o cursos asociados. |
+| RN-15 | Un docente o curso no se puede eliminar mientras tenga relaciones de dominio o asignación que impidan la operación. |
+| RN-16 | La asignación final es manual; el sistema no asigna docentes automáticamente. |
+| RN-17 | La información se guarda en SQLite y debe persistir después de cerrar y reiniciar el servidor. |
+| RN-18 | Las claves foráneas de SQLite deben permanecer activadas en la conexión de la aplicación. |
+
+## 7. Requerimientos no funcionales
+
+### RNF-01 — Integridad de datos
+La aplicación deberá mantener las restricciones de unicidad y las relaciones entre entidades. Las reglas críticas se validarán en el servidor y, cuando corresponda, también mediante restricciones de SQLite.
+
+### RNF-02 — Persistencia
+Los cambios válidos deberán conservarse en `db/app.db` y permanecer disponibles después de reiniciar Node.js.
+
+### RNF-03 — Seguridad frente a inyección SQL
+Las consultas deberán utilizar sentencias preparadas y parámetros para los valores recibidos. Los nombres dinámicos de tablas o columnas, si existen, deberán controlarse mediante listas permitidas; no se deben construir consultas concatenando entradas del usuario.
+
+### RNF-04 — Validación de entradas
+El servidor no deberá depender exclusivamente de las validaciones del navegador. Deberá validar campos obligatorios, formatos, identificadores, rangos numéricos y relaciones entre entidades antes de persistir los cambios.
+
+### RNF-05 — Manejo de errores
+Las respuestas HTTP deberán comunicar los errores de forma comprensible sin exponer al cliente trazas, rutas internas o detalles de SQLite. Los detalles técnicos se podrán registrar en la consola del servidor durante el desarrollo.
+
+### RNF-06 — Mantenibilidad
+La solución deberá mantener separadas la interfaz, las rutas HTTP, los modelos de datos y la capa de acceso a SQLite, siguiendo la estructura actual del proyecto.
+
+### RNF-07 — Usabilidad
+Los formularios deberán identificar los campos obligatorios y mostrar mensajes claros cuando una operación sea rechazada.
+
+### RNF-08 — Uso previsto y exposición de red
+La versión actual no cuenta con autenticación ni autorización. Por tanto, deberá utilizarse en un entorno local o controlado y no se considerará lista para exposición pública hasta añadir los controles de acceso y la configuración de red apropiados.
+
+### RNF-09 — Respaldo
+Antes de cambios importantes o demostraciones relevantes, se recomienda realizar una copia de `db/app.db`. Para copiarla de forma simple, se debe detener primero el servidor.
+
+### RNF-10 — Rendimiento
+No se ha establecido un objetivo de rendimiento formal ni se ha realizado una prueba de carga. El rendimiento se evaluará según el uso esperado del prototipo académico.
+
+## 8. Modelo de datos lógico actual
+
+La base de datos actual utiliza SQLite. Los nombres físicos de las columnas se mantienen en `snake_case`, mientras que la API puede presentar propiedades en `camelCase`.
+
+| Entidad/tabla | Propósito y restricciones relevantes |
+|---|---|
+| `academias` | Guarda nombre, clave y descripción. La clave debe ser única. |
+| `docentes` | Guarda número de empleado, nombre, nivel y título académico, especialidad, indicadores SNI y PRODEP, certificaciones y referencia a una academia. El número de empleado es único. |
+| `cursos` | Guarda nombre, descripción y academia. El nombre es único dentro de cada academia. |
+| `dominios` | Relaciona docente y curso y almacena un nivel de 1 a 10. La pareja docente-curso es única. |
+| `asignaciones` | Relaciona un docente con un curso. La pareja curso-docente es única. |
+| `horarios` | Contiene los bloques de horario predefinidos. |
+| `asignacion_horarios` | Tabla asociativa que vincula una asignación con uno o varios bloques horarios. |
+| `licenciaturas` | Catálogo de licenciaturas. |
+| `maestrias` | Catálogo de maestrías. |
+| `doctorados` | Catálogo de doctorados. |
+| `niveles_sni` | Catálogo de niveles SNI. |
+| `especialidades` | Catálogo de especialidades. |
+
+### 8.1 Relaciones principales
+
+- Una academia puede tener varios docentes; cada docente pertenece a una academia.
+- Una academia puede tener varios cursos; cada curso pertenece a una academia.
+- Un docente y un curso pueden relacionarse mediante un registro de dominio.
+- Un docente y un curso pueden relacionarse mediante una asignación, con un máximo de una asignación para esa pareja.
+- Una asignación tiene uno o varios bloques horarios mediante `asignacion_horarios`.
+- Un docente puede tener múltiples asignaciones, siempre que no repita un bloque horario entre ellas.
+- Los catálogos alimentan los formularios y no son entidades administrables desde la interfaz actual.
+
+### 8.2 Decisiones de modelado que difieren del diseño original
+
+| Diseño original | Implementación actual |
+|---|---|
+| Un docente puede pertenecer a varias academias | Cada docente tiene una sola `academia_id` |
+| Un curso puede pertenecer a varias academias | Cada curso tiene una sola `academia_id` |
+| El dominio admite valores de 0 a 10 | Se admite de 1 a 10; el valor 0 está excluido |
+| Curso con clave propia y requisitos de competencias | El curso actual se identifica mediante su ID; la unicidad de negocio es el nombre dentro de la academia |
+| Certificaciones y grados como registros relacionados con fecha y vigencia | Se guardan campos de formulario y catálogos; no hay gestión completa de vigencias ni de múltiples registros por docente |
+| Elegibilidad automática según requisitos y certificaciones | La aplicación presenta información de apoyo; la decisión se mantiene manual |
+| Gestión de secuencias, proyectos, espacios y recursos | No implementada en esta versión |
+| Desactivación lógica de todas las entidades | Algunas eliminaciones físicas se permiten si no existen relaciones que las bloqueen |
 
-### RF-016 — Definir relaciones de precedencia entre cursos
+## 9. Casos de uso principales
 
-**Descripción:** El sistema deberá permitir establecer el orden y las relaciones de precedencia entre cursos dentro de una secuencia académica.
+### CU-01 — Registrar una academia
 
-**Prioridad:** Media.
+**Actor:** Administrador operativo.  
+**Precondición:** el servidor y la base de datos están disponibles.
 
----
+**Flujo principal:**
+1. El administrador abre el módulo de academias.
+2. Captura nombre, clave y descripción.
+3. La interfaz verifica los campos del formulario.
+4. El servidor vuelve a validar los datos.
+5. El modelo comprueba la unicidad y registra la academia.
+6. La interfaz actualiza la información mostrada.
 
-### RF-017 — Consultar secuencia académica
+**Alternativas y errores:** clave inválida, campos obligatorios vacíos o clave duplicada. El sistema rechaza la operación e informa el motivo.
 
-**Descripción:** El sistema deberá permitir consultar los cursos que componen una secuencia y su orden correspondiente.
+### CU-02 — Registrar un docente
 
-**Prioridad:** Media.
+**Actor:** Administrador operativo.  
+**Precondición:** existe al menos una academia.
 
----
+**Flujo principal:**
+1. El administrador abre el módulo de docentes.
+2. Captura los datos obligatorios y selecciona una academia.
+3. Si indica pertenencia al SNI, selecciona el nivel correspondiente.
+4. El servidor valida los campos, el nivel académico, la unicidad del número de empleado y la existencia de la academia.
+5. El sistema registra el docente y muestra el resultado.
 
-## Gestión de proyectos académicos
+**Alternativas y errores:** número de empleado duplicado, academia inexistente o información obligatoria faltante.
 
-### RF-018 — Registrar proyecto académico
+### CU-03 — Registrar el dominio de un docente sobre un curso
 
-**Descripción:** El sistema deberá permitir registrar un proyecto académico asociado obligatoriamente a un curso.
+**Actor:** Administrador operativo.  
+**Precondición:** existe el docente y el curso.
 
-El proyecto podrá contener:
+**Flujo principal:**
+1. El administrador abre el módulo de dominios.
+2. Selecciona docente y curso.
+3. Captura un nivel entero entre 1 y 10.
+4. El servidor verifica existencia, academia compartida y ausencia de una pareja duplicada.
+5. El sistema registra el dominio.
 
-- Nombre.
-- Descripción.
-- Estado.
-- Curso asociado.
-- Docente responsable.
-- Docentes participantes.
-- Espacios físicos.
-- Recursos requeridos.
+**Alternativas y errores:** nivel fuera de rango, entidades inexistentes, academias distintas o pareja ya registrada.
 
-**Prioridad:** Media.
+### CU-04 — Registrar una asignación
 
----
+**Actor:** Administrador operativo.  
+**Precondición:** existe un curso y al menos un docente elegible para el proceso administrativo de selección; ambos deben pertenecer a la misma academia.
 
-### RF-019 — Asignar docente responsable a un proyecto
+**Flujo principal:**
+1. El administrador selecciona la academia y el curso.
+2. Consulta los docentes disponibles para esa selección y la información de dominio.
+3. Selecciona manualmente un docente.
+4. Añade uno o varios bloques horarios.
+5. El servidor comprueba existencia de entidades, coincidencia de academia, duplicidad de asignación, validez de bloques y conflictos de horario del docente.
+6. El sistema registra la asignación y sus bloques en una operación transaccional.
+7. La interfaz muestra la asignación registrada.
 
-**Descripción:** El sistema deberá permitir designar un docente responsable para un proyecto registrado.
+**Alternativas y errores:** no se seleccionó horario, se repite la pareja curso-docente, hay academias diferentes o el docente ya ocupa uno de los bloques elegidos. La operación se rechaza sin dejar una asignación incompleta.
 
-Cada proyecto deberá tener exactamente un docente responsable.
+### CU-05 — Eliminar un registro con relaciones
 
-**Prioridad:** Media.
+**Actor:** Administrador operativo.  
+**Precondición:** existe el registro seleccionado.
 
----
+**Flujo principal:**
+1. El administrador solicita eliminar una academia, docente o curso.
+2. El sistema verifica si hay entidades dependientes.
+3. Si la eliminación está permitida, se elimina el registro.
+4. Si existen relaciones bloqueantes, el servidor rechaza la solicitud y explica que primero deben resolverse las dependencias.
 
-### RF-020 — Asociar docentes participantes a un proyecto
+## 10. Matriz de trazabilidad resumida
 
-**Descripción:** El sistema deberá permitir asociar uno o varios docentes participantes a un proyecto.
-
-Un docente podrá participar en múltiples proyectos.
-
-**Prioridad:** Media.
-
----
-
-### RF-021 — Asociar recursos y espacio físico a un proyecto
-
-**Descripción:** El sistema deberá permitir asociar uno o varios espacios académicos, así como recursos y equipamiento, a un proyecto.
-
-**Prioridad:** Media.
-
----
-
-## Gestión de academias
-
-### RF-022 — Registrar academia
-
-**Descripción:** El sistema deberá permitir registrar una academia con:
-
-- Nombre.
-- Clave.
-- Descripción.
-- Estado.
-
-La clave de la academia será alfanumérica, tendrá una longitud máxima de 10 caracteres y deberá ser única.
-
-**Prioridad:** Media.
-
----
-
-### RF-023 — Asociar docente con academia
-
-**Descripción:** El sistema deberá permitir asociar uno o más docentes a una academia.
-
-Un docente podrá pertenecer a una o varias academias.
-
-**Prioridad:** Media.
-
----
-
-### RF-024 — Consultar academias de un docente
-
-**Descripción:** El sistema deberá permitir consultar a qué academia o academias pertenece un docente.
-
-**Prioridad:** Media.
-
----
-
-### RF-025 — Asociar cursos con academias
-
-**Descripción:** El sistema deberá permitir asociar cursos a una o varias academias cuando corresponda.
-
-La coincidencia entre la academia del curso y la academia del docente podrá utilizarse como criterio de recomendación durante la consulta de candidatos.
-
-**Prioridad:** Media.
-
----
-
-## Gestión de aulas y laboratorios
-
-### RF-026 — Registrar aula o laboratorio
-
-**Descripción:** El sistema deberá permitir registrar un espacio académico indicando:
-
-- Nombre.
-- Tipo.
-- Capacidad.
-- Estado.
-- Recursos/equipamiento disponible.
-
-Los tipos de espacio serán:
-
-- Aula.
-- Laboratorio.
-
-**Prioridad:** Media.
-
----
-
-### RF-027 — Consultar disponibilidad general de espacios
-
-**Descripción:** El sistema deberá permitir consultar qué espacios se encuentran disponibles o no disponibles para su asociación con cursos o proyectos.
-
-En esta versión, la disponibilidad será general y no estará relacionada con horarios específicos.
-
-**Prioridad:** Media.
-
----
-
-### RF-028 — Asociar cursos/proyectos con espacios físicos
-
-**Descripción:** El sistema deberá permitir vincular uno o varios cursos o proyectos con los espacios académicos requeridos.
-
-Esta asociación no representa una reservación de horario.
-
-**Prioridad:** Media.
-
----
-
-## Gestión de recursos y equipamiento
-
-### RF-029 — Registrar recurso o equipamiento
-
-**Descripción:** El sistema deberá permitir registrar recursos o equipamiento indicando:
-
-- Nombre.
-- Tipo.
-- Cantidad.
-- Estado.
-
-**Prioridad:** Media.
-
----
-
-### RF-030 — Asociar recursos a espacios académicos
-
-**Descripción:** El sistema deberá permitir asociar recursos a aulas o laboratorios, indicando la cantidad disponible.
-
-**Prioridad:** Media.
-
----
-
-### RF-031 — Asociar recursos a proyectos
-
-**Descripción:** El sistema deberá permitir asociar recursos a proyectos, indicando la cantidad requerida.
-
-**Prioridad:** Media.
-
----
-
-# 5. Requerimientos No Funcionales
-
-## 5.1 Derivados directamente del contexto
-
-### RNF-001 — Integridad de datos
-
-El sistema deberá garantizar que un docente no pueda ser considerado elegible para un curso sin cumplir los requisitos obligatorios definidos y el nivel mínimo de dominio establecido.
-
----
-
-### RNF-002 — Consistencia de relaciones
-
-El sistema deberá mantener la integridad de las relaciones entre docentes, cursos, academias, proyectos, espacios y recursos.
-
-No deberán generarse asociaciones duplicadas ni referencias a entidades inexistentes.
-
----
-
-### RNF-003 — Validación de datos
-
-El sistema deberá validar los datos ingresados, incluyendo:
-
-- Unicidad del número de empleado.
-- Unicidad de la clave del curso.
-- Unicidad de la clave de academia.
-- Nivel de dominio entre 0 y 10.
-- Capacidad de espacios mayor que cero.
-- Fechas de certificación válidas.
-- Claves de academia con máximo 10 caracteres alfanuméricos.
-
----
-
-## 5.2 Recomendados
-
-### RNF-004 — Usabilidad
-
-Se recomienda una interfaz simple y consistente, dado el contexto de un proyecto académico RAD con tiempo de desarrollo limitado.
-
-La navegación deberá organizarse mediante módulos claramente identificables.
-
----
-
-### RNF-005 — Mantenibilidad
-
-Se recomienda una arquitectura modular que separe las principales áreas funcionales:
-
-- Docentes.
-- Cursos.
-- Academias.
-- Secuencias.
-- Proyectos.
-- Espacios.
-- Recursos.
-
----
-
-### RNF-006 — Respaldos
-
-Se recomienda realizar respaldos periódicos de la base de datos, especialmente antes de demostraciones o modificaciones importantes.
-
-La frecuencia exacta no será una funcionalidad del sistema y dependerá del entorno de desarrollo.
-
----
-
-### RNF-007 — Rendimiento
-
-Para el prototipo se establece como objetivo que las consultas comunes respondan en aproximadamente 2 segundos o menos bajo un volumen esperado de hasta:
-
-- 500 docentes.
-- 200 cursos.
-- 50 academias.
-- 100 espacios académicos.
-
----
-
-### RNF-008 — Disponibilidad
-
-No se establecerá un SLA formal.
-
-La aplicación estará orientada inicialmente a un entorno académico, de desarrollo y demostración.
-
----
-
-### RNF-009 — Escalabilidad
-
-La arquitectura deberá mantenerse modular para permitir una ampliación futura del sistema, aunque no se establece como requisito una infraestructura de escalabilidad empresarial para la primera versión.
-
----
-
-### RNF-010 — Privacidad
-
-El sistema almacenará únicamente información académica y profesional necesaria para sus funciones.
-
-No se almacenarán contraseñas, información bancaria, médica u otra información personal sensible que no sea necesaria para el objetivo del sistema.
-
-La implementación de políticas institucionales específicas de protección de datos queda fuera del alcance técnico del prototipo.
-
----
-
-# 6. Reglas de Negocio
-
-| ID | Regla | Tipo |
+| Regla | Requerimientos relacionados | Casos de uso |
 |---|---|---|
-| RN-001 | Un docente solo podrá ser considerado elegible para impartir un curso cuando cumpla todos los requisitos obligatorios definidos para dicho curso. | Regla de negocio |
-| RN-002 | El nivel de dominio de un docente sobre un curso deberá encontrarse entre 0 y 10. | Regla de negocio |
-| RN-003 | Un docente será elegible cuando su nivel de dominio sea igual o superior al nivel mínimo requerido por el curso. | Regla de negocio |
-| RN-004 | Las certificaciones que sean requisitos obligatorios deberán encontrarse vigentes para que puedan considerarse cumplidas. | Regla de negocio |
-| RN-005 | Los requisitos recomendados no impedirán que un docente sea considerado elegible. | Regla de negocio |
-| RN-006 | La coincidencia entre la academia del docente y la academia asociada al curso será un criterio de recomendación, no un requisito obligatorio. | Regla de negocio |
-| RN-007 | Un docente puede pertenecer a una o varias academias. | Regla estructural |
-| RN-008 | Un curso puede estar asociado a una o varias academias. | Regla estructural |
-| RN-009 | La elegibilidad se determinará automáticamente mediante las reglas establecidas. | Regla funcional |
-| RN-010 | La asignación final de un docente a un curso será realizada manualmente por el administrador. | Regla funcional |
-| RN-011 | El sistema no permitirá registrar una asignación docente-curso si el docente no cumple los requisitos obligatorios. | Regla de integridad |
-| RN-012 | Un docente puede tener cero o más certificaciones. | Regla estructural |
-| RN-013 | Un docente puede tener cero o más grados académicos registrados. | Regla estructural |
-| RN-014 | Un proyecto académico pertenece obligatoriamente a un único curso. | Regla estructural |
-| RN-015 | Un proyecto deberá tener exactamente un docente responsable. | Regla de negocio |
-| RN-016 | Un proyecto puede tener cero o varios docentes participantes adicionales. | Regla estructural |
-| RN-017 | Un curso puede tener cero o varios proyectos asociados. | Regla estructural |
-| RN-018 | Un curso puede pertenecer a varias secuencias académicas. | Regla estructural |
-| RN-019 | Un curso no podrá aparecer más de una vez dentro de la misma secuencia académica. | Regla de integridad |
-| RN-020 | La primera versión del sistema manejará únicamente el estado académico actual y no administrará múltiples periodos escolares. | Regla de alcance |
-| RN-021 | La disponibilidad de aulas y laboratorios se manejará como estado general y no como disponibilidad por horario. | Regla de alcance |
-| RN-022 | Las entidades principales podrán desactivarse en lugar de eliminarse físicamente cuando existan relaciones dependientes. | Regla de integridad |
-
----
-
-### 7.2 Entidades identificadas
-
-| Entidad | Propósito | Atributos principales | Clave primaria propuesta | Relaciones importantes |
-|---|---|---|---|---|
-| Docente | Representa al profesor | id_docente, numero_empleado, nombre_completo, especialidad_id, SNI/SNII, PRODEP | id_docente | GradoAcadémico, Certificación, Competencia, Curso, Academia, Proyecto |
-| GradoAcademico | Registra los grados académicos | id_grado, tipo_grado, institucion, area, anio, docente_id | id_grado | Docente (N:1) |
-| Especialidad | Catálogo de especialidades | id_especialidad, nombre | id_especialidad | Docente (1:N) |
-| Certificacion | Catálogo de certificaciones | id_certificacion, nombre, organismo_emisor, descripcion | id_certificacion | Docente (N:M) |
-| DocenteCertificacion | Relaciona docentes y certificaciones | docente_id, certificacion_id, fecha_emision, fecha_vencimiento | Clave compuesta | Docente, Certificacion |
-| Competencia | Representa habilidades o capacidades | id_competencia, nombre, descripcion | id_competencia | Docente (N:M), Curso (N:M) |
-| DocenteCompetencia | Relaciona docentes y competencias | docente_id, competencia_id | Clave compuesta | Docente, Competencia |
-| Curso | Representa una asignatura | id_curso, clave, nombre, descripcion, nivel_minimo_dominio | id_curso | Docente, Competencia, Secuencia, Proyecto, Academia, Espacio |
-| DocenteCurso | Registra dominio del docente sobre un curso | docente_id, curso_id, nivel_dominio | Clave compuesta | Docente, Curso |
-| CursoRequisito | Define competencias requeridas por curso | curso_id, competencia_id, tipo_requisito | Clave compuesta | Curso, Competencia |
-| Academia | Agrupación académica | id_academia, clave, nombre, descripcion | id_academia | Docente (N:M), Curso (N:M) |
-| DocenteAcademia | Relaciona docentes y academias | docente_id, academia_id | Clave compuesta | Docente, Academia |
-| CursoAcademia | Relaciona cursos y academias | curso_id, academia_id | Clave compuesta | Curso, Academia |
-| SecuenciaAcademica | Agrupación ordenada de cursos | id_secuencia, nombre, descripcion | id_secuencia | Curso (N:M) |
-| SecuenciaCurso | Relaciona cursos con secuencias | secuencia_id, curso_id, orden | Clave compuesta | Secuencia, Curso |
-| Proyecto | Proyecto académico | id_proyecto, nombre, descripcion, curso_id, estado | id_proyecto | Curso, Docente, Espacio, Recurso |
-| DocenteProyecto | Relaciona docentes y proyectos | docente_id, proyecto_id, rol | Clave compuesta | Docente, Proyecto |
-| EspacioAcademico | Representa aula o laboratorio | id_espacio, nombre, tipo, capacidad, estado | id_espacio | Curso, Proyecto, Recurso |
-| CursoEspacio | Relaciona cursos y espacios | curso_id, espacio_id | Clave compuesta | Curso, Espacio |
-| ProyectoEspacio | Relaciona proyectos y espacios | proyecto_id, espacio_id | Clave compuesta | Proyecto, Espacio |
-| Recurso | Representa recurso o equipamiento | id_recurso, nombre, tipo, cantidad, estado | id_recurso | Espacio, Proyecto |
-| EspacioRecurso | Relaciona recursos con espacios | espacio_id, recurso_id, cantidad | Clave compuesta | Espacio, Recurso |
-| ProyectoRecurso | Relaciona recursos con proyectos | proyecto_id, recurso_id, cantidad | Clave compuesta | Proyecto, Recurso |
-
-### Nota de diseño
-
-Se utilizará una entidad genérica `EspacioAcademico` en lugar de mantener entidades independientes `Aula` y `Laboratorio`.
-
-El atributo `tipo` permitirá distinguir entre:
-
-- Aula.
-- Laboratorio.
-
-Esto evita duplicación estructural y permite que ambas clases de espacio sean utilizadas de la misma manera por cursos y proyectos.
-
----
-
-## 8. Relaciones y Cardinalidades
-
-| Relación | Cardinalidad | Justificación |
-|---|---|---|
-| Docente — GradoAcademico | 1:N | Un docente puede tener cero o varios grados académicos; cada grado pertenece a un solo docente. |
-| Docente — Certificación | N:M | Un docente puede tener varias certificaciones y una certificación puede estar asociada a varios docentes. Se utiliza `DocenteCertificacion`. |
-| Docente — Competencia | N:M | Un docente puede tener varias competencias y una competencia puede corresponder a varios docentes. Se utiliza `DocenteCompetencia`. |
-| Docente — Curso | N:M | Un docente puede tener dominio registrado sobre varios cursos y un curso puede tener varios docentes con nivel de dominio registrado. Se utiliza `DocenteCurso`. |
-| Docente — Academia | N:M | Un docente puede pertenecer a varias academias y una academia puede tener varios docentes. Se utiliza `DocenteAcademia`. |
-| Curso — Competencia | N:M | Un curso puede requerir varias competencias y una competencia puede ser requisito de varios cursos. Se utiliza `CursoRequisito`. |
-| Curso — Secuencia | N:M | Un curso puede pertenecer a diferentes secuencias y una secuencia contiene varios cursos. Se utiliza `SecuenciaCurso`, que registra el orden. |
-| Curso — Proyecto | 1:N | Un curso puede tener cero o varios proyectos y cada proyecto pertenece a un único curso. |
-| Curso — Academia | N:M | Un curso puede estar asociado a varias academias y una academia puede agrupar varios cursos. Se utiliza `CursoAcademia`. |
-| Proyecto — Docente | N:M | Un proyecto puede tener varios docentes y un docente puede participar en varios proyectos. Se utiliza `DocenteProyecto`. |
-| Curso — EspacioAcademico | N:M | Un curso puede estar asociado a diferentes espacios y un espacio puede estar asociado a diferentes cursos. Se utiliza `CursoEspacio`. |
-| Proyecto — EspacioAcademico | N:M | Un proyecto puede utilizar uno o varios espacios y un espacio puede estar asociado a diferentes proyectos. Se utiliza `ProyectoEspacio`. |
-| EspacioAcademico — Recurso | N:M | Un espacio puede disponer de varios recursos y un recurso puede encontrarse asociado a diferentes espacios. Se utiliza `EspacioRecurso`. |
-| Proyecto — Recurso | N:M | Un proyecto puede requerir varios recursos y un recurso puede ser utilizado por varios proyectos. Se utiliza `ProyectoRecurso`. |
-
-### Aclaración sobre cardinalidades
-
-Las relaciones N:M se implementarán mediante entidades asociativas. Esto permite almacenar información adicional de la relación.
-
-Por ejemplo:
-
-```text
-Docente ───< DocenteCurso >─── Curso
-                    │
-                    └── nivel_dominio
-```
-
-El nivel de dominio no pertenece exclusivamente al docente ni exclusivamente al curso; pertenece a la relación entre ambos.
-
-De manera similar:
-
-```text
-Docente ───< DocenteAcademia >─── Academia
-```
-
-permite que un docente pertenezca a varias academias.
-
-
----
-# 9. Casos de Uso
-
-## CU-001 — Registrar docente
-
-**Actor principal:** Administrador.
-
-**Objetivo:** Incorporar un nuevo docente al sistema con su información básica.
-
-**Precondiciones:** No requiere autenticación en la primera versión.
-
-**Flujo principal:**
-
-1. El administrador accede al módulo de docentes.
-2. Selecciona la opción para registrar un docente.
-3. Captura los datos obligatorios.
-4. El sistema valida la información.
-5. El sistema almacena el registro.
-6. El administrador puede agregar grados académicos, certificaciones y competencias.
-
-**Flujos alternativos:**
-
-- El administrador puede registrar primero al docente y posteriormente agregar información relacionada.
-
-**Excepciones:**
-
-- Número de empleado duplicado → el sistema rechaza el registro.
-
-**Resultado esperado:** Docente disponible para asociaciones futuras.
-
----
-
-## CU-002 — Consultar candidatos elegibles para un curso
-
-**Actor principal:** Administrador.
-
-**Objetivo:** Obtener la lista de docentes que cumplen los requisitos de un curso.
-
-**Precondiciones:** El curso debe estar registrado y contar con la información necesaria para realizar la evaluación.
-
-**Flujo principal:**
-
-1. El administrador selecciona un curso.
-2. El sistema consulta los docentes registrados.
-3. El sistema evalúa los requisitos obligatorios.
-4. El sistema compara el nivel de dominio del docente con el nivel mínimo requerido.
-5. El sistema valida las certificaciones obligatorias.
-6. El sistema identifica los docentes elegibles.
-7. El sistema muestra los candidatos.
-
-**Flujos alternativos:**
-
-- El administrador puede filtrar por academia.
-- El administrador puede filtrar por especialidad.
-- El administrador puede ordenar por nivel de dominio.
-
-**Excepciones:**
-
-- Ningún docente cumple los requisitos → el sistema informa que no existen candidatos elegibles.
-
-**Resultado esperado:** Lista de docentes elegibles ordenada de acuerdo con los criterios definidos.
-
----
-
-## CU-003 — Registrar proyecto académico
-
-**Actor principal:** Administrador.
-
-**Objetivo:** Crear un proyecto asociado a un curso, docentes y recursos.
-
-**Precondiciones:**
-
-- Debe existir un curso.
-- Debe existir al menos un docente para designarlo como responsable.
-
-**Flujo principal:**
-
-1. El administrador accede al módulo de proyectos.
-2. Crea un nuevo proyecto.
-3. Selecciona el curso asociado.
-4. Designa un docente responsable.
-5. Agrega docentes participantes, si corresponde.
-6. Asocia espacios.
-7. Asocia recursos.
-8. El sistema valida la información.
-9. El sistema registra el proyecto.
-
-**Excepciones:**
-
-- Falta de curso → el sistema no permite guardar.
-- Falta de docente responsable → el sistema no permite guardar.
-
-**Resultado esperado:** Proyecto registrado y disponible para consulta.
-
----
-
-## CU-004 — Asociar docente a academia
-
-**Actor principal:** Administrador.
-
-**Objetivo:** Incorporar un docente a una academia.
-
-**Precondiciones:**
-
-- El docente debe existir.
-- La academia debe existir.
-
-**Flujo principal:**
-
-1. El administrador selecciona una academia.
-2. Consulta los docentes.
-3. Selecciona un docente.
-4. El sistema valida que la relación no exista previamente.
-5. El sistema registra la asociación.
-
-**Resultado esperado:** El docente queda asociado a la academia.
-
----
-
-## CU-005 — Gestionar espacio académico
-
-**Actor principal:** Administrador.
-
-**Objetivo:** Registrar y mantener actualizados los espacios disponibles.
-
-**Precondiciones:** Ninguna.
-
-**Flujo principal:**
-
-1. El administrador accede al módulo de espacios.
-2. Selecciona aula o laboratorio.
-3. Captura nombre, capacidad y estado.
-4. Registra el equipamiento disponible.
-5. El sistema valida la información.
-6. El sistema almacena el espacio.
-
-**Resultado esperado:** Espacio disponible para su asociación con cursos y proyectos.
-
----
-
-# 10. Matriz de Trazabilidad Preliminar
-
-| Regla de negocio | Requerimiento funcional | Caso de uso | Entidades involucradas |
-|---|---|---|---|
-| RN-001 | RF-011, RF-012, RF-013 | CU-002 | Docente, Curso, Competencia |
-| RN-002 | RF-009 | CU-002 | Docente, Curso |
-| RN-003 | RF-010, RF-013 | CU-002 | Docente, Curso |
-| RN-004 | RF-006, RF-011, RF-013 | CU-002 | Docente, Certificacion, Curso |
-| RN-005 | RF-011, RF-013 | CU-002 | Curso, Competencia |
-| RN-006 | RF-025 | CU-002 | Docente, Academia, Curso |
-| RN-007 | RF-023, RF-024 | CU-004 | Docente, Academia |
-| RN-008 | RF-025 | CU-002 | Curso, Academia |
-| RN-009 | RF-013 | CU-002 | Docente, Curso |
-| RN-010 | RF-014 | — | Docente, Curso |
-| RN-011 | RF-014 | — | Docente, Curso |
-| RN-012 | RF-006 | CU-001 | Docente, Certificacion |
-| RN-013 | RF-005 | CU-001 | Docente, GradoAcademico |
-| RN-014 | RF-018 | CU-003 | Curso, Proyecto |
-| RN-015 | RF-019 | CU-003 | Proyecto, Docente |
-| RN-016 | RF-020 | CU-003 | Proyecto, Docente |
-| RN-017 | RF-018 | CU-003 | Curso, Proyecto |
-| RN-018 | RF-015, RF-016 | — | SecuenciaAcademica, Curso |
-| RN-019 | RF-016 | — | SecuenciaAcademica, Curso |
-| RN-020 | — | — | Todas las entidades académicas |
-| RN-021 | RF-027, RF-028 | CU-005 | EspacioAcademico |
-| RN-022 | RF-003, RF-024, RF-027, RF-029 | — | Entidades principales |
-
----
-
-# 11. Diagramas Mermaid
-
-## A. Diagrama de casos de uso
-
-```mermaid
-flowchart LR
-
-    ADMIN[Administrador]
-
-    ADMIN --> DOC[Gestionar docentes]
-    ADMIN --> CUR[Gestionar cursos]
-    ADMIN --> EVAL[Evaluar elegibilidad]
-    ADMIN --> ASIG[Registrar asignación]
-    ADMIN --> ACA[Gestionar academias]
-    ADMIN --> SEC[Gestionar secuencias]
-    ADMIN --> PRO[Gestionar proyectos]
-    ADMIN --> ESP[Gestionar espacios]
-    ADMIN --> REC[Gestionar recursos]
-
-    EVAL --> CUR
-    ASIG --> EVAL
-```
-
----
-
-## B. Diagrama entidad-relación conceptual
-
-```mermaid
-erDiagram
-
-    DOCENTE ||--o{ GRADO_ACADEMICO : posee
-
-    DOCENTE ||--o{ DOCENTE_CERTIFICACION : tiene
-    CERTIFICACION ||--o{ DOCENTE_CERTIFICACION : corresponde
-
-    DOCENTE ||--o{ DOCENTE_COMPETENCIA : posee
-    COMPETENCIA ||--o{ DOCENTE_COMPETENCIA : corresponde
-
-    DOCENTE ||--o{ DOCENTE_CURSO : domina
-    CURSO ||--o{ DOCENTE_CURSO : tiene
-
-    DOCENTE ||--o{ DOCENTE_ACADEMIA : pertenece
-    ACADEMIA ||--o{ DOCENTE_ACADEMIA : integra
-
-    CURSO ||--o{ CURSO_REQUISITO : requiere
-    COMPETENCIA ||--o{ CURSO_REQUISITO : define
-
-    CURSO ||--o{ CURSO_ACADEMIA : pertenece
-    ACADEMIA ||--o{ CURSO_ACADEMIA : agrupa
-
-    SECUENCIA_ACADEMICA ||--o{ SECUENCIA_CURSO : contiene
-    CURSO ||--o{ SECUENCIA_CURSO : participa
-
-    CURSO ||--o{ PROYECTO : origina
-
-    PROYECTO ||--o{ DOCENTE_PROYECTO : involucra
-    DOCENTE ||--o{ DOCENTE_PROYECTO : participa
-
-    CURSO ||--o{ CURSO_ESPACIO : utiliza
-    ESPACIO_ACADEMICO ||--o{ CURSO_ESPACIO : recibe
-
-    PROYECTO ||--o{ PROYECTO_ESPACIO : utiliza
-    ESPACIO_ACADEMICO ||--o{ PROYECTO_ESPACIO : recibe
-
-    ESPACIO_ACADEMICO ||--o{ ESPACIO_RECURSO : dispone
-    RECURSO ||--o{ ESPACIO_RECURSO : pertenece
-
-    PROYECTO ||--o{ PROYECTO_RECURSO : requiere
-    RECURSO ||--o{ PROYECTO_RECURSO : utiliza
-
-    DOCENTE {
-        int id_docente PK
-        string numero_empleado UK
-        string nombre_completo
-        int especialidad_id FK
-        string sni_estatus
-        string sni_nivel
-        string sni_area
-        date sni_vigencia_inicio
-        date sni_vigencia_fin
-        string prodep_estatus
-        string prodep_tipo
-        date prodep_vigencia_inicio
-        date prodep_vigencia_fin
-        boolean activo
-    }
-
-    GRADO_ACADEMICO {
-        int id_grado PK
-        int docente_id FK
-        string tipo_grado
-        string institucion
-        string area
-        int anio_obtencion
-    }
-
-    ESPECIALIDAD {
-        int id_especialidad PK
-        string nombre UK
-    }
-
-    CERTIFICACION {
-        int id_certificacion PK
-        string nombre
-        string organismo_emisor
-        string descripcion
-    }
-
-    DOCENTE_CERTIFICACION {
-        int docente_id FK
-        int certificacion_id FK
-        date fecha_emision
-        date fecha_vencimiento
-    }
-
-    COMPETENCIA {
-        int id_competencia PK
-        string nombre
-        string descripcion
-    }
-
-    DOCENTE_COMPETENCIA {
-        int docente_id FK
-        int competencia_id FK
-    }
-
-    CURSO {
-        int id_curso PK
-        string clave UK
-        string nombre
-        string descripcion
-        int nivel_minimo_dominio
-        boolean activo
-    }
-
-    DOCENTE_CURSO {
-        int docente_id FK
-        int curso_id FK
-        int nivel_dominio
-    }
-
-    CURSO_REQUISITO {
-        int curso_id FK
-        int competencia_id FK
-        string tipo_requisito
-    }
-
-    ACADEMIA {
-        int id_academia PK
-        string clave UK
-        string nombre
-        string descripcion
-        boolean activo
-    }
-
-    DOCENTE_ACADEMIA {
-        int docente_id FK
-        int academia_id FK
-    }
-
-    CURSO_ACADEMIA {
-        int curso_id FK
-        int academia_id FK
-    }
-
-    SECUENCIA_ACADEMICA {
-        int id_secuencia PK
-        string nombre
-        string descripcion
-    }
-
-    SECUENCIA_CURSO {
-        int secuencia_id FK
-        int curso_id FK
-        int orden
-    }
-
-    PROYECTO {
-        int id_proyecto PK
-        int curso_id FK
-        string nombre
-        string descripcion
-        string estado
-    }
-
-    DOCENTE_PROYECTO {
-        int docente_id FK
-        int proyecto_id FK
-        string rol
-    }
-
-    ESPACIO_ACADEMICO {
-        int id_espacio PK
-        string nombre
-        string tipo
-        int capacidad
-        string estado
-    }
-
-    CURSO_ESPACIO {
-        int curso_id FK
-        int espacio_id FK
-    }
-
-    PROYECTO_ESPACIO {
-        int proyecto_id FK
-        int espacio_id FK
-    }
-
-    RECURSO {
-        int id_recurso PK
-        string nombre
-        string tipo
-        int cantidad
-        string estado
-    }
-
-    ESPACIO_RECURSO {
-        int espacio_id FK
-        int recurso_id FK
-        int cantidad
-    }
-
-    PROYECTO_RECURSO {
-        int proyecto_id FK
-        int recurso_id FK
-        int cantidad
-    }
-```
-
----
-
-## C. Diagrama de flujo general — Elegibilidad docente-curso
+| RN-01 | RF-ACA-02, RF-ACA-03 | CU-01 |
+| RN-02 | RF-DOC-02, RF-DOC-03 | CU-02 |
+| RN-03, RN-04 | RF-DOC-02, RF-CUR-02, RF-DOM-02, RF-ASI-03 | CU-02, CU-03, CU-04 |
+| RN-05 | RF-CUR-02, RF-CUR-03 | — |
+| RN-06, RN-07, RN-08 | RF-DOM-02, RF-DOM-03 | CU-03 |
+| RN-09, RN-10 | RF-ASI-03 | CU-04 |
+| RN-11, RN-12, RN-13 | RF-ASI-01, RF-ASI-03, RF-ASI-04 | CU-04 |
+| RN-14, RN-15 | RF-ACA-04, RF-DOC-04, RF-CUR-04 | CU-05 |
+| RN-17, RN-18 | RF-ACA-01, RF-DOC-01, RF-CUR-01, RF-DOM-01, RF-ASI-04 | Todos los casos de uso con persistencia |
+
+## 11. Diagramas Mermaid
+
+### 11.1 Flujo general para registrar una asignación
 
 ```mermaid
 flowchart TD
-
-    INICIO([Seleccionar curso])
-
-    CONSULTAR[Consultar docentes]
-
-    REQ{¿Cumple requisitos obligatorios?}
-
-    DOM{¿Nivel de dominio suficiente?}
-
-    CERT{¿Certificaciones obligatorias vigentes?}
-
-    ELEGIBLE[Docente elegible]
-
-    NO[Docente no elegible]
-
-    ORDENAR[Ordenar candidatos]
-
-    ACADEMIA[Considerar coincidencia de academia]
-
-    SELECCIONAR[Administrador selecciona docente]
-
-    VALIDAR[Validar elegibilidad]
-
-    ASIGNAR[Registrar asignación]
-
-    FIN([Fin])
-
-    INICIO --> CONSULTAR
-    CONSULTAR --> REQ
-
-    REQ -- No --> NO
-    REQ -- Sí --> DOM
-
-    DOM -- No --> NO
-    DOM -- Sí --> CERT
-
-    CERT -- No --> NO
-    CERT -- Sí --> ELEGIBLE
-
-    ELEGIBLE --> ACADEMIA
-    ACADEMIA --> ORDENAR
-    ORDENAR --> SELECCIONAR
-    SELECCIONAR --> VALIDAR
-    VALIDAR --> ASIGNAR
-    ASIGNAR --> FIN
-
-    NO --> FIN
+    A([Inicio]) --> B[Seleccionar academia y curso]
+    B --> C[Consultar candidatos]
+    C --> D[Seleccionar docente]
+    D --> E[Seleccionar uno o más bloques horarios]
+    E --> F{¿Datos y horarios válidos?}
+    F -- No --> G[Mostrar error y solicitar corrección]
+    G --> D
+    F -- Sí --> H{¿Se repite la asignación o hay conflicto de horario?}
+    H -- Sí --> I[Rechazar operación y mostrar motivo]
+    I --> D
+    H -- No --> J[Guardar asignación y bloques en una transacción]
+    J --> K[Actualizar la lista de asignaciones]
+    K --> L([Fin])
 ```
 
----
-
-## D. Diagrama de clases conceptual
+### 11.2 Diagrama entidad-relación simplificado
 
 ```mermaid
-classDiagram
+erDiagram
+    ACADEMIAS ||--o{ DOCENTES : contiene
+    ACADEMIAS ||--o{ CURSOS : agrupa
+    DOCENTES ||--o{ DOMINIOS : registra
+    CURSOS ||--o{ DOMINIOS : recibe
+    DOCENTES ||--o{ ASIGNACIONES : participa
+    CURSOS ||--o{ ASIGNACIONES : recibe
+    ASIGNACIONES ||--|{ ASIGNACION_HORARIOS : incluye
+    HORARIOS ||--o{ ASIGNACION_HORARIOS : se_asocia
 
-    class Docente {
-        +int id_docente
-        +string numero_empleado
-        +string nombre_completo
-        +string sni_estatus
-        +string sni_nivel
-        +string prodep_estatus
-        +bool activo
+    ACADEMIAS {
+        int id PK
+        string nombre
+        string clave UK
+        string descripcion
     }
-
-    class GradoAcademico {
-        +int id_grado
-        +string tipo_grado
-        +string institucion
-        +string area
-        +int anio_obtencion
+    DOCENTES {
+        int id PK
+        string numero_empleado UK
+        string nombre
+        string nivel_academico
+        string titulo_academico
+        string especialidad
+        string sni
+        string nivel_sni
+        string prodep
+        string certificaciones
+        int academia_id FK
     }
-
-    class Especialidad {
-        +int id_especialidad
-        +string nombre
+    CURSOS {
+        int id PK
+        string nombre
+        string descripcion
+        int academia_id FK
     }
-
-    class Certificacion {
-        +int id_certificacion
-        +string nombre
-        +string organismo_emisor
+    DOMINIOS {
+        int id PK
+        int docente_id FK
+        int curso_id FK
+        int nivel
     }
-
-    class Competencia {
-        +int id_competencia
-        +string nombre
-        +string descripcion
+    ASIGNACIONES {
+        int id PK
+        int curso_id FK
+        int docente_id FK
     }
-
-    class Curso {
-        +int id_curso
-        +string clave
-        +string nombre
-        +string descripcion
-        +int nivel_minimo_dominio
+    HORARIOS {
+        int id PK
+        string dia
+        string hora_inicio
+        string hora_fin
     }
-
-    class Academia {
-        +int id_academia
-        +string clave
-        +string nombre
-        +string descripcion
+    ASIGNACION_HORARIOS {
+        int asignacion_id PK, FK
+        int horario_id PK, FK
     }
-
-    class SecuenciaAcademica {
-        +int id_secuencia
-        +string nombre
-        +string descripcion
-    }
-
-    class Proyecto {
-        +int id_proyecto
-        +string nombre
-        +string descripcion
-        +string estado
-    }
-
-    class EspacioAcademico {
-        +int id_espacio
-        +string nombre
-        +string tipo
-        +int capacidad
-        +string estado
-    }
-
-    class Recurso {
-        +int id_recurso
-        +string nombre
-        +string tipo
-        +int cantidad
-        +string estado
-    }
-
-    Docente "1" --> "0..*" GradoAcademico
-    Docente "0..*" --> "0..*" Certificacion
-    Docente "0..*" --> "0..*" Competencia
-    Docente "0..*" --> "0..*" Curso
-    Docente "0..*" --> "0..*" Academia
-
-    Curso "0..*" --> "0..*" Competencia
-    Curso "0..*" --> "0..*" SecuenciaAcademica
-    Curso "1" --> "0..*" Proyecto
-    Curso "0..*" --> "0..*" Academia
-    Curso "0..*" --> "0..*" EspacioAcademico
-
-    Proyecto "0..*" --> "0..*" Docente
-    Proyecto "0..*" --> "0..*" EspacioAcademico
-    Proyecto "0..*" --> "0..*" Recurso
-
-    EspacioAcademico "0..*" --> "0..*" Recurso
 ```
 
----
+## 12. Pruebas de aceptación mínimas
 
-# 12. Decisiones de Levantamiento de Requerimientos
+| ID | Prueba | Resultado esperado |
+|---|---|---|
+| PA-01 | Crear una academia con clave válida | Se registra y aparece en la consulta |
+| PA-02 | Crear una academia con espacios en la clave | Se rechaza y se informa que no se permiten espacios |
+| PA-03 | Registrar una clave de academia duplicada, ignorando mayúsculas | Se rechaza sin crear un registro adicional |
+| PA-04 | Registrar dos docentes con el mismo número de empleado | El segundo registro se rechaza |
+| PA-05 | Registrar un docente con SNI = sí y sin nivel SNI | El registro se rechaza |
+| PA-06 | Crear dos cursos con el mismo nombre en una academia | El segundo se rechaza |
+| PA-07 | Crear el mismo nombre de curso en academias distintas | Se permite, porque la unicidad del nombre se aplica dentro de cada academia |
+| PA-08 | Registrar un dominio con nivel 0, 11 o decimal | Se rechaza |
+| PA-09 | Registrar un dominio entre docente y curso de academias distintas | Se rechaza |
+| PA-10 | Registrar una asignación sin bloque horario | Se rechaza |
+| PA-11 | Asignar a un docente un bloque ya utilizado en otra asignación | Se rechaza |
+| PA-12 | Asignar el mismo bloque horario a docentes distintos | Se permite si se cumplen las demás reglas |
+| PA-13 | Eliminar una academia que tenga docentes o cursos asociados | Se rechaza y los datos permanecen intactos |
+| PA-14 | Reiniciar el servidor después de crear un registro válido | El registro persiste en SQLite |
+| PA-15 | Enviar una cadena típica de inyección SQL como dato de texto | Se trata como dato, no como parte ejecutable de la consulta |
 
-Las preguntas que originalmente quedaron pendientes han sido resueltas para esta versión del proyecto:
+## 13. Ampliaciones futuras
 
-| Pregunta original | Decisión adoptada |
-|---|---|
-| ¿Quién puede registrar docentes? | Únicamente el Administrador. |
-| ¿Quién puede modificar SNI y PRODEP? | El Administrador. |
-| ¿Qué significa que un docente esté capacitado? | Cumplir los requisitos obligatorios y alcanzar el nivel mínimo de dominio establecido para el curso. |
-| ¿La elegibilidad es automática o manual? | Automática mediante reglas definidas. |
-| ¿La asignación es automática? | No. El Administrador realiza la asignación final manualmente. |
-| ¿Las certificaciones tienen expiración? | Sí, podrán tener fecha de vencimiento. |
-| ¿Las certificaciones vencidas afectan la elegibilidad? | Sí, cuando la certificación sea un requisito obligatorio. |
-| ¿Un docente puede pertenecer a varias academias? | Sí. |
-| ¿Un curso puede pertenecer a varias academias? | Sí. |
-| ¿Cómo se determina la compatibilidad docente-curso? | Mediante requisitos obligatorios, nivel de dominio, certificaciones y criterios de recomendación como coincidencia de academia. |
-| ¿Se utilizará una puntuación ponderada? | No. Se utilizará una evaluación basada en reglas y un ordenamiento de candidatos. |
-| ¿Qué es una competencia? | Una capacidad o conocimiento específico que puede asociarse tanto con docentes como con cursos. |
-| ¿Qué es una especialidad? | Un área académica o profesional general asociada al docente. |
-| ¿Qué es una certificación? | Una acreditación específica emitida por un organismo o institución. |
-| ¿Qué información se almacena de SNI/SNII? | Estatus, nivel, área y vigencia. |
-| ¿Qué información se almacena de PRODEP? | Estatus, tipo y vigencia. |
-| ¿Las aulas/laboratorios manejan horarios? | No. Solo disponibilidad general. |
-| ¿Existe reservación de espacios? | No en esta versión. |
-| ¿Los proyectos pueden existir sin curso? | No. Cada proyecto pertenece a un único curso. |
-| ¿Un proyecto puede utilizar varios espacios? | Sí. |
-| ¿Un proyecto puede utilizar varios recursos? | Sí. |
-| ¿Se manejan múltiples periodos escolares? | No. La primera versión representa únicamente el estado actual. |
-| ¿Se requiere gestión de estudiantes? | No. Queda fuera del alcance actual. |
-| ¿Se implementará autenticación? | No en la primera versión. |
-| ¿Habrá diferentes actores/roles? | No. Solo Administrador en la primera versión. |
-| ¿Se eliminarán físicamente los registros? | Se priorizará la desactivación de registros relacionados para preservar la integridad. |
-| ¿Qué información personal se almacenará? | Únicamente información académica y profesional necesaria para el funcionamiento del sistema. |
+Las ideas siguientes pueden retomarse en versiones posteriores, pero requieren nuevos requerimientos, diseño de datos, implementación y pruebas antes de considerarse disponibles:
 
----
+1. Evaluación automática de elegibilidad con requisitos obligatorios y recomendados.
+2. Gestión normalizada de grados académicos, certificaciones, competencias y sus vigencias.
+3. Relación de docentes y cursos con múltiples academias.
+4. Secuencias académicas y precedencia de cursos.
+5. Proyectos académicos con responsables, participantes, recursos y espacios asociados.
+6. Gestión de aulas y laboratorios con inventario y capacidad.
+7. Gestión de recursos, cantidades disponibles y necesidades por proyecto.
+8. Autenticación, autorización y controles de acceso.
+9. Historial de cambios, auditoría y desactivación lógica de registros.
+10. Gestión de periodos escolares, estudiantes, reportes e integraciones externas.
 
-## Decisiones de diseño establecidas
+## 14. Decisiones finales del alcance actual
 
-Las decisiones principales para el desarrollo son:
-
-- Un único usuario: Administrador.
-- Sin autenticación.
-- Asignación manual.
-- Nivel de dominio de 0 a 10.
-- Requisitos obligatorios y recomendados.
-- Certificaciones con posible vigencia.
-- Docentes con pertenencia a múltiples academias.
-- Cursos asociados a múltiples academias.
-- Proyectos asociados a un único curso.
-- Proyectos con exactamente un responsable.
-- Espacios representados mediante `EspacioAcademico`.
-- Aulas y laboratorios diferenciados mediante `tipo`.
-- Disponibilidad general sin horarios.
-- Sin estudiantes.
-- Sin múltiples periodos académicos.
-- Eliminación preferentemente lógica/desactivación cuando existan dependencias.
-- Relaciones N:M implementadas mediante entidades asociativas.
-
----
+- La versión actual es un prototipo RAD centrado en datos de docentes, academias, cursos, dominios y asignaciones.
+- La interfaz permite al administrador operar los módulos sin iniciar sesión.
+- Los docentes y los cursos pertenecen a una única academia en esta versión.
+- El dominio se registra manualmente en una escala de 1 a 10.
+- La asignación de docentes es manual; no hay un motor completo de elegibilidad automática.
+- Los horarios son bloques fijos asociados a las asignaciones, no un sistema de reservación de aulas.
+- Los datos persisten en `db/app.db`.
+- El diseño futuro puede ampliar el modelo, pero esas ampliaciones no deben confundirse con las capacidades actuales.
