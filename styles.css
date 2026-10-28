@@ -464,3 +464,39 @@ body {
     }
 
 }
+
+
+/* Tabla del horario semanal de asignaciones */
+
+.tabla-horario-semanal {
+    width: 100%;
+    min-width: 680px;
+    border-collapse: collapse;
+}
+
+.tabla-horario-semanal th,
+.tabla-horario-semanal td {
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #ddd;
+}
+
+.tabla-horario-semanal thead th {
+    background-color: #f1f1f1;
+    font-weight: 600;
+}
+
+.tabla-horario-semanal tbody th {
+    white-space: nowrap;
+    background-color: #f9f9f9;
+}
+
+.tabla-horario-semanal .celda-horario-ocupada {
+    background-color: #d9ead3;
+    font-weight: 500;
+}
+
+.tabla-horario-semanal .celda-horario-vacia {
+    color: #888;
+}

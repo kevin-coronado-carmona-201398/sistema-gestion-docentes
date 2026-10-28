@@ -303,7 +303,7 @@ function fillAssignmentCourses() {
     courseSelect.innerHTML = `
 
         <option value="">
-            Seleccionar curso...
+            Seleccionar materia...
         </option>
 
     `;
@@ -847,33 +847,35 @@ function renderCandidates() {
 function renderAssigned() {
 
     const tableBody =
-        document.getElementById(
-            "tbodyAsignados"
-        );
+        document.getElementById("tbodyAsignados");
 
-    const course =
-        getSelectedCourse();
+    const course = getSelectedCourse();
 
     if (!tableBody) {
         return;
     }
 
-    if (!course) {
+    const days = [
+        "Lunes",
+        "Martes",
+        "Miércoles",
+        "Jueves",
+        "Viernes"
+    ];
 
+    if (!course) {
         tableBody.innerHTML = `
             <tr>
-                <td
-                    colspan="13"
-                    class="w3-center"
-                >
-                    Seleccione un curso para mostrar los docentes asignados.
+                <td colspan="6" class="w3-center">
+                    Seleccione una materia para mostrar
+                    el horario semanal.
                 </td>
             </tr>
         `;
-
         return;
     }
 
+    // Obtener las asignaciones de la materia seleccionada.
     const assignments =
         appState.asignaciones.filter(
             asignacion =>
@@ -881,213 +883,142 @@ function renderAssigned() {
                 String(course.id)
         );
 
-    if (assignments.length === 0) {
+    // Relacionar cada horario con el docente asignado.
+    const occupiedSlots = [];
 
+    assignments.forEach(asignacion => {
+
+        const docente =
+            appState.docentes.find(
+                item =>
+                    String(item.id) ===
+                    String(asignacion.docenteId)
+            );
+
+        if (!docente) {
+            return;
+        }
+
+        const scheduleIds =
+            Array.isArray(asignacion.horarioIds)
+                ? asignacion.horarioIds
+                : [];
+
+        scheduleIds.forEach(id => {
+
+            const horario =
+                appState.horarios.find(
+                    item =>
+                        String(item.id) === String(id)
+                );
+
+            if (!horario) {
+                return;
+            }
+
+            const day = days.find(
+                item =>
+                    item.toLowerCase() ===
+                    String(horario.dia).trim().toLowerCase()
+            );
+
+            // La tabla solicitada comprende de lunes a viernes.
+            if (!day) {
+                return;
+            }
+
+            occupiedSlots.push({
+                day,
+                horaInicio: String(horario.horaInicio),
+                horaFin: String(horario.horaFin),
+                docente: docente.nombre
+            });
+
+        });
+
+    });
+
+    if (occupiedSlots.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td
-                    colspan="13"
-                    class="w3-center"
-                >
-                    No hay docentes asignados a este curso.
+                <td colspan="6" class="w3-center">
+                    No hay docentes asignados con horarios
+                    registrados para esta materia.
                 </td>
             </tr>
         `;
-
         return;
     }
 
-    tableBody.innerHTML =
-        assignments
-            .map(asignacion => {
+    // Crear una fila por cada intervalo horario distinto.
+    const slotMap = new Map();
 
-                const docente =
-                    appState.docentes.find(
-                        item =>
-                            String(item.id) ===
-                            String(
-                                asignacion.docenteId
-                            )
-                    );
+    occupiedSlots.forEach(slot => {
 
-                if (!docente) {
-                    return "";
-                }
+        const key =
+            `${slot.horaInicio}|${slot.horaFin}`;
 
-                const docenteAcademia =
-                    academy(
-                        appState,
-                        docente.academiaId
-                    );
+        if (!slotMap.has(key)) {
+            slotMap.set(key, {
+                horaInicio: slot.horaInicio,
+                horaFin: slot.horaFin,
+                docentesPorDia: Object.fromEntries(
+                    days.map(day => [day, []])
+                )
+            });
+        }
 
-                const domainLevel =
-                    getDomainLevel(
-                        docente.id,
-                        course.id
-                    );
+        const row = slotMap.get(key);
+        const teachers = row.docentesPorDia[slot.day];
 
-                const sni =
-                    String(
-                        docente.sni || "no"
-                    )
-                        .trim()
-                        .toLowerCase();
+        if (!teachers.includes(slot.docente)) {
+            teachers.push(slot.docente);
+        }
 
-                const hasSni =
-                    sni === "si";
+    });
 
-                const prodep =
-                    String(
-                        docente.prodep || "no"
-                    )
-                        .trim()
-                        .toLowerCase();
+    // Ordenar cronológicamente los intervalos.
+    const rows =
+        Array.from(slotMap.values()).sort(
+            (a, b) =>
+                a.horaInicio.localeCompare(b.horaInicio)
+        );
 
-                const certificationText =
-                    docente.certificaciones
-                        ? esc(
-                            docente.certificaciones
-                        ).replace(
-                            /\n/g,
-                            "<br>"
-                        )
-                        : "—";
+    tableBody.innerHTML = rows.map(row => {
 
-                const schedules =
-                    Array.isArray(
-                        asignacion.horarioIds
-                    )
-                        ? asignacion.horarioIds
-                            .map(
-                                id =>
-                                    appState.horarios.find(
-                                        horario =>
-                                            String(
-                                                horario.id
-                                            ) ===
-                                            String(id)
-                                    )
-                            )
-                            .filter(Boolean)
-                        : [];
+        const cells = days.map(day => {
 
-                const scheduleText =
-                    schedules.length > 0
-                        ? schedules
-                            .map(
-                                horario =>
-                                    `${esc(horario.dia)} ${esc(horario.horaInicio)}-${esc(horario.horaFin)}`
-                            )
-                            .join("<br>")
-                        : "Sin horario";
+            const teachers = row.docentesPorDia[day];
 
+            if (teachers.length === 0) {
                 return `
-                    <tr>
-
-                        <td>
-                            ${esc(
-                                docente.nombre
-                            )}
-                            <br>
-                            <span class="w3-small">
-                                N.º ${esc(
-                                    docente.numeroEmpleado
-                                )}
-                            </span>
-                        </td>
-
-                        <td>
-                            ${esc(
-                                docenteAcademia
-                                    ? docenteAcademia.nombre
-                                    : "Sin academia"
-                            )}
-                        </td>
-
-                        <td>
-                            ${esc(
-                                docente.nivelAcademico || "—"
-                            )}
-                        </td>
-
-                        <td>
-                            ${esc(
-                                docente.tituloAcademico || "—"
-                            )}
-                        </td>
-
-                        <td>
-                            ${esc(
-                                docente.especialidad || "—"
-                            )}
-                        </td>
-
-                        <td>
-                            ${
-                                prodep === "si"
-                                    ? "Sí"
-                                    : "No"
-                            }
-                        </td>
-
-                        <td>
-                            ${
-                                hasSni
-                                    ? "Sí"
-                                    : "No"
-                            }
-                        </td>
-
-                        <td>
-                            ${
-                                hasSni
-                                    ? esc(
-                                        docente.nivelSni || "Sin nivel"
-                                    )
-                                    : "—"
-                            }
-                        </td>
-
-                        <td>
-                            ${certificationText}
-                        </td>
-
-                        <td>
-                            ${
-                                domainLevel !== null
-                                    ? `${domainLevel}/10`
-                                    : "Sin registrar"
-                            }
-                        </td>
-
-                        <td>
-                            ${scheduleText}
-                        </td>
-
-                        <td>
-                            Asignado
-                        </td>
-
-                        <td>
-                            <button
-                                type="button"
-                                class="w3-button w3-small w3-red"
-                                onclick='unassignCourse(
-                                    ${JSON.stringify(course.id)},
-                                    ${JSON.stringify(docente.id)}
-                                )'
-                            >
-                                Desasignar
-                            </button>
-                        </td>
-
-                    </tr>
+                    <td class="celda-horario-vacia">—</td>
                 `;
+            }
 
-            })
-            .join("");
+            return `
+                <td class="celda-horario-ocupada">
+                    ${teachers.map(
+                        nombre => `<div>${esc(nombre)}</div>`
+                    ).join("")}
+                </td>
+            `;
+
+        }).join("");
+
+        return `
+            <tr>
+                <th>
+                    ${esc(row.horaInicio)}–${esc(row.horaFin)}
+                </th>
+                ${cells}
+            </tr>
+        `;
+
+    }).join("");
 
 }
+
 
 // ============================================================
 // RENDERIZAR TODA LA INFORMACIÓN

@@ -444,11 +444,11 @@ export function initSelects() {
 
     fillCourses(
         "cursoDominio",
-        "Seleccionar curso..."
+        "Seleccionar materia..."
     );
 
     fillCourses(
         "cursoAsignacion",
-        "Seleccionar curso..."
+        "Seleccionar materia..."
     );
 }

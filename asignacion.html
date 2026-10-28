@@ -42,8 +42,8 @@
                     Academias
                 </a>
 
-                <a href="cursos.html">
-                    Cursos
+                <a href="materias.html">
+                    Materias
                 </a>
 
                 <a href="asignacion.html" class="active">
@@ -82,7 +82,7 @@
 
         <section class="card">
 
-            <h3>Seleccionar academia y curso</h3>
+            <h3>Seleccionar academia y materia</h3>
 
 
             <div class="form-grid-3">
@@ -110,7 +110,7 @@
                 <div class="form-group">
 
                     <label for="cursoAsignacion">
-                        Curso *
+                        Materia *
                     </label>
 
                     <select
@@ -120,7 +120,7 @@
                     >
 
                         <option value="">
-                            Seleccionar curso...
+                            Seleccionar materia...
                         </option>
 
                     </select>
@@ -164,7 +164,7 @@
             <h3>Información del curso</h3>
 
             <p>
-                <strong>Curso:</strong>
+                <strong>Materia:</strong>
                 <span id="detalleNombreCurso">—</span>
             </p>
 
@@ -323,7 +323,7 @@
                                 colspan="12"
                                 class="w3-center"
                             >
-                                Seleccione un curso para mostrar candidatos.
+                                Seleccione una materia para mostrar candidatos.
                             </td>
 
                         </tr>
@@ -339,71 +339,48 @@
         <!-- ==================================================
             DOCENTES ASIGNADOS
             ================================================== -->
-
+            
         <section class="card">
 
-            <h3>
-                Docentes asignados al curso
-            </h3>
+            <h3>Horario semanal de asignaciones</h3>
 
+            <p class="w3-small">
+                La tabla muestra los docentes asignados a la materia
+                seleccionada y los bloques horarios que ocupan.
+            </p>
 
             <div class="table-wrap">
 
-                <table class="w3-table-all">
+                <table class="w3-table-all tabla-horario-semanal">
 
                     <thead>
-
                         <tr>
-
-                            <th>Docente</th>
-
-                            <th>Academia</th>
-
-                            <th>Grado académico</th>
-
-                            <th>Título obtenido</th>
-
-                            <th>Especialidad</th>
-
-                            <th>PRODEP</th>
-
-                            <th>SNI</th>
-
-                            <th>Nivel SNI</th>
-
-                            <th>Certificaciones</th>
-
-                            <th>Nivel de dominio</th>
-
-                            <th>Horarios</th>
-
-                            <th>Estado</th>
-
-                            <th>Acción</th>
-
+                            <th>Horario</th>
+                            <th>Lunes</th>
+                            <th>Martes</th>
+                            <th>Miércoles</th>
+                            <th>Jueves</th>
+                            <th>Viernes</th>
                         </tr>
-
                     </thead>
 
-
                     <tbody id="tbodyAsignados">
-
                         <tr>
-
-                            <td
-                                colspan="13"
-                                class="w3-center"
-                            >
-                                Seleccione un curso para mostrar los docentes asignados.
+                            <td colspan="6" class="w3-center">
+                                Seleccione una materia para mostrar
+                                el horario semanal.
                             </td>
-
                         </tr>
-
                     </tbody>
 
                 </table>
 
             </div>
+
+            <p class="w3-small">
+                Los bloques ocupados mostrarán el nombre del docente.
+                Los conflictos de horario deberán señalarse de forma visible.
+            </p>
 
         </section>
 
