@@ -15,6 +15,9 @@ const ModelDocentes =
 const ModelCursos =
     require("./db/model.cursos.mjs").default;
 
+const ModelPlantillas =
+    require("./db/model.plantillas.mjs").default;
+
 const ModelDominios =
     require("./db/model.dominios.mjs").default;
 
@@ -56,6 +59,13 @@ const modelCursos =
     new ModelCursos(
         controllerDB
     );
+
+const modelPlantillas =
+    new ModelPlantillas(
+        controllerDB
+    );
+
+modelPlantillas.seedDefaults();
 
 const modelDominios =
     new ModelDominios(
@@ -1043,6 +1053,9 @@ app.post(
                     req.body.academiaId
                 );
 
+            const horasSemanales =
+                Number(req.body.horasSemanales);
+
             if (
                 !nombre ||
                 !academiaId
@@ -1055,11 +1068,23 @@ app.post(
 
             }
 
+            if (
+                !Number.isInteger(horasSemanales) ||
+                horasSemanales < 1 ||
+                horasSemanales > 10
+            ) {
+                return res.status(400).json({
+                    error:
+                        "Las horas semanales deben ser un número entero entre 1 y 10."
+                });
+            }
+
             const course =
                 modelCursos.create(
                     nombre,
                     descripcion,
-                    academiaId
+                    academiaId,
+                    horasSemanales
                 );
 
             res.status(201).json(
@@ -1090,6 +1115,14 @@ app.post(
                         error.message
                 });
 
+            }
+
+            if (
+                error.code === "INVALID_WEEKLY_HOURS"
+            ) {
+                return res.status(400).json({
+                    error: error.message
+                });
             }
 
             console.error(
@@ -1158,6 +1191,11 @@ app.patch(
                         current.academiaId
                     );
 
+            const horasSemanales =
+                req.body.horasSemanales !== undefined
+                    ? Number(req.body.horasSemanales)
+                    : Number(current.horasSemanales);
+
             if (
                 !nombre ||
                 !academiaId
@@ -1170,13 +1208,25 @@ app.patch(
 
             }
 
-            const course =
-                modelCursos.update(
-                    id,
-                    nombre,
-                    descripcion,
-                    academiaId
-                );
+            if (
+                !Number.isInteger(horasSemanales) ||
+                horasSemanales < 1 ||
+                horasSemanales > 10
+            ) {
+                return res.status(400).json({
+                    error:
+                        "Las horas semanales deben ser un número entero entre 1 y 10."
+                });
+            }
+            
+        const course =
+            modelCursos.update(
+                id,
+                nombre,
+                descripcion,
+                academiaId,
+                horasSemanales
+            );
 
             res.json(
                 course
@@ -1220,6 +1270,22 @@ app.patch(
 
             }
 
+            if (
+                error.code === "INVALID_WEEKLY_HOURS"
+            ) {
+                return res.status(400).json({
+                    error: error.message
+                });
+            }
+
+            if (
+                error.code === "COURSE_ASSIGNMENT_HOURS_MISMATCH"
+            ) {
+                return res.status(409).json({
+                    error: error.message
+                });
+            }
+            
             console.error(
                 "Error al actualizar curso:",
                 error
@@ -1588,6 +1654,341 @@ app.delete(
     }
 );
 
+
+ // ============================================================
+// PLANTILLAS
+// ============================================================
+
+app.get(
+    "/plantillas",
+    (req, res) => {
+
+        try {
+
+            const rawHours =
+                req.query.horasSemanales;
+
+            const horasSemanales =
+                rawHours === undefined
+                    ? null
+                    : Number(rawHours);
+
+            if (
+                horasSemanales !== null &&
+                (
+                    !Number.isInteger(horasSemanales) ||
+                    horasSemanales < 1
+                )
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        "El filtro de horas semanales no es válido."
+                });
+
+            }
+
+            const soloActivas =
+                req.query.soloActivas === "true";
+
+            res.json(
+                modelPlantillas.getAll({
+                    horasSemanales,
+                    soloActivas
+                })
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Error al consultar plantillas:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    "No se pudieron consultar las plantillas."
+            });
+
+        }
+
+    }
+);
+
+// ------------------------------------------------------------
+// CONSULTAR UNA PLANTILLA
+// ------------------------------------------------------------
+
+app.get(
+    "/plantillas/:id",
+    (req, res) => {
+
+        try {
+
+            const id =
+                Number(req.params.id);
+
+            if (
+                !Number.isInteger(id) ||
+                id < 1
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        "El identificador de la plantilla no es válido."
+                });
+
+            }
+
+            const template =
+                modelPlantillas.get(id);
+
+            if (!template) {
+
+                return res.status(404).json({
+                    error:
+                        "La plantilla no existe."
+                });
+
+            }
+
+            res.json(template);
+
+        } catch (error) {
+
+            console.error(
+                "Error al consultar plantilla:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    "No se pudo consultar la plantilla."
+            });
+
+        }
+
+    }
+);
+
+// ------------------------------------------------------------
+// CREAR PLANTILLA PERSONALIZADA
+// ------------------------------------------------------------
+
+app.post(
+    "/plantillas",
+    (req, res) => {
+
+        try {
+
+            const template =
+                modelPlantillas.create(
+                    req.body
+                );
+
+            res.status(201).json(
+                template
+            );
+
+        } catch (error) {
+
+            if (
+                error.code === "INVALID_TEMPLATE"
+            ) {
+
+                return res.status(400).json({
+                    error: error.message
+                });
+
+            }
+
+            if (
+                error.code === "DUPLICATE_TEMPLATE"
+            ) {
+
+                return res.status(409).json({
+                    error: error.message
+                });
+
+            }
+
+            console.error(
+                "Error al crear plantilla:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    "No se pudo crear la plantilla."
+            });
+
+        }
+
+    }
+);
+
+// ------------------------------------------------------------
+// DUPLICAR PLANTILLA
+// ------------------------------------------------------------
+
+app.post(
+    "/plantillas/:id/duplicar",
+    (req, res) => {
+
+        try {
+
+            const id =
+                Number(req.params.id);
+
+            if (
+                !Number.isInteger(id) ||
+                id < 1
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        "El identificador de la plantilla no es válido."
+                });
+
+            }
+
+            const template =
+                modelPlantillas.duplicate(
+                    id,
+                    req.body.nombre
+                );
+
+            res.status(201).json(template);
+
+        } catch (error) {
+
+            if (
+                error.code === "TEMPLATE_NOT_FOUND"
+            ) {
+
+                return res.status(404).json({
+                    error: error.message
+                });
+
+            }
+
+            if (
+                error.code === "INACTIVE_TEMPLATE" ||
+                error.code === "DUPLICATE_TEMPLATE"
+            ) {
+
+                return res.status(409).json({
+                    error: error.message
+                });
+
+            }
+
+            console.error(
+                "Error al duplicar plantilla:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    "No se pudo duplicar la plantilla."
+            });
+
+        }
+
+    }
+);
+
+// ------------------------------------------------------------
+// MODIFICAR PLANTILLA PERSONALIZADA
+// ------------------------------------------------------------
+
+app.patch(
+    "/plantillas/:id",
+    (req, res) => {
+
+        try {
+
+            const id =
+                Number(req.params.id);
+
+            if (
+                !Number.isInteger(id) ||
+                id < 1
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        "El identificador de la plantilla no es válido."
+                });
+
+            }
+
+            const template =
+                modelPlantillas.update(
+                    id,
+                    req.body
+                );
+
+            res.json(template);
+
+        } catch (error) {
+
+            if (
+                error.code === "INVALID_TEMPLATE"
+            ) {
+
+                return res.status(400).json({
+                    error: error.message
+                });
+
+            }
+
+            if (
+                error.code === "TEMPLATE_NOT_FOUND"
+            ) {
+
+                return res.status(404).json({
+                    error: error.message
+                });
+
+            }
+
+            if (
+                error.code === "PREDEFINED_TEMPLATE"
+            ) {
+
+                return res.status(403).json({
+                    error: error.message
+                });
+
+            }
+
+            if (
+                error.code === "DUPLICATE_TEMPLATE" ||
+                error.code === "TEMPLATE_IN_USE"
+            ) {
+
+                return res.status(409).json({
+                    error: error.message
+                });
+
+            }
+
+            console.error(
+                "Error al actualizar plantilla:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    "No se pudo actualizar la plantilla."
+            });
+
+        }
+
+    }
+);
+
 // ============================================================
 // HORARIOS
 // ============================================================
@@ -1685,6 +2086,19 @@ app.post(
             );
 
         } catch (error) {
+
+            if (
+                error.code === "COURSE_HOURS_NOT_CONFIGURED" ||
+                error.code === "INVALID_SCHEDULE_DAY" ||
+                error.code === "INVALID_SCHEDULE_TIME" ||
+                error.code === "INVALID_SESSION_DURATION" ||
+                error.code === "DAILY_SESSION_LIMIT" ||
+                error.code === "WEEKLY_HOURS_MISMATCH"
+            ) {
+                return res.status(400).json({
+                    error: error.message
+                });
+            }
 
             if (
                 error.code ===

@@ -101,6 +101,13 @@ try {
 
             descripcion TEXT,
 
+
+            horas_semanales INTEGER
+                CHECK (
+                    horas_semanales IS NULL
+                    OR horas_semanales >= 1
+                ),
+
             academia_id INTEGER NOT NULL,
 
             UNIQUE (academia_id, nombre),

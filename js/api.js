@@ -55,45 +55,45 @@ export async function loadDataFromAPI() {
         dominios,
         asignaciones,
         horarios,
-        
+        plantillas,
+
         licenciaturas,
         maestrias,
         doctorados,
         nivelesSNI,
         especialidades
     ] = await Promise.all([
-
         fetchResource("academias"),
         fetchResource("docentes"),
         fetchResource("cursos"),
         fetchResource("dominios"),
         fetchResource("asignaciones"),
         fetchResource("horarios"),
+        fetchResource("plantillas"),
 
         fetchResource("licenciaturas"),
         fetchResource("maestrias"),
         fetchResource("doctorados"),
         fetchResource("nivelesSNI"),
         fetchResource("especialidades")
-
     ]);
 
     return {
-
         academias,
         docentes,
         cursos,
         dominios,
         asignaciones,
         horarios,
+        plantillas,
 
         licenciaturas,
         maestrias,
         doctorados,
         nivelesSNI,
         especialidades
-
     };
+
 }
 
 // ============================================================
@@ -259,6 +259,24 @@ export async function deleteTeacher(id) {
 // CURSOS
 // ============================================================
 
+async function throwCourseApiError(response) {
+
+    let message =
+        `cursos: HTTP ${response.status} - ${response.statusText}`;
+
+    try {
+        const data = await response.json();
+
+        if (data.error) {
+            message = data.error;
+        }
+    } catch {
+        // Se conserva el mensaje HTTP.
+    }
+
+    throw new Error(message);
+}
+
 export async function createCourse(data) {
 
     const response = await fetch(
@@ -273,11 +291,7 @@ export async function createCourse(data) {
     );
 
     if (!response.ok) {
-
-        throw new Error(
-            `cursos: HTTP ${response.status} - ${response.statusText}`
-        );
-
+        await throwCourseApiError(response);
     }
 
     return await response.json();
@@ -298,11 +312,7 @@ export async function updateCourse(id, data) {
     );
 
     if (!response.ok) {
-
-        throw new Error(
-            `cursos: HTTP ${response.status} - ${response.statusText}`
-        );
-
+        await throwCourseApiError(response);
     }
 
     return await response.json();

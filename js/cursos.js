@@ -23,6 +23,269 @@ import {
 } from "./selects.js";
 
 // ============================================================
+// DISTRIBUCIÓN HORARIA DE MATERIAS
+// ============================================================
+
+const COURSE_DAY_INPUTS = [
+    {
+        id: "horasLunes",
+        field: "horasLunes"
+    },
+    {
+        id: "horasMartes",
+        field: "horasMartes"
+    },
+    {
+        id: "horasMiercoles",
+        field: "horasMiercoles"
+    },
+    {
+        id: "horasJueves",
+        field: "horasJueves"
+    },
+    {
+        id: "horasViernes",
+        field: "horasViernes"
+    }
+];
+
+
+// ------------------------------------------------------------
+// OBTENER DISTRIBUCIÓN DEL FORMULARIO
+// ------------------------------------------------------------
+
+function getCourseScheduleValues() {
+
+    const schedule = {};
+
+    for (const day of COURSE_DAY_INPUTS) {
+
+        const input =
+            document.getElementById(day.id);
+
+        schedule[day.field] =
+            Number(input?.value ?? 0);
+
+    }
+
+    return schedule;
+
+}
+
+
+// ------------------------------------------------------------
+// COLOCAR DISTRIBUCIÓN EN EL FORMULARIO
+// ------------------------------------------------------------
+
+function setCourseScheduleValues(course = {}) {
+
+    for (const day of COURSE_DAY_INPUTS) {
+
+        const input =
+            document.getElementById(day.id);
+
+        if (input) {
+
+            input.value =
+                Number(course[day.field] ?? 0);
+
+        }
+
+    }
+
+    updateCourseScheduleSummary();
+
+}
+
+
+// ------------------------------------------------------------
+// RESUMEN DE HORAS DISTRIBUIDAS
+// ------------------------------------------------------------
+
+function updateCourseScheduleSummary() {
+
+    const summary =
+        document.getElementById(
+            "resumenDistribucionCurso"
+        );
+
+    const weeklyInput =
+        document.getElementById(
+            "horasSemanales"
+        );
+
+    if (!summary || !weeklyInput) {
+        return;
+    }
+
+    const required =
+        Number(weeklyInput.value);
+
+    const schedule =
+        getCourseScheduleValues();
+
+    const distributed =
+        Object.values(schedule).reduce(
+            (total, hours) => total + hours,
+            0
+        );
+
+    if (!Number.isInteger(required) || required < 1) {
+
+        summary.textContent =
+            "Primero indique las horas semanales requeridas.";
+
+        return;
+
+    }
+
+    summary.textContent =
+        `Horas distribuidas: ${distributed} de ${required}. ` +
+        (
+            distributed === required
+                ? "Distribución completa."
+                : `Faltan ${required - distributed} horas o hay horas excedentes.`
+        );
+
+}
+
+
+// ------------------------------------------------------------
+// CARGAR PLANTILLAS DISPONIBLES
+// ------------------------------------------------------------
+
+function populateCourseTemplates(
+    horasSemanales,
+    selectedTemplateId = ""
+) {
+
+    const select =
+        document.getElementById(
+            "plantillaCurso"
+        );
+
+    if (!select) {
+        return;
+    }
+
+    select.innerHTML = "";
+
+    const customOption =
+        document.createElement("option");
+
+    customOption.value = "";
+
+    customOption.textContent =
+        "Distribución personalizada";
+
+    select.appendChild(customOption);
+
+    const hours = Number(horasSemanales);
+
+    if (
+        !Number.isInteger(hours) ||
+        hours < 1 ||
+        hours > 10
+    ) {
+
+        updateCourseScheduleSummary();
+        return;
+
+    }
+
+    const templates =
+        (appState.plantillas || []).filter(
+            plantilla =>
+                Number(plantilla.horasSemanales) === hours &&
+                Number(plantilla.activa) === 1
+        );
+
+    for (const plantilla of templates) {
+
+        const option =
+            document.createElement("option");
+
+        option.value =
+            String(plantilla.id);
+
+        option.textContent =
+            plantilla.nombre;
+
+        select.appendChild(option);
+
+    }
+
+    const requestedId =
+        selectedTemplateId == null
+            ? ""
+            : String(selectedTemplateId);
+
+    if (
+        [...select.options].some(
+            option => option.value === requestedId
+        )
+    ) {
+
+        select.value = requestedId;
+
+    } else {
+
+        select.value = "";
+
+    }
+
+}
+
+
+// ------------------------------------------------------------
+// APLICAR UNA PLANTILLA
+// ------------------------------------------------------------
+
+function applyCourseTemplate(templateId) {
+
+    const template =
+        (appState.plantillas || []).find(
+            item =>
+                String(item.id) === String(templateId)
+        );
+
+    if (!template) {
+        return;
+    }
+
+    setCourseScheduleValues(template);
+
+}
+
+
+// ------------------------------------------------------------
+// BLOQUEAR CONTROLES DE DISTRIBUCIÓN
+// ------------------------------------------------------------
+
+function setCourseScheduleControlsDisabled(disabled) {
+
+    const controlIds = [
+        "horasSemanales",
+        "plantillaCurso",
+        ...COURSE_DAY_INPUTS.map(
+            day => day.id
+        )
+    ];
+
+    for (const id of controlIds) {
+
+        const control =
+            document.getElementById(id);
+
+        if (control) {
+            control.disabled = disabled;
+        }
+
+    }
+
+}
+
+// ============================================================
 // RENDERIZAR CURSOS
 // ============================================================
 
@@ -97,6 +360,14 @@ export function renderCourses() {
                                 ${esc(
                                     curso.descripcion || ""
                                 )}
+                            </td>
+
+                            <td>
+                                ${
+                                    curso.horasSemanales != null
+                                        ? `${esc(curso.horasSemanales)} h/semana`
+                                        : "Pendiente de configurar"
+                                }
                             </td>
 
                             <td>
@@ -193,6 +464,48 @@ export function editCourse(id) {
     ).value =
         curso.descripcion || "";
 
+    document.getElementById(
+        "horasSemanales"
+    ).value =
+        curso.horasSemanales ?? "";
+
+    // Cargar plantillas correspondientes a las horas semanales.
+
+    populateCourseTemplates(
+        curso.horasSemanales,
+        curso.plantillaId
+    );
+
+
+    // Restaurar la distribución guardada.
+
+    setCourseScheduleValues(curso);
+
+
+    // Comprobar si el curso tiene asignaciones.
+
+    const hasAssignments =
+        appState.asignaciones.some(
+            asignacion =>
+                String(asignacion.cursoId) ===
+                String(curso.id)
+        );
+
+
+    // Si tiene asignaciones, bloquear la distribución.
+
+    setCourseScheduleControlsDisabled(
+        hasAssignments
+    );
+
+    const scheduleWarning =
+        document.getElementById(
+            "avisoDistribucionBloqueada"
+        );
+
+    if (scheduleWarning) {
+        scheduleWarning.hidden = !hasAssignments;
+    }
 
     document.getElementById(
         "academiaCurso"
@@ -259,6 +572,21 @@ export function cancelCourseEdit() {
 
 
     form.reset();
+
+    setCourseScheduleControlsDisabled(false);
+
+    const scheduleWarning =
+        document.getElementById(
+            "avisoDistribucionBloqueada"
+        );
+
+    if (scheduleWarning) {
+        scheduleWarning.hidden = true;
+    }
+
+    populateCourseTemplates("");
+
+    updateCourseScheduleSummary();
 
     const submitButton =
         form.querySelector(
@@ -416,7 +744,87 @@ export function bindCourseEvents() {
     if (!form) {
         return;
     }
+    
+    // --------------------------------------------------------
+    // INICIALIZAR CONTROLES DE DISTRIBUCIÓN
+    // --------------------------------------------------------
 
+    const weeklyInput =
+        document.getElementById(
+            "horasSemanales"
+        );
+
+    const templateSelect =
+        document.getElementById(
+            "plantillaCurso"
+        );
+
+
+    // Cargar opciones iniciales.
+
+    populateCourseTemplates(
+        weeklyInput?.value
+    );
+
+
+    // Cuando cambien las horas semanales,
+    // actualizar plantillas y reiniciar distribución.
+
+    weeklyInput?.addEventListener(
+        "change",
+        () => {
+
+            populateCourseTemplates(
+                weeklyInput.value
+            );
+
+            if (templateSelect) {
+                templateSelect.value = "";
+            }
+
+            setCourseScheduleValues({
+                horasLunes: 0,
+                horasMartes: 0,
+                horasMiercoles: 0,
+                horasJueves: 0,
+                horasViernes: 0
+            });
+
+        }
+    );
+
+
+    // Aplicar la plantilla seleccionada.
+
+    templateSelect?.addEventListener(
+        "change",
+        () => {
+
+            const templateId =
+                templateSelect.value;
+
+            if (templateId) {
+                applyCourseTemplate(templateId);
+            }
+
+            updateCourseScheduleSummary();
+
+        }
+    );
+
+
+    // Actualizar el resumen cuando cambien los días.
+
+    for (const day of COURSE_DAY_INPUTS) {
+
+        document
+            .getElementById(day.id)
+            ?.addEventListener(
+                "input",
+                updateCourseScheduleSummary
+            );
+
+    }
 
     // --------------------------------------------------------
     // GUARDAR CURSO
@@ -453,7 +861,13 @@ export function bindCourseEvents() {
                         "academiaCurso"
                     )
                     .value;
-  
+
+            const horasSemanales =
+                Number(
+                    document.getElementById(
+                        "horasSemanales"
+                    ).value
+                );
 
             // ------------------------------------------------
             // VALIDACIÓN
@@ -466,6 +880,17 @@ export function bindCourseEvents() {
 
                 alert(
                     "Complete los campos obligatorios del curso."
+                );
+
+                return;
+            }
+
+            if (
+                !Number.isInteger(horasSemanales) ||
+                horasSemanales < 1
+            ) {
+                alert(
+                    "Las horas semanales deben ser un número entero mayor que cero."
                 );
 
                 return;
@@ -572,7 +997,6 @@ export function bindCourseEvents() {
 
             }
 
-
             try {
 
                 const courseData = {
@@ -583,8 +1007,27 @@ export function bindCourseEvents() {
                     academiaId:
                         String(academiaId),
 
-                };
+                    horasSemanales,
 
+                    plantillaId,
+
+                    horasLunes:
+                        schedule.horasLunes,
+
+                    horasMartes:
+                        schedule.horasMartes,
+
+                    horasMiercoles:
+                        schedule.horasMiercoles,
+
+                    horasJueves:
+                        schedule.horasJueves,
+
+                    horasViernes:
+                        schedule.horasViernes
+
+                };
+                
                 // ============================================
                 // ACTUALIZAR
                 // ============================================
@@ -676,35 +1119,7 @@ export function bindCourseEvents() {
                 // ACTUALIZAR INTERFAZ
                 // ============================================
 
-                form.reset();
-
-                const submitButton =
-                    form.querySelector(
-                        'button[type="submit"]'
-                    );
-
-
-                if (submitButton) {
-
-                    submitButton.textContent =
-                        "Registrar curso";
-
-                }
-
-
-                const clearButton =
-                    document.getElementById(
-                        "limpiarCurso"
-                    );
-
-
-                if (clearButton) {
-
-                    clearButton.textContent =
-                        "Limpiar";
-
-                }
-
+                cancelCourseEdit();
 
                 initSelects();
 
