@@ -1,8 +1,8 @@
+
 import {
     appState,
     editState
 } from "./state.js";
-
 
 import {
     createCourse,
@@ -10,280 +10,16 @@ import {
     deleteCourse
 } from "./api.js";
 
-
 import {
     esc,
     academy,
     assignedTeachers
 } from "./utils.js";
 
-
 import {
-    initSelects,
+    initSelects
 } from "./selects.js";
 
-// ============================================================
-// DISTRIBUCIÓN HORARIA DE MATERIAS
-// ============================================================
-
-const COURSE_DAY_INPUTS = [
-    {
-        id: "horasLunes",
-        field: "horasLunes"
-    },
-    {
-        id: "horasMartes",
-        field: "horasMartes"
-    },
-    {
-        id: "horasMiercoles",
-        field: "horasMiercoles"
-    },
-    {
-        id: "horasJueves",
-        field: "horasJueves"
-    },
-    {
-        id: "horasViernes",
-        field: "horasViernes"
-    }
-];
-
-
-// ------------------------------------------------------------
-// OBTENER DISTRIBUCIÓN DEL FORMULARIO
-// ------------------------------------------------------------
-
-function getCourseScheduleValues() {
-
-    const schedule = {};
-
-    for (const day of COURSE_DAY_INPUTS) {
-
-        const input =
-            document.getElementById(day.id);
-
-        schedule[day.field] =
-            Number(input?.value ?? 0);
-
-    }
-
-    return schedule;
-
-}
-
-
-// ------------------------------------------------------------
-// COLOCAR DISTRIBUCIÓN EN EL FORMULARIO
-// ------------------------------------------------------------
-
-function setCourseScheduleValues(course = {}) {
-
-    for (const day of COURSE_DAY_INPUTS) {
-
-        const input =
-            document.getElementById(day.id);
-
-        if (input) {
-
-            input.value =
-                Number(course[day.field] ?? 0);
-
-        }
-
-    }
-
-    updateCourseScheduleSummary();
-
-}
-
-
-// ------------------------------------------------------------
-// RESUMEN DE HORAS DISTRIBUIDAS
-// ------------------------------------------------------------
-
-function updateCourseScheduleSummary() {
-
-    const summary =
-        document.getElementById(
-            "resumenDistribucionCurso"
-        );
-
-    const weeklyInput =
-        document.getElementById(
-            "horasSemanales"
-        );
-
-    if (!summary || !weeklyInput) {
-        return;
-    }
-
-    const required =
-        Number(weeklyInput.value);
-
-    const schedule =
-        getCourseScheduleValues();
-
-    const distributed =
-        Object.values(schedule).reduce(
-            (total, hours) => total + hours,
-            0
-        );
-
-    if (!Number.isInteger(required) || required < 1) {
-
-        summary.textContent =
-            "Primero indique las horas semanales requeridas.";
-
-        return;
-
-    }
-
-    summary.textContent =
-        `Horas distribuidas: ${distributed} de ${required}. ` +
-        (
-            distributed === required
-                ? "Distribución completa."
-                : `Faltan ${required - distributed} horas o hay horas excedentes.`
-        );
-
-}
-
-
-// ------------------------------------------------------------
-// CARGAR PLANTILLAS DISPONIBLES
-// ------------------------------------------------------------
-
-function populateCourseTemplates(
-    horasSemanales,
-    selectedTemplateId = ""
-) {
-
-    const select =
-        document.getElementById(
-            "plantillaCurso"
-        );
-
-    if (!select) {
-        return;
-    }
-
-    select.innerHTML = "";
-
-    const customOption =
-        document.createElement("option");
-
-    customOption.value = "";
-
-    customOption.textContent =
-        "Distribución personalizada";
-
-    select.appendChild(customOption);
-
-    const hours = Number(horasSemanales);
-
-    if (
-        !Number.isInteger(hours) ||
-        hours < 1 ||
-        hours > 10
-    ) {
-
-        updateCourseScheduleSummary();
-        return;
-
-    }
-
-    const templates =
-        (appState.plantillas || []).filter(
-            plantilla =>
-                Number(plantilla.horasSemanales) === hours &&
-                Number(plantilla.activa) === 1
-        );
-
-    for (const plantilla of templates) {
-
-        const option =
-            document.createElement("option");
-
-        option.value =
-            String(plantilla.id);
-
-        option.textContent =
-            plantilla.nombre;
-
-        select.appendChild(option);
-
-    }
-
-    const requestedId =
-        selectedTemplateId == null
-            ? ""
-            : String(selectedTemplateId);
-
-    if (
-        [...select.options].some(
-            option => option.value === requestedId
-        )
-    ) {
-
-        select.value = requestedId;
-
-    } else {
-
-        select.value = "";
-
-    }
-
-}
-
-
-// ------------------------------------------------------------
-// APLICAR UNA PLANTILLA
-// ------------------------------------------------------------
-
-function applyCourseTemplate(templateId) {
-
-    const template =
-        (appState.plantillas || []).find(
-            item =>
-                String(item.id) === String(templateId)
-        );
-
-    if (!template) {
-        return;
-    }
-
-    setCourseScheduleValues(template);
-
-}
-
-
-// ------------------------------------------------------------
-// BLOQUEAR CONTROLES DE DISTRIBUCIÓN
-// ------------------------------------------------------------
-
-function setCourseScheduleControlsDisabled(disabled) {
-
-    const controlIds = [
-        "horasSemanales",
-        "plantillaCurso",
-        ...COURSE_DAY_INPUTS.map(
-            day => day.id
-        )
-    ];
-
-    for (const id of controlIds) {
-
-        const control =
-            document.getElementById(id);
-
-        if (control) {
-            control.disabled = disabled;
-        }
-
-    }
-
-}
 
 // ============================================================
 // RENDERIZAR CURSOS
@@ -296,121 +32,103 @@ export function renderCourses() {
             "tbodyCursos"
         );
 
-
     if (!tableBody) {
         return;
     }
 
-
     if (appState.cursos.length === 0) {
 
         tableBody.innerHTML = `
-
             <tr>
-
-                <td
-                    colspan="5"
-                    class="w3-center"
-                >
+                <td colspan="6" class="w3-center">
                     No hay cursos registrados.
                 </td>
-
             </tr>
-
         `;
 
         return;
     }
 
-
     tableBody.innerHTML =
         appState.cursos
-            .map(
-                curso => {
+            .map(curso => {
 
-                    const cursoAcademia =
-                        academy(
-                            appState,
-                            curso.academiaId
-                        );
-   
-                    const teachers =
-                        assignedTeachers(
-                            appState,
-                            curso.id
-                        );
+                const cursoAcademia =
+                    academy(
+                        appState,
+                        curso.academiaId
+                    );
 
-                    const estado =
-                        teachers.length > 0
-                            ? "Asignado"
-                            : "Disponible";
+                const teachers =
+                    assignedTeachers(
+                        appState,
+                        curso.id
+                    );
 
+                const estado =
+                    teachers.length > 0
+                        ? "Asignado"
+                        : "Disponible";
 
-                    return `
+                return `
+                    <tr>
 
-                        <tr>
+                        <td>
+                            ${esc(curso.nombre)}
+                        </td>
 
-                            <td>
-                                ${esc(
-                                    curso.nombre
-                                )}
-                            </td>
+                        <td>
+                            ${esc(curso.descripcion || "")}
+                        </td>
 
-                            <td>
-                                ${esc(
-                                    curso.descripcion || ""
-                                )}
-                            </td>
+                        <td>
+                            ${
+                                curso.horasSemanales != null
+                                    ? `${esc(curso.horasSemanales)} h/semana`
+                                    : "Pendiente de configurar"
+                            }
+                        </td>
 
-                            <td>
-                                ${
-                                    curso.horasSemanales != null
-                                        ? `${esc(curso.horasSemanales)} h/semana`
-                                        : "Pendiente de configurar"
-                                }
-                            </td>
+                        <td>
+                            ${esc(
+                                cursoAcademia
+                                    ? cursoAcademia.nombre
+                                    : "Sin academia"
+                            )}
+                        </td>
 
-                            <td>
-                                ${esc(
-                                    cursoAcademia
-                                        ? cursoAcademia.nombre
-                                        : "Sin academia"
-                                )}
-                            </td>
+                        <td>
+                            ${estado}
+                        </td>
 
-                            <td>
-                                ${estado}
-                            </td>
+                        <td>
 
-                            <td>
+                            <button
+                                type="button"
+                                class="w3-button w3-small w3-blue w3-margin-right"
+                                onclick='editCourse(${JSON.stringify(curso.id)})'
+                            >
+                                Editar
+                            </button>
 
-                                <button
-                                    type="button"
-                                    class="w3-button w3-small w3-blue w3-margin-right"
-                                    onclick='editCourse(${JSON.stringify(curso.id)})'
-                                >
-                                    Editar
-                                </button>
+                            <button
+                                type="button"
+                                class="w3-button w3-small w3-red"
+                                onclick='removeCourse(${JSON.stringify(curso.id)})'
+                            >
+                                Eliminar
+                            </button>
 
-                                <button
-                                    type="button"
-                                    class="w3-button w3-small w3-red"
-                                    onclick='removeCourse(${JSON.stringify(curso.id)})'
-                                >
-                                    Eliminar
-                                </button>
+                        </td>
 
-                            </td>
+                    </tr>
+                `;
 
-                        </tr>
-
-                    `;
-
-                }
-            )
+            })
             .join("");
 
 }
+
 
 // ============================================================
 // EDITAR CURSO
@@ -421,43 +139,35 @@ export function editCourse(id) {
     const curso =
         appState.cursos.find(
             item =>
-                String(item.id) ===
-                String(id)
+                String(item.id) === String(id)
         );
-
 
     if (!curso) {
         return;
     }
-
 
     const confirmed =
         confirm(
             `¿Desea editar el curso "${curso.nombre}"?`
         );
 
-
     if (!confirmed) {
         return;
     }
-
 
     const form =
         document.getElementById(
             "formCurso"
         );
 
-
     if (!form) {
         return;
     }
-
 
     document.getElementById(
         "nombreCurso"
     ).value =
         curso.nombre || "";
-
 
     document.getElementById(
         "descripcionCurso"
@@ -469,44 +179,6 @@ export function editCourse(id) {
     ).value =
         curso.horasSemanales ?? "";
 
-    // Cargar plantillas correspondientes a las horas semanales.
-
-    populateCourseTemplates(
-        curso.horasSemanales,
-        curso.plantillaId
-    );
-
-
-    // Restaurar la distribución guardada.
-
-    setCourseScheduleValues(curso);
-
-
-    // Comprobar si el curso tiene asignaciones.
-
-    const hasAssignments =
-        appState.asignaciones.some(
-            asignacion =>
-                String(asignacion.cursoId) ===
-                String(curso.id)
-        );
-
-
-    // Si tiene asignaciones, bloquear la distribución.
-
-    setCourseScheduleControlsDisabled(
-        hasAssignments
-    );
-
-    const scheduleWarning =
-        document.getElementById(
-            "avisoDistribucionBloqueada"
-        );
-
-    if (scheduleWarning) {
-        scheduleWarning.hidden = !hasAssignments;
-    }
-
     document.getElementById(
         "academiaCurso"
     ).value =
@@ -515,12 +187,10 @@ export function editCourse(id) {
     editState.courseId =
         String(curso.id);
 
-
     const submitButton =
         form.querySelector(
             'button[type="submit"]'
         );
-
 
     if (submitButton) {
 
@@ -529,12 +199,10 @@ export function editCourse(id) {
 
     }
 
-
     const clearButton =
         document.getElementById(
             "limpiarCurso"
         );
-
 
     if (clearButton) {
 
@@ -543,13 +211,13 @@ export function editCourse(id) {
 
     }
 
-
     form.scrollIntoView({
         behavior: "smooth",
         block: "center"
     });
 
 }
+
 
 // ============================================================
 // CANCELAR EDICIÓN
@@ -559,40 +227,21 @@ export function cancelCourseEdit() {
 
     editState.courseId = null;
 
-
     const form =
         document.getElementById(
             "formCurso"
         );
 
-
     if (!form) {
         return;
     }
 
-
     form.reset();
-
-    setCourseScheduleControlsDisabled(false);
-
-    const scheduleWarning =
-        document.getElementById(
-            "avisoDistribucionBloqueada"
-        );
-
-    if (scheduleWarning) {
-        scheduleWarning.hidden = true;
-    }
-
-    populateCourseTemplates("");
-
-    updateCourseScheduleSummary();
 
     const submitButton =
         form.querySelector(
             'button[type="submit"]'
         );
-
 
     if (submitButton) {
 
@@ -601,12 +250,10 @@ export function cancelCourseEdit() {
 
     }
 
-
     const clearButton =
         document.getElementById(
             "limpiarCurso"
         );
-
 
     if (clearButton) {
 
@@ -617,6 +264,7 @@ export function cancelCourseEdit() {
 
 }
 
+
 // ============================================================
 // ELIMINAR CURSO
 // ============================================================
@@ -626,15 +274,12 @@ export async function removeCourse(id) {
     const curso =
         appState.cursos.find(
             item =>
-                String(item.id) ===
-                String(id)
+                String(item.id) === String(id)
         );
-
 
     if (!curso) {
         return;
     }
-
 
     const hasDomains =
         appState.dominios.some(
@@ -643,14 +288,12 @@ export async function removeCourse(id) {
                 String(curso.id)
         );
 
-
     const hasAssignments =
         appState.asignaciones.some(
             asignacion =>
                 String(asignacion.cursoId) ===
                 String(curso.id)
         );
-
 
     if (
         hasDomains ||
@@ -664,24 +307,20 @@ export async function removeCourse(id) {
         return;
     }
 
-
     const confirmed =
         confirm(
             `¿Está seguro de eliminar el curso "${curso.nombre}"?`
         );
 
-
     if (!confirmed) {
         return;
     }
-
 
     try {
 
         await deleteCourse(
             curso.id
         );
-
 
         appState.cursos =
             appState.cursos.filter(
@@ -690,27 +329,23 @@ export async function removeCourse(id) {
                     String(curso.id)
             );
 
-
         if (
             editState.courseId &&
             String(editState.courseId) ===
                 String(curso.id)
         ) {
 
-            editState.courseId = null;
+            cancelCourseEdit();
 
         }
-
 
         initSelects();
 
         renderCourses();
 
-
         alert(
             "Curso eliminado correctamente."
         );
-
 
     } catch (error) {
 
@@ -718,7 +353,6 @@ export async function removeCourse(id) {
             "Error al eliminar curso:",
             error
         );
-
 
         alert(
             "No se pudo eliminar el curso.\n\n" +
@@ -728,6 +362,7 @@ export async function removeCourse(id) {
     }
 
 }
+
 
 // ============================================================
 // FORMULARIO DE CURSO
@@ -740,90 +375,8 @@ export function bindCourseEvents() {
             "formCurso"
         );
 
-
     if (!form) {
         return;
-    }
-    
-    // --------------------------------------------------------
-    // INICIALIZAR CONTROLES DE DISTRIBUCIÓN
-    // --------------------------------------------------------
-
-    const weeklyInput =
-        document.getElementById(
-            "horasSemanales"
-        );
-
-    const templateSelect =
-        document.getElementById(
-            "plantillaCurso"
-        );
-
-
-    // Cargar opciones iniciales.
-
-    populateCourseTemplates(
-        weeklyInput?.value
-    );
-
-
-    // Cuando cambien las horas semanales,
-    // actualizar plantillas y reiniciar distribución.
-
-    weeklyInput?.addEventListener(
-        "change",
-        () => {
-
-            populateCourseTemplates(
-                weeklyInput.value
-            );
-
-            if (templateSelect) {
-                templateSelect.value = "";
-            }
-
-            setCourseScheduleValues({
-                horasLunes: 0,
-                horasMartes: 0,
-                horasMiercoles: 0,
-                horasJueves: 0,
-                horasViernes: 0
-            });
-
-        }
-    );
-
-
-    // Aplicar la plantilla seleccionada.
-
-    templateSelect?.addEventListener(
-        "change",
-        () => {
-
-            const templateId =
-                templateSelect.value;
-
-            if (templateId) {
-                applyCourseTemplate(templateId);
-            }
-
-            updateCourseScheduleSummary();
-
-        }
-    );
-
-
-    // Actualizar el resumen cuando cambien los días.
-
-    for (const day of COURSE_DAY_INPUTS) {
-
-        document
-            .getElementById(day.id)
-            ?.addEventListener(
-                "input",
-                updateCourseScheduleSummary
-            );
-
     }
 
     // --------------------------------------------------------
@@ -836,31 +389,20 @@ export function bindCourseEvents() {
 
             event.preventDefault();
 
-
             const nombre =
-                document
-                    .getElementById(
-                        "nombreCurso"
-                    )
-                    .value
-                    .trim();
-
+                document.getElementById(
+                    "nombreCurso"
+                ).value.trim();
 
             const descripcion =
-                document
-                    .getElementById(
-                        "descripcionCurso"
-                    )
-                    .value
-                    .trim();
-
+                document.getElementById(
+                    "descripcionCurso"
+                ).value.trim();
 
             const academiaId =
-                document
-                    .getElementById(
-                        "academiaCurso"
-                    )
-                    .value;
+                document.getElementById(
+                    "academiaCurso"
+                ).value;
 
             const horasSemanales =
                 Number(
@@ -869,9 +411,9 @@ export function bindCourseEvents() {
                     ).value
                 );
 
-            // ------------------------------------------------
-            // VALIDACIÓN
-            // ------------------------------------------------
+            // ----------------------------------------------
+            // VALIDAR CAMPOS OBLIGATORIOS
+            // ----------------------------------------------
 
             if (
                 !nombre ||
@@ -883,52 +425,64 @@ export function bindCourseEvents() {
                 );
 
                 return;
+
             }
 
             if (
                 !Number.isInteger(horasSemanales) ||
-                horasSemanales < 1
+                horasSemanales < 1 ||
+                horasSemanales > 10
             ) {
+
                 alert(
-                    "Las horas semanales deben ser un número entero mayor que cero."
+                    "Las horas semanales deben ser un número entero entre 1 y 10."
                 );
 
                 return;
+
             }
 
             const wasEditing =
-                Boolean(
-                    editState.courseId
-                );
+                Boolean(editState.courseId);
 
-
-            // ------------------------------------------------
+            // ----------------------------------------------
             // BUSCAR CURSO ACTUAL
-            // ------------------------------------------------
+            // ----------------------------------------------
 
             const currentCourse =
                 wasEditing
                     ? appState.cursos.find(
                         curso =>
                             String(curso.id) ===
-                            String(
-                                editState.courseId
-                            )
+                            String(editState.courseId)
                     )
                     : null;
 
-            // ------------------------------------------------
+            if (
+                wasEditing &&
+                !currentCourse
+            ) {
+
+                alert(
+                    "No se encontró el curso que intenta actualizar."
+                );
+
+                cancelCourseEdit();
+
+                return;
+
+            }
+
+            // ----------------------------------------------
             // VALIDAR NOMBRE DUPLICADO
             // DENTRO DE LA MISMA ACADEMIA
-            // ------------------------------------------------
+            // ----------------------------------------------
 
             const duplicateCourse =
                 appState.cursos.some(
                     curso =>
                         String(curso.id) !==
-                            String(
-                                editState.courseId
-                            ) &&
+                            String(editState.courseId) &&
                         String(curso.academiaId) ===
                             String(academiaId) &&
                         curso.nombre
@@ -937,7 +491,6 @@ export function bindCourseEvents() {
                             nombre.toLowerCase()
                 );
 
-
             if (duplicateCourse) {
 
                 alert(
@@ -945,12 +498,12 @@ export function bindCourseEvents() {
                 );
 
                 return;
+
             }
 
-
-            // ------------------------------------------------
+            // ----------------------------------------------
             // VALIDAR CAMBIO DE ACADEMIA
-            // ------------------------------------------------
+            // ----------------------------------------------
 
             if (
                 wasEditing &&
@@ -962,26 +515,16 @@ export function bindCourseEvents() {
                 const hasDomains =
                     appState.dominios.some(
                         dominio =>
-                            String(
-                                dominio.cursoId
-                            ) ===
-                            String(
-                                currentCourse.id
-                            )
+                            String(dominio.cursoId) ===
+                            String(currentCourse.id)
                     );
-
 
                 const hasAssignments =
                     appState.asignaciones.some(
                         asignacion =>
-                            String(
-                                asignacion.cursoId
-                            ) ===
-                            String(
-                                currentCourse.id
-                            )
+                            String(asignacion.cursoId) ===
+                            String(currentCourse.id)
                     );
-
 
                 if (
                     hasDomains ||
@@ -993,44 +536,33 @@ export function bindCourseEvents() {
                     );
 
                     return;
+
                 }
 
             }
 
+            // ----------------------------------------------
+            // PREPARAR DATOS
+            // ----------------------------------------------
+
+            const courseData = {
+
+                nombre,
+
+                descripcion,
+
+                academiaId:
+                    Number(academiaId),
+
+                horasSemanales
+
+            };
+
             try {
 
-                const courseData = {
-
-                    nombre,
-                    descripcion,
-
-                    academiaId:
-                        String(academiaId),
-
-                    horasSemanales,
-
-                    plantillaId,
-
-                    horasLunes:
-                        schedule.horasLunes,
-
-                    horasMartes:
-                        schedule.horasMartes,
-
-                    horasMiercoles:
-                        schedule.horasMiercoles,
-
-                    horasJueves:
-                        schedule.horasJueves,
-
-                    horasViernes:
-                        schedule.horasViernes
-
-                };
-                
-                // ============================================
+                // ==========================================
                 // ACTUALIZAR
-                // ============================================
+                // ==========================================
 
                 if (wasEditing) {
 
@@ -1040,27 +572,18 @@ export function bindCourseEvents() {
                             courseData
                         );
 
-
                     updatedCourse.id =
-                        String(
-                            updatedCourse.id
-                        );
-
+                        String(updatedCourse.id);
 
                     updatedCourse.academiaId =
-                        String(
-                            updatedCourse.academiaId
-                        );
+                        String(updatedCourse.academiaId);
 
                     const index =
                         appState.cursos.findIndex(
                             item =>
                                 String(item.id) ===
-                                String(
-                                    editState.courseId
-                                )
+                                String(editState.courseId)
                         );
-
 
                     if (index !== -1) {
 
@@ -1069,8 +592,7 @@ export function bindCourseEvents() {
 
                     }
 
-                    editState.courseId =
-                        null;
+                    editState.courseId = null;
 
                     console.log(
                         "Curso actualizado:",
@@ -1079,9 +601,9 @@ export function bindCourseEvents() {
 
                 }
 
-                // ============================================
+                // ==========================================
                 // CREAR
-                // ============================================
+                // ==========================================
 
                 else {
 
@@ -1090,22 +612,15 @@ export function bindCourseEvents() {
                             courseData
                         );
 
-
                     newCourse.id =
-                        String(
-                            newCourse.id
-                        );
-
+                        String(newCourse.id);
 
                     newCourse.academiaId =
-                        String(
-                            newCourse.academiaId
-                        );
+                        String(newCourse.academiaId);
 
                     appState.cursos.push(
                         newCourse
                     );
-
 
                     console.log(
                         "Curso creado:",
@@ -1114,10 +629,9 @@ export function bindCourseEvents() {
 
                 }
 
-
-                // ============================================
+                // ==========================================
                 // ACTUALIZAR INTERFAZ
-                // ============================================
+                // ==========================================
 
                 cancelCourseEdit();
 
@@ -1125,13 +639,11 @@ export function bindCourseEvents() {
 
                 renderCourses();
 
-
                 alert(
                     wasEditing
                         ? "Curso actualizado correctamente."
                         : "Curso registrado correctamente."
                 );
-
 
             } catch (error) {
 
@@ -1139,7 +651,6 @@ export function bindCourseEvents() {
                     "Error al guardar curso:",
                     error
                 );
-
 
                 alert(
                     "No se pudo guardar el curso.\n\n" +
@@ -1151,22 +662,17 @@ export function bindCourseEvents() {
         }
     );
 
-
     // --------------------------------------------------------
     // LIMPIAR / CANCELAR
     // --------------------------------------------------------
 
     document
-        .getElementById(
-            "limpiarCurso"
-        )
+        .getElementById("limpiarCurso")
         ?.addEventListener(
             "click",
             event => {
 
-                if (
-                    editState.courseId
-                ) {
+                if (editState.courseId) {
 
                     event.preventDefault();
 
@@ -1176,7 +682,9 @@ export function bindCourseEvents() {
 
             }
         );
+
 }
+
 
 // ============================================================
 // COMPATIBILIDAD TEMPORAL CON onclick

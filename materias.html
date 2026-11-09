@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -26,7 +27,6 @@
                 </div>
 
             </div>
-
 
             <nav class="main-nav">
 
@@ -69,20 +69,19 @@
             <h2>Gestión de materias</h2>
 
             <p>
-                Consulta y registro de materias asociados obligatoriamente a una academia.
+                Consulta y registra materias asociadas obligatoriamente a una academia.
             </p>
 
         </div>
 
 
         <!-- ==================================================
-             CONSULTAR materias
+             CONSULTAR MATERIAS
              ================================================== -->
 
         <section class="card">
 
             <h3>Consultar materias</h3>
-
 
             <div class="form-grid-2">
 
@@ -128,24 +127,26 @@
 
                 <table class="w3-table-all">
 
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Horas semanales</th>
-                    <th>Academia</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Horas semanales</th>
+                            <th>Academia</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
 
-            <tbody id="tbodyCursos">
-                <tr>
-                    <td colspan="6" class="w3-center">
-                        Las materias se cargarán mediante JavaScript.
-                    </td>
-                </tr>
-            </tbody>
+                    <tbody id="tbodyCursos">
+
+                        <tr>
+                            <td colspan="6" class="w3-center">
+                                Las materias se cargarán mediante JavaScript.
+                            </td>
+                        </tr>
+
+                    </tbody>
 
                 </table>
 
@@ -155,18 +156,19 @@
 
 
         <!-- ==================================================
-             AGREGAR CURSO
+             AGREGAR / EDITAR MATERIA
              ================================================== -->
 
         <section class="card">
 
             <h3>Agregar materia</h3>
 
-
             <form
                 id="formCurso"
                 novalidate
             >
+
+                <!-- NOMBRE -->
 
                 <div class="form-group">
 
@@ -177,11 +179,14 @@
                     <input
                         id="nombreCurso"
                         class="w3-input w3-border"
+                        type="text"
                         required
                     >
 
                 </div>
 
+
+                <!-- DESCRIPCIÓN -->
 
                 <div class="form-group">
 
@@ -198,6 +203,8 @@
                 </div>
 
 
+                <!-- ACADEMIA -->
+
                 <div class="form-group">
 
                     <label for="academiaCurso">
@@ -213,175 +220,60 @@
                 </div>
 
 
-            <div class="form-group">
+                <!-- HORAS SEMANALES -->
 
-                <label for="horasSemanales">
-                    Horas semanales requeridas *
-                </label>
+                <div class="form-group">
 
-                <input
-                    id="horasSemanales"
-                    name="horasSemanales"
-                    class="w3-input w3-border"
-                    type="number"
-                    min="1"
-                    max="10"
-                    step="1"
-                    required
-                >
+                    <label for="horasSemanales">
+                        Horas semanales requeridas *
+                    </label>
 
-                <p class="w3-small">
-                    Una materia puede tener entre 1 y 10 horas semanales.
-                    Solo se permite una clase por día, con duración máxima
-                    de dos horas.
-                </p>
+                    <input
+                        id="horasSemanales"
+                        name="horasSemanales"
+                        class="w3-input w3-border"
+                        type="number"
+                        min="1"
+                        max="10"
+                        step="1"
+                        required
+                    >
 
-            </div>
+                    <p class="w3-small">
+                        Indica la cantidad total de horas que requiere
+                        impartir la materia durante la semana.
+                        Se permiten entre 1 y 10 horas.
+                    </p>
 
-
-            <div class="form-group">
-
-                <label for="plantillaCurso">
-                    Distribución inicial
-                </label>
-
-                <select
-                    id="plantillaCurso"
-                    class="w3-select w3-border"
-                >
-
-                    <option value="">
-                        Distribución personalizada
-                    </option>
-
-                </select>
-
-                <p class="w3-small">
-                    La plantilla es opcional. Puedes modificar libremente
-                    la distribución después de seleccionarla.
-                </p>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <h4>Distribución semanal</h4>
-
-                <p class="w3-small">
-                    Indica cuántas horas se impartirá la materia cada día.
-                    Utiliza 0, 1 o 2 horas por día.
-                    La suma debe coincidir con las horas semanales.
-                </p>
-
-                <div class="form-grid-2">
-
-                    <div class="form-group">
-
-                        <label for="horasLunes">Lunes</label>
-
-                        <input
-                            id="horasLunes"
-                            class="w3-input w3-border"
-                            type="number"
-                            min="0"
-                            max="2"
-                            step="1"
-                            value="0"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="horasMartes">Martes</label>
-
-                        <input
-                            id="horasMartes"
-                            class="w3-input w3-border"
-                            type="number"
-                            min="0"
-                            max="2"
-                            step="1"
-                            value="0"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="horasMiercoles">Miércoles</label>
-
-                        <input
-                            id="horasMiercoles"
-                            class="w3-input w3-border"
-                            type="number"
-                            min="0"
-                            max="2"
-                            step="1"
-                            value="0"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="horasJueves">Jueves</label>
-
-                        <input
-                            id="horasJueves"
-                            class="w3-input w3-border"
-                            type="number"
-                            min="0"
-                            max="2"
-                            step="1"
-                            value="0"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="horasViernes">Viernes</label>
-
-                        <input
-                            id="horasViernes"
-                            class="w3-input w3-border"
-                            type="number"
-                            min="0"
-                            max="2"
-                            step="1"
-                            value="0"
-                            required
-                        >
-
-                    </div>
+                    <p class="w3-small">
+                        La distribución por días y la selección de
+                        horarios concretos se configuran posteriormente
+                        en la sección Asignación de cursos.
+                    </p>
 
                 </div>
 
-                <p id="resumenDistribucionCurso" class="w3-small">
-                    Horas distribuidas: 0 de 0.
-                </p>
 
-                <p
-                    id="avisoDistribucionBloqueada"
-                    class="w3-small"
-                    hidden
-                >
-                    Esta materia ya tiene asignaciones. Su carga y distribución
-                    horaria están bloqueadas; primero debes eliminar sus
-                    asignaciones para modificarlas.
-                </p>
+                <!-- BOTONES -->
 
-            </div>
+                <div class="w3-margin-top">
+
+                    <button
+                        type="submit"
+                        class="w3-button w3-blue w3-margin-right"
+                    >
+                        Registrar curso
+                    </button>
+
+                    <button
+                        type="reset"
+                        id="limpiarCurso"
+                        class="w3-button w3-light-grey"
+                    >
+                        Limpiar
+                    </button>
+
+                </div>
 
             </form>
 
@@ -395,10 +287,11 @@
     </footer>
 
 
-     <script 
-        type = "module"
-        src = "js/main.js"
+    <script
+        type="module"
+        src="js/main.js"
     ></script>
 
 </body>
+
 </html>

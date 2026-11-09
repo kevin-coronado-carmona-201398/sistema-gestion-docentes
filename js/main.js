@@ -159,8 +159,12 @@ async function startApp() {
         renderDomains();
         bindDomainEvents();
 
-        bindAssignmentEvents();
-
+        if (
+            document.getElementById("academiaAsignacion")
+        ) {
+            bindAssignmentEvents();
+        }
+        
     } catch (error) {
 
         console.error(
