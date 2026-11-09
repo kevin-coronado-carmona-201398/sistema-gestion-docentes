@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cursos - Gestión Académica</title>
+    <title>Materias - Gestión Académica</title>
 
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <link rel="stylesheet" href="styles.css">
@@ -27,7 +28,6 @@
 
             </div>
 
-
             <nav class="main-nav">
 
                 <a href="home.html">
@@ -42,8 +42,8 @@
                     Academias
                 </a>
 
-                <a href="cursos.html" class="active">
-                    Cursos
+                <a href="materias.html" class="active">
+                    Materias
                 </a>
 
                 <a href="asignacion.html">
@@ -66,23 +66,22 @@
 
         <div class="page-title">
 
-            <h2>Gestión de cursos</h2>
+            <h2>Gestión de materias</h2>
 
             <p>
-                Consulta y registro de cursos asociados obligatoriamente a una academia.
+                Consulta y registra materias asociadas obligatoriamente a una academia.
             </p>
 
         </div>
 
 
         <!-- ==================================================
-             CONSULTAR CURSOS
+             CONSULTAR MATERIAS
              ================================================== -->
 
         <section class="card">
 
-            <h3>Consultar cursos</h3>
-
+            <h3>Consultar materias</h3>
 
             <div class="form-grid-2">
 
@@ -129,41 +128,22 @@
                 <table class="w3-table-all">
 
                     <thead>
-
                         <tr>
-
-                            <th>
-                                Nombre
-                            </th>
-
-                            <th>
-                                Descripción
-                            </th>
-
-                            <th>
-                                Academia
-                            </th>
-
-                            <th>
-                                Estado
-                            </th>
-
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Horas semanales</th>
+                            <th>Academia</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
-
                     </thead>
-
 
                     <tbody id="tbodyCursos">
 
                         <tr>
-
-                            <td
-                                colspan="5"
-                                class="w3-center"
-                            >
-                                Los cursos se cargarán mediante JavaScript.
+                            <td colspan="6" class="w3-center">
+                                Las materias se cargarán mediante JavaScript.
                             </td>
-
                         </tr>
 
                     </tbody>
@@ -176,18 +156,19 @@
 
 
         <!-- ==================================================
-             AGREGAR CURSO
+             AGREGAR / EDITAR MATERIA
              ================================================== -->
 
         <section class="card">
 
-            <h3>Agregar curso</h3>
-
+            <h3>Agregar materia</h3>
 
             <form
                 id="formCurso"
                 novalidate
             >
+
+                <!-- NOMBRE -->
 
                 <div class="form-group">
 
@@ -198,11 +179,14 @@
                     <input
                         id="nombreCurso"
                         class="w3-input w3-border"
+                        type="text"
                         required
                     >
 
                 </div>
 
+
+                <!-- DESCRIPCIÓN -->
 
                 <div class="form-group">
 
@@ -219,6 +203,8 @@
                 </div>
 
 
+                <!-- ACADEMIA -->
+
                 <div class="form-group">
 
                     <label for="academiaCurso">
@@ -233,11 +219,48 @@
 
                 </div>
 
-                <div class="action-row">
+
+                <!-- HORAS SEMANALES -->
+
+                <div class="form-group">
+
+                    <label for="horasSemanales">
+                        Horas semanales requeridas *
+                    </label>
+
+                    <input
+                        id="horasSemanales"
+                        name="horasSemanales"
+                        class="w3-input w3-border"
+                        type="number"
+                        min="1"
+                        max="10"
+                        step="1"
+                        required
+                    >
+
+                    <p class="w3-small">
+                        Indica la cantidad total de horas que requiere
+                        impartir la materia durante la semana.
+                        Se permiten entre 1 y 10 horas.
+                    </p>
+
+                    <p class="w3-small">
+                        La distribución por días y la selección de
+                        horarios concretos se configuran posteriormente
+                        en la sección Asignación de cursos.
+                    </p>
+
+                </div>
+
+
+                <!-- BOTONES -->
+
+                <div class="w3-margin-top">
 
                     <button
                         type="submit"
-                        class="w3-button w3-blue"
+                        class="w3-button w3-blue w3-margin-right"
                     >
                         Registrar curso
                     </button>
@@ -264,10 +287,11 @@
     </footer>
 
 
-     <script 
-        type = "module"
-        src = "js/main.js"
+    <script
+        type="module"
+        src="js/main.js"
     ></script>
 
 </body>
+
 </html>

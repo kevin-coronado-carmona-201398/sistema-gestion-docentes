@@ -352,10 +352,11 @@ export function fillScheduleHours(
                 horario =>
                     horario.dia === day
             )
+            
             .sort(
                 (a, b) =>
-                    Number(a.id) -
-                    Number(b.id)
+                    a.horaInicio.localeCompare(b.horaInicio) ||
+                    a.horaFin.localeCompare(b.horaFin)
             );
 
 
@@ -444,11 +445,11 @@ export function initSelects() {
 
     fillCourses(
         "cursoDominio",
-        "Seleccionar curso..."
+        "Seleccionar materia..."
     );
 
     fillCourses(
         "cursoAsignacion",
-        "Seleccionar curso..."
+        "Seleccionar materia..."
     );
 }

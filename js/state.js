@@ -1,7 +1,6 @@
 // ============================================================
 // ESTADO DE LA APLICACIÓN
 // ============================================================
-
 export const appState = {
 
     academias: [],
@@ -10,6 +9,7 @@ export const appState = {
     dominios: [],
     asignaciones: [],
     horarios: [],
+    plantillas: [],
 
     licenciaturas: [],
     maestrias: [],
@@ -18,7 +18,6 @@ export const appState = {
     especialidades: []
 
 };
-
 
 // ============================================================
 // ESTADO DE EDICIÓN

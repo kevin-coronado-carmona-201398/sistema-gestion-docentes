@@ -116,6 +116,14 @@ async function startApp() {
             id: String(item.id)
         }));
 
+        appState.plantillas =
+            data.plantillas.map(item => ({
+                ...item,
+                id: String(item.id),
+                horasSemanales: Number(item.horasSemanales),
+                activa: Number(item.activa)
+            }));
+
         appState.licenciaturas =
             data.licenciaturas;
 
@@ -151,8 +159,12 @@ async function startApp() {
         renderDomains();
         bindDomainEvents();
 
-        bindAssignmentEvents();
-
+        if (
+            document.getElementById("academiaAsignacion")
+        ) {
+            bindAssignmentEvents();
+        }
+        
     } catch (error) {
 
         console.error(

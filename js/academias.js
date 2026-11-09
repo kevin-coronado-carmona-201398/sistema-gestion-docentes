@@ -453,15 +453,13 @@ export function bindAcademyEvents() {
 
             event.preventDefault();
 
+            const claveOriginal =
+                document.getElementById(
+                    "claveAcademia"
+                ).value;
 
             const clave =
-                document
-                    .getElementById(
-                        "claveAcademia"
-                    )
-                    .value
-                    .trim();
-
+                claveOriginal.trim();
 
             const nombre =
                 document
@@ -484,6 +482,16 @@ export function bindAcademyEvents() {
             // ------------------------------------------------
             // VALIDACIÓN
             // ------------------------------------------------
+
+            if (/\s/.test(claveOriginal)) {
+
+                    alert(
+                        "La clave no puede contener espacios."
+                    );
+
+                    return;
+
+                }
 
             if (
                 !/^[A-Za-z0-9]{1,10}$/.test(
