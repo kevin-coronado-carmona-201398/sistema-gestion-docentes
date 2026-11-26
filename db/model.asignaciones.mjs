@@ -2,9 +2,7 @@
 class ModelAsignaciones {
 
     constructor(controller) {
-
         this.dbController = controller;
-
     }
 
     // --------------------------------------------------------
@@ -22,10 +20,70 @@ class ModelAsignaciones {
             return null;
         }
 
-        const hours = Number(match[1]);
-        const minutes = Number(match[2]);
+        return (
+            Number(match[1]) * 60 +
+            Number(match[2])
+        );
 
-        return hours * 60 + minutes;
+    }
+
+    // --------------------------------------------------------
+    // NORMALIZAR DÍA
+    // Permite comparar Miércoles y Miercoles.
+    // --------------------------------------------------------
+
+    normalizeDay(value) {
+
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase();
+
+    }
+
+    // --------------------------------------------------------
+    // CONSULTA INTERNA DE ASIGNACIÓN
+    // No abre ni cierra la conexión.
+    // --------------------------------------------------------
+
+    getById(id) {
+
+        const assignment =
+            this.dbController.get(
+                `
+                    SELECT
+                        id,
+                        curso_id AS cursoId,
+                        docente_id AS docenteId
+                    FROM asignaciones
+                    WHERE id = ?;
+                `,
+                [id]
+            );
+
+        if (!assignment) {
+            return null;
+        }
+
+        const schedules =
+            this.dbController.all(
+                `
+                    SELECT
+                        horario_id
+                    FROM asignacion_horarios
+                    WHERE asignacion_id = ?
+                    ORDER BY horario_id;
+                `,
+                [id]
+            );
+
+        return {
+            ...assignment,
+            horarioIds: schedules.map(
+                item => item.horario_id
+            )
+        };
 
     }
 
@@ -39,42 +97,7 @@ class ModelAsignaciones {
 
         try {
 
-            const assignment =
-                this.dbController.get(
-                    `
-                        SELECT
-                            id,
-                            curso_id AS cursoId,
-                            docente_id AS docenteId
-                        FROM asignaciones
-                        WHERE id = ?;
-                    `,
-                    [id]
-                );
-
-            if (!assignment) {
-                return null;
-            }
-
-            const schedules =
-                this.dbController.all(
-                    `
-                        SELECT
-                            horario_id
-                        FROM asignacion_horarios
-                        WHERE asignacion_id = ?
-                        ORDER BY horario_id;
-                    `,
-                    [id]
-                );
-
-            return {
-                ...assignment,
-                horarioIds:
-                    schedules.map(
-                        item => item.horario_id
-                    )
-            };
+            return this.getById(id);
 
         } finally {
 
@@ -119,17 +142,14 @@ class ModelAsignaciones {
                                 WHERE asignacion_id = ?
                                 ORDER BY horario_id;
                             `,
-                            [
-                                assignment.id
-                            ]
+                            [assignment.id]
                         );
 
                     return {
                         ...assignment,
-                        horarioIds:
-                            schedules.map(
-                                item => item.horario_id
-                            )
+                        horarioIds: schedules.map(
+                            item => item.horario_id
+                        )
                     };
 
                 }
@@ -144,17 +164,225 @@ class ModelAsignaciones {
     }
 
     // --------------------------------------------------------
-    // CREAR ASIGNACIÓN
+    // CREAR ASIGNACIÓN PENDIENTE
+    // Solo registra la relación materia-docente.
+    // Los horarios se configuran posteriormente.
     // --------------------------------------------------------
 
     create(
         cursoId,
-        docenteId,
+        docenteId
+    ) {
+
+        const normalizedCourseId =
+            Number(cursoId);
+
+        const normalizedTeacherId =
+            Number(docenteId);
+
+        if (
+            !Number.isInteger(normalizedCourseId) ||
+            normalizedCourseId < 1 ||
+            !Number.isInteger(normalizedTeacherId) ||
+            normalizedTeacherId < 1
+        ) {
+
+            const error = new Error(
+                "El identificador del curso o del docente no es válido."
+            );
+
+            error.code = "NOT_FOUND";
+            throw error;
+
+        }
+
+        this.dbController.open();
+
+        try {
+
+            return this.dbController.transaction(
+                () => {
+
+                    // ----------------------------------------
+                    // VALIDAR MATERIA Y DOCENTE
+                    // ----------------------------------------
+
+                    const course =
+                        this.dbController.get(
+                            `
+                                SELECT
+                                    id,
+                                    academia_id,
+                                    horas_semanales AS horasSemanales
+                                FROM cursos
+                                WHERE id = ?;
+                            `,
+                            [normalizedCourseId]
+                        );
+
+                    const teacher =
+                        this.dbController.get(
+                            `
+                                SELECT
+                                    id,
+                                    academia_id
+                                FROM docentes
+                                WHERE id = ?;
+                            `,
+                            [normalizedTeacherId]
+                        );
+
+                    if (
+                        !course ||
+                        !teacher
+                    ) {
+
+                        const error = new Error(
+                            "El docente o la materia no existe."
+                        );
+
+                        error.code = "NOT_FOUND";
+                        throw error;
+
+                    }
+
+                    // ----------------------------------------
+                    // VALIDAR HORAS SEMANALES
+                    // ----------------------------------------
+
+                    const weeklyHours =
+                        Number(course.horasSemanales);
+
+                    if (
+                        !Number.isInteger(weeklyHours) ||
+                        weeklyHours < 1 ||
+                        weeklyHours > 10
+                    ) {
+
+                        const error = new Error(
+                            "La materia debe tener configuradas sus horas semanales antes de asignar un docente."
+                        );
+
+                        error.code = "COURSE_HOURS_NOT_CONFIGURED";
+                        throw error;
+
+                    }
+
+                    // ----------------------------------------
+                    // VALIDAR ACADEMIA
+                    // ----------------------------------------
+
+                    if (
+                        Number(course.academia_id) !==
+                        Number(teacher.academia_id)
+                    ) {
+
+                        const error = new Error(
+                            "No se puede asignar un docente de una academia diferente a la materia."
+                        );
+
+                        error.code = "ACADEMY_MISMATCH";
+                        throw error;
+
+                    }
+
+                    // ----------------------------------------
+                    // EVITAR ASIGNACIÓN DUPLICADA
+                    // ----------------------------------------
+
+                    const duplicate =
+                        this.dbController.get(
+                            `
+                                SELECT id
+                                FROM asignaciones
+                                WHERE curso_id = ?
+                                  AND docente_id = ?;
+                            `,
+                            [
+                                normalizedCourseId,
+                                normalizedTeacherId
+                            ]
+                        );
+
+                    if (duplicate) {
+
+                        const error = new Error(
+                            "El docente ya está asignado a esta materia."
+                        );
+
+                        error.code = "DUPLICATE_ASSIGNMENT";
+                        throw error;
+
+                    }
+
+                    // ----------------------------------------
+                    // REGISTRAR ASIGNACIÓN PENDIENTE
+                    // ----------------------------------------
+
+                    const result =
+                        this.dbController.run(
+                            `
+                                INSERT INTO asignaciones
+                                (
+                                    curso_id,
+                                    docente_id
+                                )
+                                VALUES (?, ?);
+                            `,
+                            [
+                                normalizedCourseId,
+                                normalizedTeacherId
+                            ]
+                        );
+
+                    return {
+                        id: result.lastInsertRowid,
+                        cursoId: normalizedCourseId,
+                        docenteId: normalizedTeacherId,
+                        horarioIds: []
+                    };
+
+                }
+            );
+
+        } finally {
+
+            this.dbController.close();
+
+        }
+
+    }
+
+    // --------------------------------------------------------
+    // CONFIRMAR O ACTUALIZAR HORARIOS
+    // Reemplaza los horarios anteriores solamente cuando
+    // la nueva programación cumple todas las validaciones.
+    // --------------------------------------------------------
+
+    updateSchedules(
+        assignmentId,
         horarioIds
     ) {
 
+        const normalizedAssignmentId =
+            Number(assignmentId);
+
+        if (
+            !Number.isInteger(normalizedAssignmentId) ||
+            normalizedAssignmentId < 1
+        ) {
+
+            const error = new Error(
+                "El identificador de la asignación no es válido."
+            );
+
+            error.code = "ASSIGNMENT_NOT_FOUND";
+            throw error;
+
+        }
+
         // ----------------------------------------------------
-        // VALIDAR IDENTIFICADORES RECIBIDOS
+        // VALIDAR IDENTIFICADORES DE HORARIO
         // ----------------------------------------------------
 
         if (!Array.isArray(horarioIds)) {
@@ -190,8 +418,6 @@ class ModelAsignaciones {
 
         }
 
-        // Eliminar identificadores duplicados.
-
         const uniqueSchedules = [
             ...new Set(numericSchedules)
         ];
@@ -199,7 +425,7 @@ class ModelAsignaciones {
         if (uniqueSchedules.length === 0) {
 
             const error = new Error(
-                "Debe seleccionar al menos un horario para la asignación."
+                "Debe seleccionar al menos un horario para confirmar la asignación."
             );
 
             error.code = "NO_SCHEDULE";
@@ -215,54 +441,51 @@ class ModelAsignaciones {
                 () => {
 
                     // ----------------------------------------
-                    // VALIDAR MATERIA Y DOCENTE
+                    // CONSULTAR ASIGNACIÓN Y RELACIONES
                     // ----------------------------------------
 
-                    const course =
+                    const assignment =
                         this.dbController.get(
                             `
                                 SELECT
-                                    id,
-                                    academia_id,
-                                    horas_semanales AS horasSemanales
-                                FROM cursos
-                                WHERE id = ?;
+                                    a.id,
+                                    a.curso_id AS cursoId,
+                                    a.docente_id AS docenteId,
+                                    c.nombre AS materia,
+                                    c.academia_id AS academiaCurso,
+                                    c.horas_semanales AS horasSemanales,
+                                    d.academia_id AS academiaDocente
+
+                                FROM asignaciones a
+
+                                INNER JOIN cursos c
+                                    ON c.id = a.curso_id
+
+                                INNER JOIN docentes d
+                                    ON d.id = a.docente_id
+
+                                WHERE a.id = ?;
                             `,
-                            [cursoId]
+                            [normalizedAssignmentId]
                         );
 
-                    const teacher =
-                        this.dbController.get(
-                            `
-                                SELECT
-                                    id,
-                                    academia_id
-                                FROM docentes
-                                WHERE id = ?;
-                            `,
-                            [docenteId]
-                        );
-
-                    if (
-                        !course ||
-                        !teacher
-                    ) {
+                    if (!assignment) {
 
                         const error = new Error(
-                            "El docente o el curso no existe."
+                            "La asignación que intenta configurar no existe."
                         );
 
-                        error.code = "NOT_FOUND";
+                        error.code = "ASSIGNMENT_NOT_FOUND";
                         throw error;
 
                     }
 
                     // ----------------------------------------
-                    // VALIDAR HORAS SEMANALES DE LA MATERIA
+                    // VALIDAR HORAS SEMANALES
                     // ----------------------------------------
 
                     const weeklyHours =
-                        Number(course.horasSemanales);
+                        Number(assignment.horasSemanales);
 
                     if (
                         !Number.isInteger(weeklyHours) ||
@@ -284,12 +507,12 @@ class ModelAsignaciones {
                     // ----------------------------------------
 
                     if (
-                        Number(course.academia_id) !==
-                        Number(teacher.academia_id)
+                        Number(assignment.academiaCurso) !==
+                        Number(assignment.academiaDocente)
                     ) {
 
                         const error = new Error(
-                            "No se puede asignar un docente de una academia diferente al curso."
+                            "El docente y la materia deben pertenecer a la misma academia."
                         );
 
                         error.code = "ACADEMY_MISMATCH";
@@ -298,36 +521,7 @@ class ModelAsignaciones {
                     }
 
                     // ----------------------------------------
-                    // VALIDAR ASIGNACIÓN DUPLICADA
-                    // ----------------------------------------
-
-                    const duplicate =
-                        this.dbController.get(
-                            `
-                                SELECT id
-                                FROM asignaciones
-                                WHERE curso_id = ?
-                                  AND docente_id = ?;
-                            `,
-                            [
-                                cursoId,
-                                docenteId
-                            ]
-                        );
-
-                    if (duplicate) {
-
-                        const error = new Error(
-                            "El docente ya está asignado a este curso."
-                        );
-
-                        error.code = "DUPLICATE_ASSIGNMENT";
-                        throw error;
-
-                    }
-
-                    // ----------------------------------------
-                    // CONSULTAR HORARIOS SELECCIONADOS
+                    // CONSULTAR BLOQUES HORARIOS
                     // ----------------------------------------
 
                     const placeholders =
@@ -364,15 +558,15 @@ class ModelAsignaciones {
                     }
 
                     // ----------------------------------------
-                    // VALIDAR DISTRIBUCIÓN SEMANAL
+                    // VALIDAR DÍAS, DURACIONES Y HORAS
                     // ----------------------------------------
 
                     const validDays = new Set([
-                        "Lunes",
-                        "Martes",
-                        "Miércoles",
-                        "Jueves",
-                        "Viernes"
+                        "lunes",
+                        "martes",
+                        "miercoles",
+                        "jueves",
+                        "viernes"
                     ]);
 
                     const selectedDays = new Set();
@@ -381,9 +575,10 @@ class ModelAsignaciones {
 
                     for (const schedule of schedules) {
 
-                        // Validar día.
+                        const day =
+                            this.normalizeDay(schedule.dia);
 
-                        if (!validDays.has(schedule.dia)) {
+                        if (!validDays.has(day)) {
 
                             const error = new Error(
                                 `El día ${schedule.dia} no es válido. Solo se permiten horarios de lunes a viernes.`
@@ -393,8 +588,6 @@ class ModelAsignaciones {
                             throw error;
 
                         }
-
-                        // Convertir horas a minutos.
 
                         const start =
                             this.toMinutes(schedule.horaInicio);
@@ -420,8 +613,6 @@ class ModelAsignaciones {
                         const duration =
                             end - start;
 
-                        // Solo se permiten sesiones de 1 o 2 horas.
-
                         if (
                             duration !== 60 &&
                             duration !== 120
@@ -438,7 +629,7 @@ class ModelAsignaciones {
 
                         // Máximo una sesión por día.
 
-                        if (selectedDays.has(schedule.dia)) {
+                        if (selectedDays.has(day)) {
 
                             const error = new Error(
                                 `La asignación ya tiene una sesión programada para ${schedule.dia}. Solo se permite una sesión diaria.`
@@ -449,21 +640,25 @@ class ModelAsignaciones {
 
                         }
 
-                        selectedDays.add(schedule.dia);
+                        selectedDays.add(day);
 
                         totalMinutes += duration;
 
                     }
 
-                    const totalHours =
-                        totalMinutes / 60;
+                    // ----------------------------------------
+                    // VALIDAR TOTAL SEMANAL
+                    // ----------------------------------------
 
-                    // La suma debe coincidir con la materia.
+                    if (
+                        totalMinutes !== weeklyHours * 60
+                    ) {
 
-                    if (totalHours !== weeklyHours) {
+                        const actualHours =
+                            totalMinutes / 60;
 
                         const error = new Error(
-                            `Los horarios seleccionados suman ${totalHours} horas, pero la materia requiere ${weeklyHours} horas semanales.`
+                            `Los horarios seleccionados suman ${actualHours} horas, pero la materia requiere ${weeklyHours} horas semanales.`
                         );
 
                         error.code = "WEEKLY_HOURS_MISMATCH";
@@ -472,7 +667,7 @@ class ModelAsignaciones {
                     }
 
                     // ----------------------------------------
-                    // VALIDAR CONFLICTOS DEL DOCENTE
+                    // VALIDAR CONFLICTOS CON OTRAS ASIGNACIONES
                     // ----------------------------------------
 
                     for (const schedule of schedules) {
@@ -499,6 +694,7 @@ class ModelAsignaciones {
                                         ON h.id = ah.horario_id
 
                                     WHERE a.docente_id = ?
+                                      AND a.id <> ?
                                       AND h.dia = ?
                                       AND h.hora_inicio < ?
                                       AND h.hora_fin > ?
@@ -506,7 +702,8 @@ class ModelAsignaciones {
                                     LIMIT 1;
                                 `,
                                 [
-                                    docenteId,
+                                    assignment.docenteId,
+                                    normalizedAssignmentId,
                                     schedule.dia,
                                     schedule.horaFin,
                                     schedule.horaInicio
@@ -516,7 +713,7 @@ class ModelAsignaciones {
                         if (conflict) {
 
                             const error = new Error(
-                                "No se puede asignar al docente porque ya tiene otra materia en un horario que se superpone." +
+                                "No se puede confirmar el horario porque el docente ya tiene otra materia en un intervalo que se superpone." +
                                 ` Materia en conflicto: ${conflict.materia}.` +
                                 ` Horario: ${conflict.dia} ${conflict.horaInicio}-${conflict.horaFin}.`
                             );
@@ -529,31 +726,16 @@ class ModelAsignaciones {
                     }
 
                     // ----------------------------------------
-                    // INSERTAR ASIGNACIÓN
+                    // REEMPLAZAR HORARIOS ANTERIORES
                     // ----------------------------------------
 
-                    const assignmentResult =
-                        this.dbController.run(
-                            `
-                                INSERT INTO asignaciones
-                                (
-                                    curso_id,
-                                    docente_id
-                                )
-                                VALUES (?, ?);
-                            `,
-                            [
-                                cursoId,
-                                docenteId
-                            ]
-                        );
-
-                    const assignmentId =
-                        assignmentResult.lastInsertRowid;
-
-                    // ----------------------------------------
-                    // INSERTAR HORARIOS DE LA ASIGNACIÓN
-                    // ----------------------------------------
+                    this.dbController.run(
+                        `
+                            DELETE FROM asignacion_horarios
+                            WHERE asignacion_id = ?;
+                        `,
+                        [normalizedAssignmentId]
+                    );
 
                     for (const horarioId of uniqueSchedules) {
 
@@ -567,17 +749,21 @@ class ModelAsignaciones {
                                 VALUES (?, ?);
                             `,
                             [
-                                assignmentId,
+                                normalizedAssignmentId,
                                 horarioId
                             ]
                         );
 
                     }
 
+                    // ----------------------------------------
+                    // DEVOLVER ASIGNACIÓN ACTUALIZADA
+                    // ----------------------------------------
+
                     return {
-                        id: assignmentId,
-                        cursoId: Number(cursoId),
-                        docenteId: Number(docenteId),
+                        id: normalizedAssignmentId,
+                        cursoId: Number(assignment.cursoId),
+                        docenteId: Number(assignment.docenteId),
                         horarioIds: uniqueSchedules
                     };
 
@@ -594,6 +780,7 @@ class ModelAsignaciones {
 
     // --------------------------------------------------------
     // ELIMINAR ASIGNACIÓN
+    // Los horarios asociados se eliminan mediante CASCADE.
     // --------------------------------------------------------
 
     remove(id) {
@@ -611,9 +798,7 @@ class ModelAsignaciones {
                     [id]
                 );
 
-            return (
-                result.changes > 0
-            );
+            return result.changes > 0;
 
         } finally {
 

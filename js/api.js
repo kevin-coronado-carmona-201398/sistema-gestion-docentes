@@ -446,6 +446,55 @@ export async function createAssignment(data) {
 
 }
 
+
+export async function updateAssignmentSchedules(
+    id,
+    horarioIds
+) {
+
+    const response =
+        await fetch(
+            `${API_URL}/asignaciones/${id}/horarios`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    horarioIds
+                })
+            }
+        );
+
+    if (!response.ok) {
+
+        let message =
+            `asignaciones: HTTP ${response.status} - ${response.statusText}`;
+
+        try {
+
+            const errorData =
+                await response.json();
+
+            if (errorData.error) {
+                message = errorData.error;
+            }
+
+        } catch {
+            // Se conserva el mensaje HTTP
+            // si la respuesta no contiene JSON.
+        }
+
+        throw new Error(message);
+
+    }
+
+    return await response.json();
+
+}
+
 export async function deleteAssignment(id) {
 
     const response = await fetch(

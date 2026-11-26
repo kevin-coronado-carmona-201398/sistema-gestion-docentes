@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -26,7 +27,6 @@
                 </div>
 
             </div>
-
 
             <nav class="main-nav">
 
@@ -83,7 +83,6 @@
 
             <h3>Consultar docentes</h3>
 
-
             <div class="form-grid-2">
 
                 <div class="form-group">
@@ -130,33 +129,20 @@
 
                         <tr>
 
-                            <th>
-                                N.º de empleado
-                            </th>
+                            <th>N.º de empleado</th>
 
-                            <th>
-                                Nombre
-                            </th>
+                            <th>Nombre</th>
 
-                            <th>
-                                Nivel académico
-                            </th>
+                            <th>Nivel académico</th>
 
-                            <th>
-                                Especialidad
-                            </th>
+                            <th>Especialidad</th>
 
-                            <th>
-                                Academia
-                            </th>
+                            <th>Academia</th>
 
-                            <th>
-                                Materias asignadas
-                            </th>
+                            <th>Materias asignadas</th>
 
-                            <th>
-                                Acción
-                            </th>
+                            <th>Acción</th>
+
                         </tr>
 
                     </thead>
@@ -166,10 +152,7 @@
 
                         <tr>
 
-                            <td
-                                colspan="6"
-                                class="w3-center"
-                            >
+                            <td colspan="7" class="w3-center">
                                 Los docentes se cargarán mediante JavaScript.
                             </td>
 
@@ -192,9 +175,7 @@
 
             <h3>Agregar docente</h3>
 
-
             <form id="formDocente" novalidate>
-
 
                 <div class="form-grid-2">
 
@@ -426,6 +407,256 @@
 
         </section>
 
+
+        <!-- ==================================================
+             REGISTRAR / MODIFICAR DOMINIO
+             ================================================== -->
+
+        <section class="card">
+
+            <h3>Registrar o modificar nivel de dominio</h3>
+
+            <p class="w3-small">
+                Registra el nivel de dominio de un docente sobre una materia.
+                Si ya existe una relación entre ambos, el nivel se actualizará.
+            </p>
+
+
+            <form id="formDominio" novalidate>
+
+                <div class="form-grid-2">
+
+                    <div class="form-group">
+
+                        <label for="docenteDominio">
+                            Docente *
+                        </label>
+
+                        <select
+                            id="docenteDominio"
+                            class="w3-select w3-border"
+                            required
+                        ></select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="cursoDominio">
+                            Materia *
+                        </label>
+
+                        <select
+                            id="cursoDominio"
+                            class="w3-select w3-border"
+                            required
+                        ></select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="nivelDominio">
+                        Nivel de dominio (1-10) *
+                    </label>
+
+                    <input
+                        id="nivelDominio"
+                        class="w3-input w3-border"
+                        type="number"
+                        min="1"
+                        max="10"
+                        step="1"
+                        required
+                    >
+
+                    <p class="w3-small">
+                        Utiliza un número entero entre 1 y 10.
+                    </p>
+
+                </div>
+
+
+                <div class="action-row">
+
+                    <button
+                        type="submit"
+                        class="w3-button w3-blue"
+                    >
+                        Guardar nivel
+                    </button>
+
+                    <button
+                        type="reset"
+                        class="w3-button w3-light-grey"
+                    >
+                        Limpiar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- ==================================================
+             CONSULTAR DOMINIOS
+             ================================================== -->
+
+        <section class="card">
+
+            <h3>Dominios registrados</h3>
+
+            <p class="w3-small">
+                Consulta los niveles de dominio registrados entre docentes y materias.
+                También se muestran las combinaciones que todavía no tienen un nivel registrado.
+                Puedes combinar los filtros para encontrar registros específicos.
+            </p>
+
+
+            <!-- FILTROS -->
+
+            <div class="form-grid-2">
+
+                <div class="form-group">
+
+                    <label for="filtroAcademiaDominio">
+                        Academia
+                    </label>
+
+                    <select
+                        id="filtroAcademiaDominio"
+                        class="w3-select w3-border"
+                    >
+                        <option value="">
+                            Todas las academias
+                        </option>
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="filtroMateriaDominio">
+                        Materia
+                    </label>
+
+                    <select
+                        id="filtroMateriaDominio"
+                        class="w3-select w3-border"
+                    >
+                        <option value="">
+                            Todas las materias
+                        </option>
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-grid-2">
+
+                <div class="form-group">
+
+                    <label for="ordenNivelDominio">
+                        Ordenar por nivel de dominio
+                    </label>
+
+                    <select
+                        id="ordenNivelDominio"
+                        class="w3-select w3-border"
+                    >
+                        <option value="asc">
+                            Ascendente (1 → 10)
+                        </option>
+
+                        <option value="desc">
+                            Descendente (10 → 1)
+                        </option>
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="buscarDominio">
+                        Buscar docente
+                    </label>
+
+                    <input
+                        id="buscarDominio"
+                        class="w3-input w3-border"
+                        type="search"
+                        placeholder="Escribe un nombre..."
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="action-row">
+
+                <button
+                    type="button"
+                    id="limpiarFiltrosDominios"
+                    class="w3-button w3-light-grey"
+                >
+                    Restablecer filtros
+                </button>
+
+            </div>
+
+
+            <!-- TABLA -->
+
+            <div class="table-wrap">
+
+                <table class="w3-table-all">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Docente</th>
+
+                            <th>Materia</th>
+
+                            <th>Academia</th>
+
+                            <th>Nivel de dominio</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="tbodyDominios">
+
+                        <tr>
+
+                            <td colspan="4" class="w3-center">
+                                Los dominios se cargarán mediante JavaScript.
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
     </main>
 
 
@@ -434,9 +665,9 @@
     </footer>
 
 
-      <script 
-        type = "module"
-        src = "js/main.js"
+    <script
+        type="module"
+        src="js/main.js"
     ></script>
 
 </body>
