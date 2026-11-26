@@ -1,11 +1,11 @@
+
 // ============================================================
-// IMPORTACIÓN DE MODULOS
+// IMPORTACIÓN DE MÓDULOS
 // ============================================================
 
 import {
     appState
 } from "./state.js";
-
 
 import {
     loadDataFromAPI
@@ -14,7 +14,6 @@ import {
 import {
     initSelects
 } from "./selects.js";
-
 
 import {
     renderAcademies,
@@ -39,6 +38,7 @@ import {
 import {
     bindAssignmentEvents
 } from "./asignaciones.js";
+
 
 // ============================================================
 // INICIALIZACIÓN
@@ -75,11 +75,17 @@ async function startApp() {
                 })
             );
 
-        appState.cursos = data.cursos.map(item => ({
-            ...item,
-            id: String(item.id),
-            academiaId: String(item.academiaId)
-        }));
+
+        appState.cursos =
+            data.cursos.map(
+                item => ({
+                    ...item,
+                    id: String(item.id),
+                    academiaId:
+                        String(item.academiaId)
+                })
+            );
+
 
         appState.dominios =
             data.dominios.map(
@@ -92,6 +98,7 @@ async function startApp() {
                         String(item.cursoId)
                 })
             );
+
 
         appState.asignaciones =
             data.asignaciones.map(
@@ -110,74 +117,140 @@ async function startApp() {
                             : []
                 })
             );
-        
-        appState.horarios = data.horarios.map(item => ({
-            ...item,
-            id: String(item.id)
-        }));
+
+
+        appState.horarios =
+            data.horarios.map(
+                item => ({
+                    ...item,
+                    id: String(item.id)
+                })
+            );
+
 
         appState.plantillas =
-            data.plantillas.map(item => ({
-                ...item,
-                id: String(item.id),
-                horasSemanales: Number(item.horasSemanales),
-                activa: Number(item.activa)
-            }));
+            data.plantillas.map(
+                item => ({
+                    ...item,
+                    id: String(item.id),
+                    horasSemanales:
+                        Number(item.horasSemanales),
+                    activa:
+                        Number(item.activa)
+                })
+            );
+
 
         appState.licenciaturas =
             data.licenciaturas;
 
-
         appState.maestrias =
             data.maestrias;
-
 
         appState.doctorados =
             data.doctorados;
 
-
         appState.nivelesSNI =
             data.nivelesSNI;
 
-
         appState.especialidades =
             data.especialidades;
-        
-        window.appState = appState;
+
+
+        // Exponer el estado para depuración.
+
+        window.appState =
+            appState;
+
+
+        // ----------------------------------------------------
+        // INICIALIZAR SELECTORES
+        // ----------------------------------------------------
 
         initSelects();
 
+
+        // ----------------------------------------------------
+        // ACADEMIAS
+        // ----------------------------------------------------
+
         renderAcademies();
+
         bindAcademyEvents();
 
+
+        // ----------------------------------------------------
+        // DOCENTES
+        // ----------------------------------------------------
+
         renderTeachers();
+
         bindTeacherEvents();
 
+
+        // ----------------------------------------------------
+        // CURSOS
+        // ----------------------------------------------------
+
         renderCourses();
+
         bindCourseEvents();
 
-        renderDomains();
-        bindDomainEvents();
+
+        // ----------------------------------------------------
+        // DOMINIOS
+        // Solo se inicializan en la página que contiene
+        // la tabla y el formulario de dominios.
+        // ----------------------------------------------------
+
+        if (
+            document.getElementById("tbodyDominios")
+        ) {
+
+            renderDomains();
+
+        }
+
+        if (
+            document.getElementById("formDominio")
+        ) {
+
+            bindDomainEvents();
+
+        }
+
+
+        // ----------------------------------------------------
+        // ASIGNACIONES
+        // Solo se inicializan en asignacion.html.
+        // ----------------------------------------------------
 
         if (
             document.getElementById("academiaAsignacion")
         ) {
+
             bindAssignmentEvents();
+
         }
-        
+
     } catch (error) {
 
         console.error(
             "Error al iniciar la aplicación:",
             error
         );
+
     }
 
 }
 
+
+// ============================================================
+// ESPERAR A QUE EL DOCUMENTO ESTÉ DISPONIBLE
+// ============================================================
+
 if (
-    document.readyState ===
-    "loading"
+    document.readyState === "loading"
 ) {
 
     document.addEventListener(

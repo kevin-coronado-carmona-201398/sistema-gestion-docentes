@@ -1,18 +1,20 @@
+
 import {
     appState
 } from "./state.js";
 
 import {
     createAssignment,
+    updateAssignmentSchedules,
     deleteAssignment
 } from "./api.js";
 
 import {
     esc,
     academy,
-    domain,
-    assigned
+    domain
 } from "./utils.js";
+
 
 // ============================================================
 // CONFIGURACIÓN DE LOS DÍAS
@@ -21,27 +23,32 @@ import {
 const ASSIGNMENT_DAYS = [
     {
         field: "horasLunes",
-        inputId: "horasLunesAsignacion",
+        hoursId: "horasLunesAsignacion",
+        blockId: "bloqueLunesAsignacion",
         label: "Lunes"
     },
     {
         field: "horasMartes",
-        inputId: "horasMartesAsignacion",
+        hoursId: "horasMartesAsignacion",
+        blockId: "bloqueMartesAsignacion",
         label: "Martes"
     },
     {
         field: "horasMiercoles",
-        inputId: "horasMiercolesAsignacion",
+        hoursId: "horasMiercolesAsignacion",
+        blockId: "bloqueMiercolesAsignacion",
         label: "Miércoles"
     },
     {
         field: "horasJueves",
-        inputId: "horasJuevesAsignacion",
+        hoursId: "horasJuevesAsignacion",
+        blockId: "bloqueJuevesAsignacion",
         label: "Jueves"
     },
     {
         field: "horasViernes",
-        inputId: "horasViernesAsignacion",
+        hoursId: "horasViernesAsignacion",
+        blockId: "bloqueViernesAsignacion",
         label: "Viernes"
     }
 ];
@@ -51,9 +58,9 @@ const ASSIGNMENT_DAYS = [
 // ESTADO LOCAL DEL MÓDULO
 // ============================================================
 
-let selectedAcademyId = null;
 let selectedCourseId = null;
-let selectedScheduleIds = [];
+let selectedAssignmentId = null;
+let isSavingSchedule = false;
 
 
 // ============================================================
@@ -61,7 +68,7 @@ let selectedScheduleIds = [];
 // ============================================================
 
 // ------------------------------------------------------------
-// NORMALIZAR NOMBRE DEL DÍA
+// NORMALIZAR DÍA
 // ------------------------------------------------------------
 
 function normalizeDay(day) {
@@ -73,6 +80,7 @@ function normalizeDay(day) {
         .toLowerCase();
 
 }
+
 
 // ------------------------------------------------------------
 // CONVERTIR HH:MM A MINUTOS
@@ -126,12 +134,46 @@ function getScheduleDuration(schedule) {
 }
 
 
+// ------------------------------------------------------------
+// BUSCAR MATERIA SELECCIONADA
+// ------------------------------------------------------------
+
+function getSelectedCourse() {
+
+    if (!selectedCourseId) {
+        return null;
+    }
+
+    return appState.cursos.find(
+        course =>
+            String(course.id) ===
+            String(selectedCourseId)
+    );
+
+}
+
+
+// ------------------------------------------------------------
+// BUSCAR ASIGNACIÓN POR ID
+// ------------------------------------------------------------
+
+function getAssignmentById(id) {
+
+    return appState.asignaciones.find(
+        assignment =>
+            String(assignment.id) ===
+            String(id)
+    );
+
+}
+
+
 // ============================================================
-// DISTRIBUCIÓN SEMANAL
+// DISTRIBUCIÓN Y CONFIGURACIÓN DE HORARIOS
 // ============================================================
 
 // ------------------------------------------------------------
-// OBTENER HORAS CONFIGURADAS POR DÍA
+// OBTENER DISTRIBUCIÓN ACTUAL
 // ------------------------------------------------------------
 
 function getDistributionState() {
@@ -151,7 +193,7 @@ function getDistributionState() {
 
         const input =
             document.getElementById(
-                day.inputId
+                day.hoursId
             );
 
         const rawValue =
@@ -211,10 +253,10 @@ function getDistributionState() {
 
 
 // ------------------------------------------------------------
-// ACTIVAR O DESACTIVAR CONTROLES DE DISTRIBUCIÓN
+// ACTIVAR O DESACTIVAR CONTROLES
 // ------------------------------------------------------------
 
-function setDistributionControlsDisabled(disabled) {
+function setConfigurationControlsEnabled(enabled) {
 
     const templateSelect =
         document.getElementById(
@@ -222,18 +264,18 @@ function setDistributionControlsDisabled(disabled) {
         );
 
     if (templateSelect) {
-        templateSelect.disabled = disabled;
+        templateSelect.disabled = !enabled;
     }
 
     for (const day of ASSIGNMENT_DAYS) {
 
-        const input =
+        const hoursSelect =
             document.getElementById(
-                day.inputId
+                day.hoursId
             );
 
-        if (input) {
-            input.disabled = disabled;
+        if (hoursSelect) {
+            hoursSelect.disabled = !enabled;
         }
 
     }
@@ -242,7 +284,7 @@ function setDistributionControlsDisabled(disabled) {
 
 
 // ------------------------------------------------------------
-// CARGAR PLANTILLAS SEGÚN HORAS SEMANALES
+// CARGAR PLANTILLAS SEGÚN LAS HORAS DE LA MATERIA
 // ------------------------------------------------------------
 
 function populateAssignmentTemplates(course) {
@@ -323,264 +365,77 @@ function populateAssignmentTemplates(course) {
 
 
 // ------------------------------------------------------------
-// APLICAR PLANTILLA
+// ACTUALIZAR OPCIONES DE BLOQUES DE UN DÍA
 // ------------------------------------------------------------
 
-function applyAssignmentTemplate(templateId) {
+function updateDayBlockOptions(
+    day,
+    selectedScheduleId = ""
+) {
 
-    const template =
-        appState.plantillas.find(
-            item =>
-                String(item.id) ===
-                String(templateId)
+    const hoursSelect =
+        document.getElementById(
+            day.hoursId
         );
 
-    if (!template) {
-        return;
-    }
-
-    selectedScheduleIds = [];
-
-    for (const day of ASSIGNMENT_DAYS) {
-
-        const input =
-            document.getElementById(
-                day.inputId
-            );
-
-        if (input) {
-
-            input.value =
-                Number(template[day.field] ?? 0);
-
-        }
-
-    }
-
-    renderSelectedSchedules();
-
-    updateDistributionSummary();
-
-}
-
-
-// ============================================================
-// SELECTORES DE BLOQUES HORARIOS
-// ============================================================
-
-// ------------------------------------------------------------
-// ACTUALIZAR SELECTOR DE DÍAS
-// ------------------------------------------------------------
-
-function populateAssignmentDays() {
-
-    const daySelect =
+    const blockSelect =
         document.getElementById(
-            "diaAsignacion"
-        );
-
-    const hourSelect =
-        document.getElementById(
-            "horaAsignacion"
-        );
-
-    const addButton =
-        document.getElementById(
-            "agregarHorarioAsignacion"
+            day.blockId
         );
 
     if (
-        !daySelect ||
-        !hourSelect ||
-        !addButton
+        !hoursSelect ||
+        !blockSelect
     ) {
         return;
     }
 
-    const distribution =
-        getDistributionState();
+    const requiredHours =
+        Number(hoursSelect.value);
 
-    daySelect.innerHTML = "";
+    blockSelect.innerHTML = "";
 
-    const defaultOption =
-        document.createElement("option");
+    // No se requiere una sesión ese día.
 
-    defaultOption.value = "";
-
-    defaultOption.textContent =
-        "Seleccionar día...";
-
-    daySelect.appendChild(
-        defaultOption
-    );
-
-    hourSelect.innerHTML = `
-        <option value="">
-            Seleccionar bloque horario...
-        </option>
-    `;
-
-    const selectedDays =
-        selectedScheduleIds
-            .map(
-                id =>
-                    appState.horarios.find(
-                        schedule =>
-                            String(schedule.id) ===
-                            String(id)
-                    )
-            )
-            .filter(Boolean)
-            .map(
-                schedule =>
-                    normalizeDay(schedule.dia)
-            );
-
-    if (
-        !distribution.complete
-    ) {
-
-        daySelect.disabled = true;
-        hourSelect.disabled = true;
-        addButton.disabled = true;
-
-        return;
-
-    }
-
-    const availableDays =
-        distribution.requiredDays.filter(
-            day =>
-                !selectedDays.includes(
-                    normalizeDay(day.label)
-                )
-        );
-
-    availableDays.forEach(day => {
+    if (requiredHours === 0) {
 
         const option =
             document.createElement("option");
 
-        option.value =
-            day.label;
+        option.value = "";
 
         option.textContent =
-            `${day.label} (${distribution.values[day.field]} h)`;
+            "No aplica";
 
-        daySelect.appendChild(option);
+        blockSelect.appendChild(option);
 
-    });
+        blockSelect.disabled = true;
 
-    daySelect.disabled =
-        availableDays.length === 0;
-
-    if (availableDays.length === 0) {
-
-        defaultOption.textContent =
-            "Todos los días están configurados.";
-
-    }
-
-    hourSelect.disabled = true;
-
-    addButton.disabled = true;
-
-}
-
-
-// ------------------------------------------------------------
-// ACTUALIZAR SELECTOR DE BLOQUES
-// SEGÚN DÍA Y DURACIÓN REQUERIDA
-// ------------------------------------------------------------
-
-function populateAssignmentHours(day) {
-
-    const hourSelect =
-        document.getElementById(
-            "horaAsignacion"
-        );
-
-    const addButton =
-        document.getElementById(
-            "agregarHorarioAsignacion"
-        );
-
-    if (
-        !hourSelect ||
-        !addButton
-    ) {
         return;
+
     }
 
-    hourSelect.innerHTML = "";
-
-    const defaultOption =
+    const placeholder =
         document.createElement("option");
 
-    defaultOption.value = "";
+    placeholder.value = "";
 
-    defaultOption.textContent =
-        "Seleccionar bloque horario...";
+    placeholder.textContent =
+        "Seleccionar bloque...";
 
-    hourSelect.appendChild(
-        defaultOption
-    );
-
-    addButton.disabled = true;
-
-    if (!day) {
-
-        hourSelect.disabled = true;
-
-        return;
-
-    }
-
-    const distribution =
-        getDistributionState();
-
-    if (!distribution.complete) {
-
-        hourSelect.disabled = true;
-
-        return;
-
-    }
-
-    const dayConfig =
-        ASSIGNMENT_DAYS.find(
-            item =>
-                normalizeDay(item.label) ===
-                normalizeDay(day)
-        );
-
-    if (!dayConfig) {
-
-        hourSelect.disabled = true;
-
-        return;
-
-    }
+    blockSelect.appendChild(placeholder);
 
     const requiredDuration =
-        distribution.values[dayConfig.field] * 60;
-
-    if (requiredDuration <= 0) {
-
-        hourSelect.disabled = true;
-
-        return;
-
-    }
+        requiredHours * 60;
 
     const schedules =
         appState.horarios
             .filter(
                 schedule =>
                     normalizeDay(schedule.dia) ===
-                    normalizeDay(day) &&
+                        normalizeDay(day.label) &&
                     getScheduleDuration(schedule) ===
-                    requiredDuration
+                        requiredDuration
             )
             .sort(
                 (a, b) =>
@@ -591,10 +446,10 @@ function populateAssignmentHours(day) {
 
     if (schedules.length === 0) {
 
-        defaultOption.textContent =
-            "No hay bloques compatibles para este día.";
+        placeholder.textContent =
+            "No hay bloques disponibles.";
 
-        hourSelect.disabled = true;
+        blockSelect.disabled = true;
 
         return;
 
@@ -611,99 +466,181 @@ function populateAssignmentHours(day) {
         option.textContent =
             `${schedule.horaInicio} - ${schedule.horaFin}`;
 
-        hourSelect.appendChild(option);
+        blockSelect.appendChild(option);
 
     });
 
-    hourSelect.disabled = false;
+    blockSelect.disabled = false;
+
+    if (selectedScheduleId) {
+
+        blockSelect.value =
+            String(selectedScheduleId);
+
+    }
 
 }
 
 
 // ------------------------------------------------------------
-// ACTUALIZAR ESTADO DEL BOTÓN AGREGAR
+// ACTUALIZAR TODOS LOS SELECTORES DE BLOQUES
 // ------------------------------------------------------------
 
-function updateAddScheduleButton() {
+function updateAllDayBlockOptions() {
 
-    const daySelect =
-        document.getElementById(
-            "diaAsignacion"
+    for (const day of ASSIGNMENT_DAYS) {
+
+        updateDayBlockOptions(day);
+
+    }
+
+}
+
+
+// ------------------------------------------------------------
+// APLICAR PLANTILLA
+// ------------------------------------------------------------
+
+function applyAssignmentTemplate(templateId) {
+
+    const template =
+        appState.plantillas.find(
+            item =>
+                String(item.id) ===
+                String(templateId)
         );
 
-    const hourSelect =
-        document.getElementById(
-            "horaAsignacion"
-        );
+    if (!template) {
+        return;
+    }
 
-    const addButton =
-        document.getElementById(
-            "agregarHorarioAsignacion"
-        );
+    const course =
+        getSelectedCourse();
 
     if (
-        !daySelect ||
-        !hourSelect ||
-        !addButton
+        !course ||
+        Number(template.horasSemanales) !==
+            Number(course.horasSemanales) ||
+        Number(template.activa) !== 1
     ) {
+
+        alert(
+            "La plantilla no corresponde a las horas semanales de la materia."
+        );
+
         return;
+
     }
 
-    addButton.disabled =
-        !daySelect.value ||
-        !hourSelect.value;
+    for (const day of ASSIGNMENT_DAYS) {
+
+        const hoursSelect =
+            document.getElementById(
+                day.hoursId
+            );
+
+        if (hoursSelect) {
+
+            hoursSelect.value =
+                String(
+                    Number(template[day.field] ?? 0)
+                );
+
+        }
+
+    }
+
+    updateAllDayBlockOptions();
+
+    updateConfigurationSummary();
 
 }
 
 
 // ============================================================
-// RESUMEN DE DISTRIBUCIÓN
+// VALIDAR CONFIGURACIÓN
 // ============================================================
 
-function updateDistributionSummary() {
+// ------------------------------------------------------------
+// OBTENER BLOQUES SELECCIONADOS
+// ------------------------------------------------------------
 
-    const summary =
-        document.getElementById(
-            "resumenDistribucionAsignacion"
-        );
+function getSelectedScheduleIds() {
 
-    if (!summary) {
-        return;
+    const ids = [];
+
+    for (const day of ASSIGNMENT_DAYS) {
+
+        const hoursSelect =
+            document.getElementById(
+                day.hoursId
+            );
+
+        const blockSelect =
+            document.getElementById(
+                day.blockId
+            );
+
+        const hours =
+            Number(hoursSelect?.value ?? 0);
+
+        if (hours > 0 && blockSelect?.value) {
+
+            ids.push(
+                String(blockSelect.value)
+            );
+
+        }
+
     }
+
+    return ids;
+
+}
+
+
+// ------------------------------------------------------------
+// VALIDAR DISTRIBUCIÓN Y BLOQUES
+// ------------------------------------------------------------
+
+function validateScheduleConfiguration() {
 
     const distribution =
         getDistributionState();
 
+    if (!selectedAssignmentId) {
+
+        return {
+            valid: false,
+            message: "Primero seleccione un docente asignado."
+        };
+
+    }
+
     if (!distribution.course) {
 
-        summary.textContent =
-            "Seleccione una materia para configurar su distribución.";
-
-        populateAssignmentDays();
-
-        return;
+        return {
+            valid: false,
+            message: "No se encontró la materia seleccionada."
+        };
 
     }
 
     if (!distribution.validWeeklyHours) {
 
-        summary.textContent =
-            "La materia no tiene configuradas correctamente sus horas semanales.";
-
-        populateAssignmentDays();
-
-        return;
+        return {
+            valid: false,
+            message: "La materia no tiene configuradas correctamente sus horas semanales."
+        };
 
     }
 
     if (!distribution.valid) {
 
-        summary.textContent =
-            "Cada día debe contener un número entero entre 0 y 2.";
-
-        populateAssignmentDays();
-
-        return;
+        return {
+            valid: false,
+            message: "Cada día debe tener una duración de 0, 1 o 2 horas."
+        };
 
     }
 
@@ -713,108 +650,158 @@ function updateDistributionSummary() {
             distribution.weeklyHours -
             distribution.total;
 
-        summary.textContent =
-            difference > 0
-                ? `Horas distribuidas: ${distribution.total} de ${distribution.weeklyHours}. Faltan ${difference} horas.`
-                : `Horas distribuidas: ${distribution.total} de ${distribution.weeklyHours}. Hay ${Math.abs(difference)} horas excedentes.`;
-
-        populateAssignmentDays();
-
-        return;
+        return {
+            valid: false,
+            message:
+                difference > 0
+                    ? `La distribución tiene ${distribution.total} de ${distribution.weeklyHours} horas. Faltan ${difference} horas.`
+                    : `La distribución tiene ${distribution.total} de ${distribution.weeklyHours} horas. Hay ${Math.abs(difference)} horas excedentes.`
+        };
 
     }
 
-    const requiredDays =
-        distribution.requiredDays.length;
-
-    const selectedCount =
-        selectedScheduleIds.length;
-
-    summary.textContent =
-        `Distribución completa: ${distribution.total} de ${distribution.weeklyHours} horas. ` +
-        `Bloques seleccionados: ${selectedCount} de ${requiredDays} días.`;
-
-    populateAssignmentDays();
-
-}
-
-
-// ============================================================
-// INICIALIZAR CONFIGURACIÓN DE UNA MATERIA
-// ============================================================
-
-function initializeCourseConfiguration() {
-
-    selectedScheduleIds = [];
-
-    const course =
-        getSelectedCourse();
-
-    // Limpiar distribución anterior.
+    const scheduleIds = [];
 
     for (const day of ASSIGNMENT_DAYS) {
 
-        const input =
+        const hoursSelect =
             document.getElementById(
-                day.inputId
+                day.hoursId
             );
 
-        if (input) {
-            input.value = "0";
+        const blockSelect =
+            document.getElementById(
+                day.blockId
+            );
+
+        const hours =
+            Number(hoursSelect?.value ?? 0);
+
+        const scheduleId =
+            blockSelect?.value || "";
+
+        // No se requiere horario para este día.
+
+        if (hours === 0) {
+
+            if (scheduleId) {
+
+                return {
+                    valid: false,
+                    message: `${day.label} no debe tener un bloque horario porque tiene cero horas asignadas.`
+                };
+
+            }
+
+            continue;
+
         }
+
+        // Se requiere un bloque para cada día con horas.
+
+        if (!scheduleId) {
+
+            return {
+                valid: false,
+                message: `Seleccione un bloque horario para ${day.label}.`
+            };
+
+        }
+
+        const schedule =
+            appState.horarios.find(
+                item =>
+                    String(item.id) ===
+                    String(scheduleId)
+            );
+
+        if (!schedule) {
+
+            return {
+                valid: false,
+                message: `El bloque seleccionado para ${day.label} ya no está disponible.`
+            };
+
+        }
+
+        // Validar día.
+
+        if (
+            normalizeDay(schedule.dia) !==
+            normalizeDay(day.label)
+        ) {
+
+            return {
+                valid: false,
+                message: `El bloque seleccionado no corresponde a ${day.label}.`
+            };
+
+        }
+
+        // Validar duración.
+
+        const duration =
+            getScheduleDuration(schedule);
+
+        if (duration !== hours * 60) {
+
+            return {
+                valid: false,
+                message: `El bloque de ${day.label} debe durar exactamente ${hours} hora(s).`
+            };
+
+        }
+
+        scheduleIds.push(
+            String(schedule.id)
+        );
 
     }
 
-    populateAssignmentTemplates(course);
+    if (
+        scheduleIds.length !==
+        distribution.requiredDays.length
+    ) {
 
-    const validHours =
-        course &&
-        Number.isInteger(
-            Number(course.horasSemanales)
-        ) &&
-        Number(course.horasSemanales) >= 1 &&
-        Number(course.horasSemanales) <= 10;
+        return {
+            valid: false,
+            message: "Debe seleccionar un bloque por cada día que tenga horas asignadas."
+        };
 
-    setDistributionControlsDisabled(
-        !validHours
-    );
+    }
 
-    renderSelectedSchedules();
+    if (
+        new Set(scheduleIds).size !==
+        scheduleIds.length
+    ) {
 
-    updateDistributionSummary();
+        return {
+            valid: false,
+            message: "No se puede repetir un mismo bloque horario."
+        };
+
+    }
+
+    return {
+        valid: true,
+        horarioIds: scheduleIds
+    };
 
 }
 
 
 // ============================================================
-// RENDERIZAR HORARIOS SELECCIONADOS
+// DETECTAR CONFLICTOS DE HORARIO
 // ============================================================
 
-function renderSelectedSchedules() {
+function findScheduleConflict(
+    docenteId,
+    newScheduleIds,
+    currentAssignmentId
+) {
 
-    const container =
-        document.getElementById(
-            "horariosSeleccionadosAsignacion"
-        );
-
-    if (!container) {
-        return;
-    }
-
-    if (selectedScheduleIds.length === 0) {
-
-        container.innerHTML = `
-            <p class="w3-small">
-                No se han agregado horarios.
-            </p>
-        `;
-
-        return;
-
-    }
-
-    const schedules =
-        selectedScheduleIds
+    const newSchedules =
+        newScheduleIds
             .map(
                 id =>
                     appState.horarios.find(
@@ -823,356 +810,171 @@ function renderSelectedSchedules() {
                             String(id)
                     )
             )
-            .filter(Boolean)
-            .sort(
-                (a, b) => {
+            .filter(Boolean);
 
-                    const dayA =
-                        ASSIGNMENT_DAYS.findIndex(
-                            day =>
-                                normalizeDay(day.label) ===
-                                normalizeDay(a.dia)
+    const otherAssignments =
+        appState.asignaciones.filter(
+            assignment =>
+                String(assignment.docenteId) ===
+                    String(docenteId) &&
+                String(assignment.id) !==
+                    String(currentAssignmentId)
+        );
+
+    for (const assignment of otherAssignments) {
+
+        const existingIds =
+            Array.isArray(assignment.horarioIds)
+                ? assignment.horarioIds
+                : [];
+
+        for (const existingId of existingIds) {
+
+            const existingSchedule =
+                appState.horarios.find(
+                    item =>
+                        String(item.id) ===
+                        String(existingId)
+                );
+
+            if (!existingSchedule) {
+                continue;
+            }
+
+            const existingStart =
+                toMinutes(existingSchedule.horaInicio);
+
+            const existingEnd =
+                toMinutes(existingSchedule.horaFin);
+
+            if (
+                existingStart === null ||
+                existingEnd === null
+            ) {
+                continue;
+            }
+
+            for (const newSchedule of newSchedules) {
+
+                if (
+                    normalizeDay(existingSchedule.dia) !==
+                    normalizeDay(newSchedule.dia)
+                ) {
+                    continue;
+                }
+
+                const newStart =
+                    toMinutes(newSchedule.horaInicio);
+
+                const newEnd =
+                    toMinutes(newSchedule.horaFin);
+
+                if (
+                    newStart === null ||
+                    newEnd === null
+                ) {
+                    continue;
+                }
+
+                const overlaps =
+                    newStart < existingEnd &&
+                    newEnd > existingStart;
+
+                if (overlaps) {
+
+                    const teacher =
+                        appState.docentes.find(
+                            item =>
+                                String(item.id) ===
+                                String(docenteId)
                         );
 
-                    const dayB =
-                        ASSIGNMENT_DAYS.findIndex(
-                            day =>
-                                normalizeDay(day.label) ===
-                                normalizeDay(b.dia)
+                    const otherCourse =
+                        appState.cursos.find(
+                            course =>
+                                String(course.id) ===
+                                String(assignment.cursoId)
                         );
 
-                    if (dayA !== dayB) {
-                        return dayA - dayB;
-                    }
-
-                    return String(a.horaInicio).localeCompare(
-                        String(b.horaInicio)
-                    );
+                    return {
+                        docente: teacher,
+                        otherCourse,
+                        horario: existingSchedule,
+                        newSchedule
+                    };
 
                 }
-            );
 
-    container.innerHTML = `
-        <p class="w3-small">
-            <strong>Horarios seleccionados:</strong>
-        </p>
+            }
 
-        ${schedules.map(schedule => `
+        }
 
-            <div class="w3-padding-small w3-border-bottom">
+    }
 
-                <span>
-                    ${esc(schedule.dia)}
-                    ${esc(schedule.horaInicio)}
-                    - ${esc(schedule.horaFin)}
-                    (${getScheduleDuration(schedule) / 60} h)
-                </span>
-
-                <button
-                    type="button"
-                    class="w3-button w3-small w3-red w3-margin-left"
-                    onclick='removeSelectedSchedule(${JSON.stringify(String(schedule.id))})'
-                >
-                    Quitar
-                </button>
-
-            </div>
-
-        `).join("")}
-    `;
+    return null;
 
 }
 
 
 // ============================================================
-// AGREGAR HORARIO
+// RESUMEN DE CONFIGURACIÓN
 // ============================================================
 
-function addSelectedSchedule() {
+function updateConfigurationSummary() {
 
-    const daySelect =
+    const summary =
         document.getElementById(
-            "diaAsignacion"
+            "resumenDistribucionAsignacion"
         );
 
-    const hourSelect =
+    const confirmButton =
         document.getElementById(
-            "horaAsignacion"
+            "confirmarHorarioAsignacion"
         );
 
-    if (
-        !daySelect ||
-        !hourSelect
-    ) {
+    if (!summary || !confirmButton) {
         return;
     }
 
     const distribution =
         getDistributionState();
 
-    if (!distribution.complete) {
+    if (!distribution.course) {
 
-        alert(
-            "Primero configure una distribución semanal válida."
-        );
+        summary.textContent =
+            "No se encontró la materia seleccionada.";
 
-        return;
-
-    }
-
-    const day =
-        daySelect.value;
-
-    const scheduleId =
-        hourSelect.value;
-
-    if (!day || !scheduleId) {
-
-        alert(
-            "Seleccione un día y un bloque horario."
-        );
+        confirmButton.disabled = true;
 
         return;
 
     }
 
-    const schedule =
-        appState.horarios.find(
-            item =>
-                String(item.id) ===
-                String(scheduleId)
-        );
+    const selectedCount =
+        getSelectedScheduleIds().length;
 
-    if (!schedule) {
+    const requiredCount =
+        distribution.requiredDays.length;
 
-        alert(
-            "El horario seleccionado no es válido."
-        );
+    summary.textContent =
+        `Horas configuradas: ${distribution.total} de ${distribution.weeklyHours}. ` +
+        `Sesiones seleccionadas: ${selectedCount} de ${requiredCount}.`;
 
-        return;
+    const validation =
+        validateScheduleConfiguration();
 
-    }
-
-    if (
-        normalizeDay(schedule.dia) !==
-        normalizeDay(day)
-    ) {
-
-        alert(
-            "El horario seleccionado no corresponde al día elegido."
-        );
-
-        return;
-
-    }
-
-    const dayConfig =
-        ASSIGNMENT_DAYS.find(
-            item =>
-                normalizeDay(item.label) ===
-                normalizeDay(day)
-        );
-
-    if (!dayConfig) {
-        return;
-    }
-
-    const expectedDuration =
-        distribution.values[dayConfig.field] * 60;
-
-    const actualDuration =
-        getScheduleDuration(schedule);
-
-    if (
-        actualDuration !== expectedDuration
-    ) {
-
-        alert(
-            `El bloque seleccionado debe durar exactamente ${expectedDuration / 60} hora(s).`
-        );
-
-        return;
-
-    }
-
-    const alreadySelectedDay =
-        selectedScheduleIds.some(
-            id => {
-
-                const existing =
-                    appState.horarios.find(
-                        item =>
-                            String(item.id) ===
-                            String(id)
-                    );
-
-                return existing &&
-                    normalizeDay(existing.dia) ===
-                    normalizeDay(day);
-
-            }
-        );
-
-    if (alreadySelectedDay) {
-
-        alert(
-            `Ya se seleccionó una sesión para ${day}. Solo se permite una sesión diaria.`
-        );
-
-        return;
-
-    }
-
-    if (
-        selectedScheduleIds.some(
-            id =>
-                String(id) ===
-                String(scheduleId)
-        )
-    ) {
-
-        alert(
-            "Ese horario ya fue agregado."
-        );
-
-        return;
-
-    }
-
-    selectedScheduleIds.push(
-        String(scheduleId)
-    );
-
-    renderSelectedSchedules();
-
-    daySelect.value = "";
-
-    hourSelect.innerHTML = `
-        <option value="">
-            Seleccionar bloque horario...
-        </option>
-    `;
-
-    hourSelect.disabled = true;
-
-    updateDistributionSummary();
+    confirmButton.disabled =
+        !validation.valid ||
+        isSavingSchedule;
 
 }
 
 
 // ============================================================
-// QUITAR HORARIO
+// RESTABLECER CONFIGURACIÓN
 // ============================================================
 
-function removeSelectedSchedule(id) {
-
-    selectedScheduleIds =
-        selectedScheduleIds.filter(
-            scheduleId =>
-                String(scheduleId) !==
-                String(id)
-        );
-
-    renderSelectedSchedules();
-
-    updateDistributionSummary();
-
-}
-
-
-// ============================================================
-// LIMPIAR HORARIOS SELECCIONADOS
-// ============================================================
-
-function resetScheduleSelection() {
-
-    selectedScheduleIds = [];
-
-    renderSelectedSchedules();
-
-    const daySelect =
-        document.getElementById(
-            "diaAsignacion"
-        );
-
-    const hourSelect =
-        document.getElementById(
-            "horaAsignacion"
-        );
-
-    if (daySelect) {
-        daySelect.value = "";
-    }
-
-    if (hourSelect) {
-
-        hourSelect.innerHTML = `
-            <option value="">
-                Seleccionar bloque horario...
-            </option>
-        `;
-
-        hourSelect.disabled = true;
-
-    }
-
-    updateDistributionSummary();
-
-}
-
-
-// ============================================================
-// EVENTOS DE HORARIOS
-// ============================================================
-
-function bindScheduleEvents() {
-
-    const daySelect =
-        document.getElementById(
-            "diaAsignacion"
-        );
-
-    const hourSelect =
-        document.getElementById(
-            "horaAsignacion"
-        );
-
-    const addButton =
-        document.getElementById(
-            "agregarHorarioAsignacion"
-        );
-
-    daySelect?.addEventListener(
-        "change",
-        () => {
-
-            populateAssignmentHours(
-                daySelect.value
-            );
-
-            updateAddScheduleButton();
-
-        }
-    );
-
-    hourSelect?.addEventListener(
-        "change",
-        updateAddScheduleButton
-    );
-
-    addButton?.addEventListener(
-        "click",
-        addSelectedSchedule
-    );
-
-}
-
-
-// ============================================================
-// CAMBIOS MANUALES EN LA DISTRIBUCIÓN
-// ============================================================
-
-function handleDistributionChange() {
+function resetScheduleConfiguration() {
 
     const templateSelect =
         document.getElementById(
@@ -1183,20 +985,683 @@ function handleDistributionChange() {
         templateSelect.value = "";
     }
 
-    // Los horarios anteriores pueden dejar de coincidir
-    // con la nueva distribución.
+    for (const day of ASSIGNMENT_DAYS) {
 
-    selectedScheduleIds = [];
+        const hoursSelect =
+            document.getElementById(
+                day.hoursId
+            );
 
-    renderSelectedSchedules();
+        if (hoursSelect) {
+            hoursSelect.value = "0";
+        }
 
-    updateDistributionSummary();
+        updateDayBlockOptions(day);
+
+    }
+
+    updateConfigurationSummary();
 
 }
 
 
 // ============================================================
-// CARGAR CURSOS SEGÚN ACADEMIA
+// MOSTRAR CONFIGURACIÓN DE UNA ASIGNACIÓN
+// ============================================================
+
+export function openScheduleConfiguration(assignmentId) {
+
+    const assignment =
+        getAssignmentById(assignmentId);
+
+    if (!assignment) {
+
+        alert(
+            "No se encontró la asignación solicitada."
+        );
+
+        return;
+
+    }
+
+    if (
+        String(assignment.cursoId) !==
+        String(selectedCourseId)
+    ) {
+
+        alert(
+            "La asignación no corresponde a la materia seleccionada."
+        );
+
+        return;
+
+    }
+
+    const course =
+        getSelectedCourse();
+
+    const teacher =
+        appState.docentes.find(
+            item =>
+                String(item.id) ===
+                String(assignment.docenteId)
+        );
+
+    if (
+        !course ||
+        !teacher
+    ) {
+
+        alert(
+            "No se encontró la información de la materia o del docente."
+        );
+
+        return;
+
+    }
+
+    selectedAssignmentId =
+        String(assignment.id);
+
+    const panel =
+        document.getElementById(
+            "configuracionHorario"
+        );
+
+    if (!panel) {
+        return;
+    }
+
+    // --------------------------------------------
+    // MOSTRAR INFORMACIÓN DE LA ASIGNACIÓN
+    // --------------------------------------------
+
+    document.getElementById(
+        "detalleMateriaHorario"
+    ).textContent =
+        course.nombre;
+
+    document.getElementById(
+        "detalleDocenteHorario"
+    ).textContent =
+        teacher.nombre;
+
+    document.getElementById(
+        "detalleHorasHorario"
+    ).textContent =
+        `${course.horasSemanales} horas semanales`;
+
+    // --------------------------------------------
+    // HABILITAR CONTROLES
+    // --------------------------------------------
+
+    setConfigurationControlsEnabled(true);
+
+    // --------------------------------------------
+    // CARGAR PLANTILLAS
+    // --------------------------------------------
+
+    populateAssignmentTemplates(course);
+
+    // --------------------------------------------
+    // LIMPIAR CONFIGURACIÓN ANTERIOR
+    // --------------------------------------------
+
+    resetScheduleConfiguration();
+
+    // --------------------------------------------
+    // RECUPERAR HORARIOS EXISTENTES
+    // CUANDO SE MODIFICA UNA ASIGNACIÓN
+    // --------------------------------------------
+
+    const existingIds =
+        Array.isArray(assignment.horarioIds)
+            ? assignment.horarioIds
+            : [];
+
+    const selectedByDay = new Map();
+
+    for (const id of existingIds) {
+
+        const schedule =
+            appState.horarios.find(
+                item =>
+                    String(item.id) ===
+                    String(id)
+            );
+
+        if (!schedule) {
+            continue;
+        }
+
+        const dayConfig =
+            ASSIGNMENT_DAYS.find(
+                item =>
+                    normalizeDay(item.label) ===
+                    normalizeDay(schedule.dia)
+            );
+
+        const duration =
+            getScheduleDuration(schedule);
+
+        if (
+            !dayConfig ||
+            (
+                duration !== 60 &&
+                duration !== 120
+            )
+        ) {
+            continue;
+        }
+
+        selectedByDay.set(
+            dayConfig.field,
+            String(schedule.id)
+        );
+
+        const hoursSelect =
+            document.getElementById(
+                dayConfig.hoursId
+            );
+
+        if (hoursSelect) {
+
+            hoursSelect.value =
+                String(duration / 60);
+
+        }
+
+    }
+
+    // Reconstruir las opciones de cada día
+    // y restaurar los bloques existentes.
+
+    for (const day of ASSIGNMENT_DAYS) {
+
+        updateDayBlockOptions(
+            day,
+            selectedByDay.get(day.field) || ""
+        );
+
+    }
+
+    // No se conserva una plantilla asociada,
+    // porque la distribución real se deriva
+    // de los horarios concretos guardados.
+
+    const templateSelect =
+        document.getElementById(
+            "plantillaAsignacion"
+        );
+
+    if (templateSelect) {
+        templateSelect.value = "";
+    }
+
+    // --------------------------------------------
+    // TEXTO DEL BOTÓN
+    // --------------------------------------------
+
+    const confirmButton =
+        document.getElementById(
+            "confirmarHorarioAsignacion"
+        );
+
+    if (confirmButton) {
+
+        confirmButton.textContent =
+            existingIds.length > 0
+                ? "Guardar cambios"
+                : "Confirmar horario";
+
+    }
+
+    panel.hidden = false;
+
+    updateConfigurationSummary();
+
+    panel.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+}
+
+
+// ============================================================
+// CERRAR CONFIGURACIÓN
+// ============================================================
+
+function closeScheduleConfiguration() {
+
+    const panel =
+        document.getElementById(
+            "configuracionHorario"
+        );
+
+    if (panel) {
+        panel.hidden = true;
+    }
+
+    selectedAssignmentId = null;
+
+    isSavingSchedule = false;
+
+    setConfigurationControlsEnabled(false);
+
+}
+
+
+// ============================================================
+// REGISTRAR ASIGNACIÓN PENDIENTE
+// ============================================================
+
+export async function assignCourse(
+    courseId,
+    teacherId
+) {
+
+    const course =
+        appState.cursos.find(
+            item =>
+                String(item.id) ===
+                String(courseId)
+        );
+
+    const teacher =
+        appState.docentes.find(
+            item =>
+                String(item.id) ===
+                String(teacherId)
+        );
+
+    if (
+        !course ||
+        !teacher
+    ) {
+        return;
+    }
+
+    if (
+        String(selectedCourseId) !==
+        String(courseId)
+    ) {
+
+        alert(
+            "La materia seleccionada ya no coincide con la asignación solicitada."
+        );
+
+        return;
+
+    }
+
+    // --------------------------------------------
+    // VALIDAR ACADEMIA
+    // --------------------------------------------
+
+    if (
+        String(course.academiaId) !==
+        String(teacher.academiaId)
+    ) {
+
+        alert(
+            "El docente y la materia deben pertenecer a la misma academia."
+        );
+
+        return;
+
+    }
+
+    // --------------------------------------------
+    // VALIDAR DUPLICADO
+    // --------------------------------------------
+
+    const existing =
+        appState.asignaciones.find(
+            assignment =>
+                String(assignment.cursoId) ===
+                    String(courseId) &&
+                String(assignment.docenteId) ===
+                    String(teacherId)
+        );
+
+    if (existing) {
+
+        alert(
+            "El docente ya tiene una asignación para esta materia."
+        );
+
+        return;
+
+    }
+
+    // --------------------------------------------
+    // CREAR ASIGNACIÓN SIN HORARIOS
+    // --------------------------------------------
+
+    try {
+
+        const newAssignment =
+            await createAssignment({
+
+                cursoId:
+                    String(courseId),
+
+                docenteId:
+                    String(teacherId)
+
+            });
+
+        newAssignment.id =
+            String(newAssignment.id);
+
+        newAssignment.cursoId =
+            String(newAssignment.cursoId);
+
+        newAssignment.docenteId =
+            String(newAssignment.docenteId);
+
+        newAssignment.horarioIds =
+            Array.isArray(newAssignment.horarioIds)
+                ? newAssignment.horarioIds.map(
+                    id => String(id)
+                )
+                : [];
+
+        appState.asignaciones.push(
+            newAssignment
+        );
+
+        renderAssignmentPage();
+
+        // Abrir inmediatamente la configuración
+        // correspondiente al docente recién asignado.
+
+        openScheduleConfiguration(
+            newAssignment.id
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error al registrar asignación:",
+            error
+        );
+
+        alert(
+            "No se pudo asignar el docente.\n\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+// ============================================================
+// CONFIRMAR O ACTUALIZAR HORARIO
+// ============================================================
+
+async function confirmAssignmentSchedule() {
+
+    if (
+        !selectedAssignmentId ||
+        isSavingSchedule
+    ) {
+        return;
+    }
+
+    const assignment =
+        getAssignmentById(
+            selectedAssignmentId
+        );
+
+    if (!assignment) {
+
+        alert(
+            "La asignación ya no existe."
+        );
+
+        closeScheduleConfiguration();
+        renderAssignmentPage();
+
+        return;
+
+    }
+
+    const teacher =
+        appState.docentes.find(
+            item =>
+                String(item.id) ===
+                String(assignment.docenteId)
+        );
+
+    // --------------------------------------------
+    // VALIDAR CONFIGURACIÓN
+    // --------------------------------------------
+
+    const validation =
+        validateScheduleConfiguration();
+
+    if (!validation.valid) {
+
+        alert(
+            validation.message
+        );
+
+        return;
+
+    }
+
+    // --------------------------------------------
+    // COMPROBAR CONFLICTOS LOCALMENTE
+    // --------------------------------------------
+
+    const conflict =
+        findScheduleConflict(
+            assignment.docenteId,
+            validation.horarioIds,
+            assignment.id
+        );
+
+    if (conflict) {
+
+        alert(
+            "No se puede confirmar el horario porque el docente tiene otra materia en un intervalo superpuesto.\n\n" +
+            `Docente: ${conflict.docente?.nombre || "No identificado"}\n` +
+            `Materia en conflicto: ${conflict.otherCourse?.nombre || "No identificada"}\n` +
+            `Horario existente: ${conflict.horario.dia} ${conflict.horario.horaInicio}-${conflict.horario.horaFin}\n` +
+            `Nuevo horario: ${conflict.newSchedule.dia} ${conflict.newSchedule.horaInicio}-${conflict.newSchedule.horaFin}`
+        );
+
+        return;
+
+    }
+
+    // --------------------------------------------
+    // GUARDAR EN EL SERVIDOR
+    // --------------------------------------------
+
+    const confirmButton =
+        document.getElementById(
+            "confirmarHorarioAsignacion"
+        );
+
+    try {
+
+        isSavingSchedule = true;
+
+        if (confirmButton) {
+            confirmButton.disabled = true;
+        }
+
+        const updatedAssignment =
+            await updateAssignmentSchedules(
+                assignment.id,
+                validation.horarioIds
+            );
+
+        updatedAssignment.id =
+            String(updatedAssignment.id);
+
+        updatedAssignment.cursoId =
+            String(updatedAssignment.cursoId);
+
+        updatedAssignment.docenteId =
+            String(updatedAssignment.docenteId);
+
+        updatedAssignment.horarioIds =
+            Array.isArray(updatedAssignment.horarioIds)
+                ? updatedAssignment.horarioIds.map(
+                    id => String(id)
+                )
+                : [];
+
+        const index =
+            appState.asignaciones.findIndex(
+                item =>
+                    String(item.id) ===
+                    String(assignment.id)
+            );
+
+        if (index !== -1) {
+
+            appState.asignaciones[index] =
+                updatedAssignment;
+
+        }
+
+        closeScheduleConfiguration();
+
+        renderAssignmentPage();
+
+        alert(
+            `El horario de ${teacher?.nombre || "el docente"} fue confirmado correctamente.`
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error al confirmar horario:",
+            error
+        );
+
+        alert(
+            "No se pudo confirmar el horario.\n\n" +
+            error.message
+        );
+
+        // Se conserva la configuración abierta.
+        // El servidor no modifica los horarios anteriores
+        // si la validación falla.
+
+    } finally {
+
+        isSavingSchedule = false;
+
+        if (confirmButton && !selectedAssignmentId) {
+            confirmButton.disabled = false;
+        } else {
+            updateConfigurationSummary();
+        }
+
+    }
+
+}
+
+
+// ============================================================
+// DESASIGNAR DOCENTE
+// ============================================================
+
+export async function unassignCourse(
+    courseId,
+    teacherId
+) {
+
+    const assignment =
+        appState.asignaciones.find(
+            item =>
+                String(item.cursoId) ===
+                    String(courseId) &&
+                String(item.docenteId) ===
+                    String(teacherId)
+        );
+
+    if (!assignment) {
+        return;
+    }
+
+    const teacher =
+        appState.docentes.find(
+            item =>
+                String(item.id) ===
+                String(teacherId)
+        );
+
+    const course =
+        appState.cursos.find(
+            item =>
+                String(item.id) ===
+                String(courseId)
+        );
+
+    const confirmed =
+        confirm(
+            `¿Está seguro de desasignar a "${teacher?.nombre || "este docente"}" de la materia "${course?.nombre || "esta materia"}"?`
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        await deleteAssignment(
+            assignment.id
+        );
+
+        if (
+            String(selectedAssignmentId) ===
+            String(assignment.id)
+        ) {
+
+            closeScheduleConfiguration();
+
+        }
+
+        appState.asignaciones =
+            appState.asignaciones.filter(
+                item =>
+                    String(item.id) !==
+                    String(assignment.id)
+            );
+
+        renderAssignmentPage();
+
+        alert(
+            "El docente fue desasignado correctamente."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error al desasignar docente:",
+            error
+        );
+
+        alert(
+            "No se pudo desasignar el docente.\n\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+// ============================================================
+// CARGAR MATERIAS SEGÚN ACADEMIA
 // ============================================================
 
 function fillAssignmentCourses() {
@@ -1287,25 +1752,6 @@ function fillAssignmentCourses() {
 
 
 // ============================================================
-// OBTENER MATERIA SELECCIONADA
-// ============================================================
-
-function getSelectedCourse() {
-
-    if (!selectedCourseId) {
-        return null;
-    }
-
-    return appState.cursos.find(
-        course =>
-            String(course.id) ===
-            String(selectedCourseId)
-    );
-
-}
-
-
-// ============================================================
 // MOSTRAR INFORMACIÓN DE LA MATERIA
 // ============================================================
 
@@ -1369,30 +1815,38 @@ function renderCourseDetails() {
             course.academiaId
         );
 
-    const assignedTeacherIds =
-        appState.asignaciones
-            .filter(
-                assignment =>
-                    String(assignment.cursoId) ===
-                    String(course.id)
-            )
-            .map(
-                assignment =>
-                    String(assignment.docenteId)
-            );
+    const assignments =
+        appState.asignaciones.filter(
+            assignment =>
+                String(assignment.cursoId) ===
+                String(course.id)
+        );
 
-    const assignedNames =
-        appState.docentes
-            .filter(
-                teacher =>
-                    assignedTeacherIds.includes(
-                        String(teacher.id)
-                    )
-            )
-            .map(
-                teacher =>
-                    teacher.nombre
-            );
+    const teacherNames =
+        assignments
+            .map(assignment => {
+
+                const teacher =
+                    appState.docentes.find(
+                        item =>
+                            String(item.id) ===
+                            String(assignment.docenteId)
+                    );
+
+                if (!teacher) {
+                    return null;
+                }
+
+                const scheduled =
+                    Array.isArray(assignment.horarioIds) &&
+                    assignment.horarioIds.length > 0;
+
+                return scheduled
+                    ? teacher.nombre
+                    : `${teacher.nombre} (pendiente de horario)`;
+
+            })
+            .filter(Boolean);
 
     nombreElement.textContent =
         course.nombre || "—";
@@ -1412,13 +1866,19 @@ function renderCourseDetails() {
     }
 
     estadoElement.textContent =
-        assignedNames.length > 0
-            ? "Asignado"
-            : "Disponible";
+        assignments.length === 0
+            ? "Disponible"
+            : assignments.every(
+                assignment =>
+                    Array.isArray(assignment.horarioIds) &&
+                    assignment.horarioIds.length > 0
+            )
+                ? "Asignado"
+                : "Con asignaciones pendientes";
 
     docentesElement.textContent =
-        assignedNames.length > 0
-            ? assignedNames.join(", ")
+        teacherNames.length > 0
+            ? teacherNames.join(", ")
             : "Ninguno";
 
 }
@@ -1429,26 +1889,34 @@ function renderCourseDetails() {
 // ============================================================
 
 function getDomainLevel(
-    docenteId,
-    cursoId
+    teacherId,
+    courseId
 ) {
 
     const relation =
         domain(
             appState,
-            docenteId,
-            cursoId
+            teacherId,
+            courseId
         );
 
-    if (!relation) {
+    if (
+        !relation ||
+        relation.nivel === null ||
+        relation.nivel === undefined
+    ) {
         return null;
     }
 
-    const nivel =
+    const level =
         Number(relation.nivel);
 
-    return Number.isFinite(nivel)
-        ? nivel
+    return (
+        Number.isInteger(level) &&
+        level >= 1 &&
+        level <= 10
+    )
+        ? level
         : null;
 
 }
@@ -1456,6 +1924,7 @@ function getDomainLevel(
 
 // ============================================================
 // RENDERIZAR DOCENTES CANDIDATOS
+// Orden descendente por dominio.
 // ============================================================
 
 function renderCandidates() {
@@ -1486,45 +1955,45 @@ function renderCandidates() {
 
     }
 
-    let candidates =
-        appState.docentes.filter(
-            teacher =>
-                String(teacher.academiaId) ===
-                String(course.academiaId)
-        );
+    const candidates =
+        appState.docentes
+            .filter(
+                teacher =>
+                    String(teacher.academiaId) ===
+                    String(course.academiaId)
+            )
+            .sort((a, b) => {
 
-    const order =
-        document.getElementById(
-            "ordenDominio"
-        )?.value || "desc";
+                const levelA =
+                    getDomainLevel(a.id, course.id);
 
-    candidates.sort((a, b) => {
+                const levelB =
+                    getDomainLevel(b.id, course.id);
 
-        const domainA =
-            getDomainLevel(
-                a.id,
-                course.id
-            );
+                // Docentes sin dominio al final.
 
-        const domainB =
-            getDomainLevel(
-                b.id,
-                course.id
-            );
+                if (levelA === null && levelB !== null) {
+                    return 1;
+                }
 
-        if (domainA === null) {
-            return 1;
-        }
+                if (levelB === null && levelA !== null) {
+                    return -1;
+                }
 
-        if (domainB === null) {
-            return -1;
-        }
+                // Mayor dominio primero.
 
-        return order === "asc"
-            ? domainA - domainB
-            : domainB - domainA;
+                if (levelA !== levelB) {
+                    return (levelB ?? 0) - (levelA ?? 0);
+                }
 
-    });
+                // Desempate alfabético.
+
+                return String(a.nombre).localeCompare(
+                    String(b.nombre),
+                    "es"
+                );
+
+            });
 
     if (candidates.length === 0) {
 
@@ -1556,12 +2025,29 @@ function renderCandidates() {
                         course.id
                     );
 
-                const isAssigned =
-                    assigned(
-                        appState,
-                        course.id,
-                        teacher.id
+                const assignment =
+                    appState.asignaciones.find(
+                        item =>
+                            String(item.cursoId) ===
+                                String(course.id) &&
+                            String(item.docenteId) ===
+                                String(teacher.id)
                     );
+
+                const isAssigned =
+                    Boolean(assignment);
+
+                const isScheduled =
+                    isAssigned &&
+                    Array.isArray(assignment.horarioIds) &&
+                    assignment.horarioIds.length > 0;
+
+                const status =
+                    !isAssigned
+                        ? "Disponible"
+                        : isScheduled
+                            ? "Programado"
+                            : "Pendiente de horario";
 
                 const sni =
                     String(teacher.sni || "no")
@@ -1582,6 +2068,54 @@ function renderCandidates() {
                             teacher.certificaciones
                         ).replace(/\n/g, "<br>")
                         : "—";
+
+                let actions = "";
+
+                if (!isAssigned) {
+
+                    actions = `
+                        <button
+                            type="button"
+                            class="w3-button w3-small w3-blue"
+                            onclick='assignCourse(
+                                ${JSON.stringify(course.id)},
+                                ${JSON.stringify(teacher.id)}
+                            )'
+                        >
+                            Asignar
+                        </button>
+                    `;
+
+                } else {
+
+                    actions = `
+
+                        <button
+                            type="button"
+                            class="w3-button w3-small w3-blue w3-margin-bottom"
+                            onclick='openScheduleConfiguration(
+                                ${JSON.stringify(assignment.id)}
+                            )'
+                        >
+                            ${isScheduled ? "Modificar horario" : "Configurar horario"}
+                        </button>
+
+                        <br>
+
+                        <button
+                            type="button"
+                            class="w3-button w3-small w3-red"
+                            onclick='unassignCourse(
+                                ${JSON.stringify(course.id)},
+                                ${JSON.stringify(teacher.id)}
+                            )'
+                        >
+                            Desasignar
+                        </button>
+
+                    `;
+
+                }
 
                 return `
 
@@ -1644,45 +2178,11 @@ function renderCandidates() {
                         </td>
 
                         <td>
-                            ${isAssigned ? "Asignado" : "Disponible"}
+                            ${status}
                         </td>
 
                         <td>
-
-                            ${
-                                isAssigned
-
-                                    ? `
-
-                                        <button
-                                            type="button"
-                                            class="w3-button w3-small w3-red"
-                                            onclick='unassignCourse(
-                                                ${JSON.stringify(course.id)},
-                                                ${JSON.stringify(teacher.id)}
-                                            )'
-                                        >
-                                            Desasignar
-                                        </button>
-
-                                    `
-
-                                    : `
-
-                                        <button
-                                            type="button"
-                                            class="w3-button w3-small w3-blue"
-                                            onclick='assignCourse(
-                                                ${JSON.stringify(course.id)},
-                                                ${JSON.stringify(teacher.id)}
-                                            )'
-                                        >
-                                            Asignar
-                                        </button>
-
-                                    `
-                            }
-
+                            ${actions}
                         </td>
 
                     </tr>
@@ -1696,7 +2196,7 @@ function renderCandidates() {
 
 
 // ============================================================
-// RENDERIZAR DOCENTES ASIGNADOS
+// RENDERIZAR HORARIO SEMANAL DE ASIGNACIONES
 // ============================================================
 
 function renderAssigned() {
@@ -1744,6 +2244,7 @@ function renderAssigned() {
         );
 
     const occupiedSlots = [];
+    const pendingTeachers = [];
 
     assignments.forEach(assignment => {
 
@@ -1762,6 +2263,16 @@ function renderAssigned() {
             Array.isArray(assignment.horarioIds)
                 ? assignment.horarioIds
                 : [];
+
+        if (scheduleIds.length === 0) {
+
+            pendingTeachers.push(
+                teacher.nombre
+            );
+
+            return;
+
+        }
 
         scheduleIds.forEach(id => {
 
@@ -1798,21 +2309,6 @@ function renderAssigned() {
 
     });
 
-    if (occupiedSlots.length === 0) {
-
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="6" class="w3-center">
-                    No hay docentes asignados con horarios
-                    registrados para esta materia.
-                </td>
-            </tr>
-        `;
-
-        return;
-
-    }
-
     const slotMap = new Map();
 
     occupiedSlots.forEach(slot => {
@@ -1826,9 +2322,7 @@ function renderAssigned() {
                 horaInicio: slot.horaInicio,
                 horaFin: slot.horaFin,
                 docentesPorDia: Object.fromEntries(
-                    days.map(
-                        day => [day, []]
-                    )
+                    days.map(day => [day, []])
                 )
             });
 
@@ -1853,49 +2347,74 @@ function renderAssigned() {
                     a.horaInicio.localeCompare(b.horaInicio)
             );
 
-    tableBody.innerHTML =
-        rows.map(row => {
+    let html = rows.map(row => {
 
-            const cells =
-                days.map(day => {
+        const cells =
+            days.map(day => {
 
-                    const teachers =
-                        row.docentesPorDia[day];
+                const teachers =
+                    row.docentesPorDia[day];
 
-                    if (teachers.length === 0) {
-
-                        return `
-                            <td class="celda-horario-vacia">
-                                —
-                            </td>
-                        `;
-
-                    }
+                if (teachers.length === 0) {
 
                     return `
-                        <td class="celda-horario-ocupada">
-                            ${teachers.map(
-                                name =>
-                                    `<div>${esc(name)}</div>`
-                            ).join("")}
+                        <td class="celda-horario-vacia">
+                            —
                         </td>
                     `;
 
-                }).join("");
+                }
 
-            return `
-                <tr>
+                return `
+                    <td class="celda-horario-ocupada">
+                        ${teachers.map(
+                            name => `<div>${esc(name)}</div>`
+                        ).join("")}
+                    </td>
+                `;
 
-                    <th>
-                        ${esc(row.horaInicio)}–${esc(row.horaFin)}
-                    </th>
+            }).join("");
 
-                    ${cells}
+        return `
+            <tr>
 
-                </tr>
-            `;
+                <th>
+                    ${esc(row.horaInicio)}–${esc(row.horaFin)}
+                </th>
 
-        }).join("");
+                ${cells}
+
+            </tr>
+        `;
+
+    }).join("");
+
+    if (pendingTeachers.length > 0) {
+
+        html += `
+            <tr>
+                <td colspan="6">
+                    <strong>Asignaciones pendientes de horario:</strong>
+                    ${pendingTeachers.map(esc).join(", ")}
+                </td>
+            </tr>
+        `;
+
+    }
+
+    if (!html) {
+
+        html = `
+            <tr>
+                <td colspan="6" class="w3-center">
+                    No hay docentes asignados a esta materia.
+                </td>
+            </tr>
+        `;
+
+    }
+
+    tableBody.innerHTML = html;
 
 }
 
@@ -1916,648 +2435,25 @@ function renderAssignmentPage() {
 
 
 // ============================================================
-// VALIDAR QUE LOS HORARIOS SELECCIONADOS
-// CUMPLAN LA DISTRIBUCIÓN
+// EVENTOS DE CONFIGURACIÓN DEL HORARIO
 // ============================================================
 
-function validateSelectedSchedules() {
-
-    const distribution =
-        getDistributionState();
-
-    if (!distribution.course) {
-
-        return {
-            valid: false,
-            message: "Seleccione una materia."
-        };
-
-    }
-
-    if (!distribution.validWeeklyHours) {
-
-        return {
-            valid: false,
-            message: "La materia no tiene configuradas correctamente sus horas semanales."
-        };
-
-    }
-
-    if (!distribution.valid) {
-
-        return {
-            valid: false,
-            message: "Cada día debe contener un número entero entre 0 y 2."
-        };
-
-    }
-
-    if (!distribution.complete) {
-
-        return {
-            valid: false,
-            message: "La distribución diaria debe sumar exactamente las horas semanales requeridas."
-        };
-
-    }
-
-    const selectedSchedules =
-        selectedScheduleIds.map(
-            id =>
-                appState.horarios.find(
-                    schedule =>
-                        String(schedule.id) ===
-                        String(id)
-                )
-        );
-
-    if (
-        selectedSchedules.some(
-            schedule => !schedule
-        )
-    ) {
-
-        return {
-            valid: false,
-            message: "Uno o más horarios seleccionados ya no existen."
-        };
-
-    }
-
-    if (
-        selectedSchedules.length !==
-        distribution.requiredDays.length
-    ) {
-
-        return {
-            valid: false,
-            message: "Debe seleccionar exactamente un bloque horario para cada día que tenga horas asignadas."
-        };
-
-    }
-
-    let totalMinutes = 0;
-
-    const usedDays = new Set();
-
-    for (const schedule of selectedSchedules) {
-
-        const dayConfig =
-            ASSIGNMENT_DAYS.find(
-                item =>
-                    normalizeDay(item.label) ===
-                    normalizeDay(schedule.dia)
-            );
-
-        if (!dayConfig) {
-
-            return {
-                valid: false,
-                message: "Se encontró un horario con un día no permitido."
-            };
-
-        }
-
-        if (usedDays.has(normalizeDay(schedule.dia))) {
-
-            return {
-                valid: false,
-                message: `Solo se permite una sesión diaria. Revise ${schedule.dia}.`
-            };
-
-        }
-
-        usedDays.add(
-            normalizeDay(schedule.dia)
-        );
-
-        const expectedDuration =
-            distribution.values[dayConfig.field] * 60;
-
-        const actualDuration =
-            getScheduleDuration(schedule);
-
-        if (
-            actualDuration !== expectedDuration
-        ) {
-
-            return {
-                valid: false,
-                message: `El bloque de ${schedule.dia} no corresponde a la duración requerida.`
-            };
-
-        }
-
-        totalMinutes += actualDuration;
-
-    }
-
-    if (
-        totalMinutes !==
-        distribution.weeklyHours * 60
-    ) {
-
-        return {
-            valid: false,
-            message: "Los horarios seleccionados no completan las horas semanales requeridas."
-        };
-
-    }
-
-    return {
-        valid: true
-    };
-
-}
-
-
-// ============================================================
-// DETECTAR CONFLICTOS ENTRE INTERVALOS
-// ============================================================
-
-function findScheduleConflict(
-    docenteId,
-    newScheduleIds
-) {
-
-    const newSchedules =
-        newScheduleIds.map(
-            id =>
-                appState.horarios.find(
-                    item =>
-                        String(item.id) ===
-                        String(id)
-                )
-        ).filter(Boolean);
-
-    const assignments =
-        appState.asignaciones.filter(
-            assignment =>
-                String(assignment.docenteId) ===
-                String(docenteId)
-        );
-
-    for (const assignment of assignments) {
-
-        const otherScheduleIds =
-            Array.isArray(assignment.horarioIds)
-                ? assignment.horarioIds
-                : [];
-
-        for (const existingId of otherScheduleIds) {
-
-            const existingSchedule =
-                appState.horarios.find(
-                    item =>
-                        String(item.id) ===
-                        String(existingId)
-                );
-
-            if (!existingSchedule) {
-                continue;
-            }
-
-            const existingStart =
-                toMinutes(existingSchedule.horaInicio);
-
-            const existingEnd =
-                toMinutes(existingSchedule.horaFin);
-
-            if (
-                existingStart === null ||
-                existingEnd === null
-            ) {
-                continue;
-            }
-
-            for (const newSchedule of newSchedules) {
-
-                if (
-                    normalizeDay(existingSchedule.dia) !==
-                    normalizeDay(newSchedule.dia)
-                ) {
-                    continue;
-                }
-
-                const newStart =
-                    toMinutes(newSchedule.horaInicio);
-
-                const newEnd =
-                    toMinutes(newSchedule.horaFin);
-
-                if (
-                    newStart === null ||
-                    newEnd === null
-                ) {
-                    continue;
-                }
-
-                const overlaps =
-                    newStart < existingEnd &&
-                    newEnd > existingStart;
-
-                if (overlaps) {
-
-                    const teacher =
-                        appState.docentes.find(
-                            item =>
-                                String(item.id) ===
-                                String(docenteId)
-                        );
-
-                    const otherCourse =
-                        appState.cursos.find(
-                            course =>
-                                String(course.id) ===
-                                String(assignment.cursoId)
-                        );
-
-                    return {
-                        docente: teacher,
-                        otherCourse,
-                        horario: existingSchedule,
-                        newSchedule
-                    };
-
-                }
-
-            }
-
-        }
-
-    }
-
-    return null;
-
-}
-
-
-// ============================================================
-// ASIGNAR DOCENTE A MATERIA
-// ============================================================
-
-export async function assignCourse(
-    courseId,
-    teacherId
-) {
-
-    const course =
-        appState.cursos.find(
-            item =>
-                String(item.id) ===
-                String(courseId)
-        );
-
-    const teacher =
-        appState.docentes.find(
-            item =>
-                String(item.id) ===
-                String(teacherId)
-        );
-
-    if (
-        !course ||
-        !teacher
-    ) {
-        return;
-    }
-
-    // --------------------------------------------------------
-    // VALIDAR MATERIA SELECCIONADA
-    // --------------------------------------------------------
-
-    if (
-        String(selectedCourseId) !==
-        String(courseId)
-    ) {
-
-        alert(
-            "La materia seleccionada ya no coincide con la asignación solicitada."
-        );
-
-        return;
-
-    }
-
-    // --------------------------------------------------------
-    // VALIDAR MISMA ACADEMIA
-    // --------------------------------------------------------
-
-    if (
-        String(course.academiaId) !==
-        String(teacher.academiaId)
-    ) {
-
-        alert(
-            "El docente y la materia deben pertenecer a la misma academia."
-        );
-
-        return;
-
-    }
-
-    // --------------------------------------------------------
-    // EVITAR DUPLICADOS
-    // --------------------------------------------------------
-
-    if (
-        assigned(
-            appState,
-            courseId,
-            teacherId
-        )
-    ) {
-
-        alert(
-            "El docente ya está asignado a esta materia."
-        );
-
-        return;
-
-    }
-
-    // --------------------------------------------------------
-    // VALIDAR DISTRIBUCIÓN Y BLOQUES
-    // --------------------------------------------------------
-
-    const scheduleValidation =
-        validateSelectedSchedules();
-
-    if (!scheduleValidation.valid) {
-
-        alert(
-            scheduleValidation.message
-        );
-
-        return;
-
-    }
-
-    // --------------------------------------------------------
-    // VALIDAR CONFLICTOS DE HORARIO
-    // --------------------------------------------------------
-
-    const scheduleConflict =
-        findScheduleConflict(
-            teacher.id,
-            selectedScheduleIds
-        );
-
-    if (scheduleConflict) {
-
-        const teacherName =
-            scheduleConflict.docente
-                ? scheduleConflict.docente.nombre
-                : "Docente no identificado";
-
-        const courseName =
-            scheduleConflict.otherCourse
-                ? scheduleConflict.otherCourse.nombre
-                : "Materia no identificada";
-
-        const existingSchedule =
-            scheduleConflict.horario;
-
-        alert(
-            "No se puede asignar al docente porque ya tiene otra materia en un horario superpuesto.\n\n" +
-            `Docente: ${teacherName}\n` +
-            `Materia en conflicto: ${courseName}\n` +
-            `Horario existente: ${existingSchedule.dia} ${existingSchedule.horaInicio}-${existingSchedule.horaFin}\n` +
-            `Nuevo horario: ${scheduleConflict.newSchedule.dia} ${scheduleConflict.newSchedule.horaInicio}-${scheduleConflict.newSchedule.horaFin}`
-        );
-
-        return;
-
-    }
-
-    // --------------------------------------------------------
-    // GUARDAR ASIGNACIÓN
-    // --------------------------------------------------------
-
-    try {
-
-        const newAssignment =
-            await createAssignment({
-
-                cursoId:
-                    String(courseId),
-
-                docenteId:
-                    String(teacherId),
-
-                horarioIds:
-                    selectedScheduleIds.map(
-                        id => String(id)
-                    )
-
-            });
-
-        newAssignment.id =
-            String(newAssignment.id);
-
-        newAssignment.cursoId =
-            String(newAssignment.cursoId);
-
-        newAssignment.docenteId =
-            String(newAssignment.docenteId);
-
-        newAssignment.horarioIds =
-            Array.isArray(newAssignment.horarioIds)
-                ? newAssignment.horarioIds.map(
-                    id => String(id)
-                )
-                : [];
-
-        appState.asignaciones.push(
-            newAssignment
-        );
-
-        // Limpiar bloques concretos.
-        // La distribución queda disponible como referencia
-        // para configurar una asignación de otro docente.
-
-        resetScheduleSelection();
-
-        renderAssignmentPage();
-
-        alert(
-            `El docente ${teacher.nombre} fue asignado correctamente a ${course.nombre}.`
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Error al asignar docente:",
-            error
-        );
-
-        alert(
-            "No se pudo asignar el docente.\n\n" +
-            error.message
-        );
-
-    }
-
-}
-
-
-// ============================================================
-// DESASIGNAR DOCENTE
-// ============================================================
-
-export async function unassignCourse(
-    courseId,
-    teacherId
-) {
-
-    const assignment =
-        appState.asignaciones.find(
-            item =>
-                String(item.cursoId) ===
-                String(courseId) &&
-                String(item.docenteId) ===
-                String(teacherId)
-        );
-
-    if (!assignment) {
-        return;
-    }
-
-    const teacher =
-        appState.docentes.find(
-            item =>
-                String(item.id) ===
-                String(teacherId)
-        );
-
-    const course =
-        appState.cursos.find(
-            item =>
-                String(item.id) ===
-                String(courseId)
-        );
-
-    const confirmed =
-        confirm(
-            `¿Está seguro de desasignar a "${teacher?.nombre || "este docente"}" de la materia "${course?.nombre || "esta materia"}"?`
-        );
-
-    if (!confirmed) {
-        return;
-    }
-
-    try {
-
-        await deleteAssignment(
-            assignment.id
-        );
-
-        appState.asignaciones =
-            appState.asignaciones.filter(
-                item =>
-                    String(item.id) !==
-                    String(assignment.id)
-            );
-
-        renderAssignmentPage();
-
-        alert(
-            "El docente fue desasignado correctamente."
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Error al desasignar docente:",
-            error
-        );
-
-        alert(
-            "No se pudo desasignar el docente.\n\n" +
-            error.message
-        );
-
-    }
-
-}
-
-
-// ============================================================
-// EVENTOS DE ASIGNACIÓN
-// ============================================================
-
-export function bindAssignmentEvents() {
-
-    const academySelect =
-        document.getElementById(
-            "academiaAsignacion"
-        );
-
-    const courseSelect =
-        document.getElementById(
-            "cursoAsignacion"
-        );
+function bindScheduleConfigurationEvents() {
 
     const templateSelect =
         document.getElementById(
             "plantillaAsignacion"
         );
 
-    // --------------------------------------------------------
-    // CARGAR ACADEMIAS
-    // --------------------------------------------------------
+    const confirmButton =
+        document.getElementById(
+            "confirmarHorarioAsignacion"
+        );
 
-    if (academySelect) {
-
-        academySelect.innerHTML = `
-            <option value="">
-                Seleccionar academia...
-            </option>
-        `;
-
-        appState.academias
-            .slice()
-            .sort(
-                (a, b) =>
-                    a.nombre.localeCompare(
-                        b.nombre,
-                        "es"
-                    )
-            )
-            .forEach(academyItem => {
-
-                const option =
-                    document.createElement("option");
-
-                option.value =
-                    String(academyItem.id);
-
-                option.textContent =
-                    academyItem.nombre;
-
-                academySelect.appendChild(option);
-
-            });
-
-    }
-
-    // --------------------------------------------------------
-    // INICIALIZAR SELECTORES Y DISTRIBUCIÓN
-    // --------------------------------------------------------
-
-    selectedAcademyId =
-        academySelect?.value || null;
-
-    selectedCourseId =
-        courseSelect?.value || null;
-
-    initializeCourseConfiguration();
-
-    bindScheduleEvents();
-
-    // --------------------------------------------------------
-    // EVENTOS DE DISTRIBUCIÓN
-    // --------------------------------------------------------
+    const cancelButton =
+        document.getElementById(
+            "cancelarConfiguracionHorario"
+        );
 
     templateSelect?.addEventListener(
         "change",
@@ -2572,47 +2468,153 @@ export function bindAssignmentEvents() {
                     templateId
                 );
 
-            } else {
-
-                // Al seleccionar distribución manual,
-                // se conservan los valores actuales.
-
-                resetScheduleSelection();
-
             }
+
+            // Si se selecciona distribución manual,
+            // se conservan los valores actuales.
+
+            updateConfigurationSummary();
 
         }
     );
 
     for (const day of ASSIGNMENT_DAYS) {
 
-        document
-            .getElementById(day.inputId)
-            ?.addEventListener(
-                "input",
-                handleDistributionChange
+        const hoursSelect =
+            document.getElementById(
+                day.hoursId
             );
 
+        const blockSelect =
+            document.getElementById(
+                day.blockId
+            );
+
+        hoursSelect?.addEventListener(
+            "change",
+            () => {
+
+                updateDayBlockOptions(day);
+
+                updateConfigurationSummary();
+
+                // Al cambiar las horas del día,
+                // se elimina el bloque anterior si ya no coincide.
+
+            }
+        );
+
+        blockSelect?.addEventListener(
+            "change",
+            updateConfigurationSummary
+        );
+
     }
+
+    confirmButton?.addEventListener(
+        "click",
+        confirmAssignmentSchedule
+    );
+
+    cancelButton?.addEventListener(
+        "click",
+        closeScheduleConfiguration
+    );
+
+}
+
+
+// ============================================================
+// EVENTOS PRINCIPALES
+// ============================================================
+
+export function bindAssignmentEvents() {
+
+    const academySelect =
+        document.getElementById(
+            "academiaAsignacion"
+        );
+
+    const courseSelect =
+        document.getElementById(
+            "cursoAsignacion"
+        );
+
+    if (
+        !academySelect ||
+        !courseSelect
+    ) {
+        return;
+    }
+
+    // --------------------------------------------------------
+    // CARGAR ACADEMIAS
+    // --------------------------------------------------------
+
+    academySelect.innerHTML = `
+        <option value="">
+            Seleccionar academia...
+        </option>
+    `;
+
+    appState.academias
+        .slice()
+        .sort(
+            (a, b) =>
+                a.nombre.localeCompare(
+                    b.nombre,
+                    "es"
+                )
+        )
+        .forEach(academyItem => {
+
+            const option =
+                document.createElement("option");
+
+            option.value =
+                String(academyItem.id);
+
+            option.textContent =
+                academyItem.nombre;
+
+            academySelect.appendChild(option);
+
+        });
+
+    // --------------------------------------------------------
+    // INICIALIZAR CONTROLES
+    // --------------------------------------------------------
+
+    selectedCourseId = null;
+
+    selectedAssignmentId = null;
+
+    const panel =
+        document.getElementById(
+            "configuracionHorario"
+        );
+
+    if (panel) {
+        panel.hidden = true;
+    }
+
+    setConfigurationControlsEnabled(false);
+
+    bindScheduleConfigurationEvents();
 
     // --------------------------------------------------------
     // CAMBIAR ACADEMIA
     // --------------------------------------------------------
 
-    academySelect?.addEventListener(
+    academySelect.addEventListener(
         "change",
         () => {
 
-            selectedAcademyId =
-                academySelect.value || null;
+            closeScheduleConfiguration();
 
             selectedCourseId = null;
 
-            resetScheduleSelection();
-
             fillAssignmentCourses();
-
-            initializeCourseConfiguration();
 
             renderAssignmentPage();
 
@@ -2623,14 +2625,14 @@ export function bindAssignmentEvents() {
     // CAMBIAR MATERIA
     // --------------------------------------------------------
 
-    courseSelect?.addEventListener(
+    courseSelect.addEventListener(
         "change",
         () => {
 
+            closeScheduleConfiguration();
+
             selectedCourseId =
                 courseSelect.value || null;
-
-            initializeCourseConfiguration();
 
             renderAssignmentPage();
 
@@ -2638,21 +2640,7 @@ export function bindAssignmentEvents() {
     );
 
     // --------------------------------------------------------
-    // ORDENAR CANDIDATOS
-    // --------------------------------------------------------
-
-    const orderSelect =
-        document.getElementById(
-            "ordenDominio"
-        );
-
-    orderSelect?.addEventListener(
-        "change",
-        renderCandidates
-    );
-
-    // --------------------------------------------------------
-    // ACTUALIZAR CANDIDATOS DESPUÉS DE CAMBIAR DOMINIO
+    // ACTUALIZAR CANDIDATOS CUANDO CAMBIE UN DOMINIO
     // --------------------------------------------------------
 
     document.addEventListener(
@@ -2676,8 +2664,8 @@ export function bindAssignmentEvents() {
 window.assignCourse =
     assignCourse;
 
+window.openScheduleConfiguration =
+    openScheduleConfiguration;
+
 window.unassignCourse =
     unassignCourse;
-
-window.removeSelectedSchedule =
-    removeSelectedSchedule;

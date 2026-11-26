@@ -69,8 +69,8 @@
             <h2>Asignación de cursos</h2>
 
             <p>
-                Configure la distribución semanal de cada materia y
-                seleccione los horarios y docentes correspondientes.
+                Seleccione una materia, asigne un docente y posteriormente
+                configure y confirme su horario semanal.
             </p>
 
         </div>
@@ -84,7 +84,7 @@
 
             <h3>Seleccionar academia y materia</h3>
 
-            <div class="form-grid-3">
+            <div class="form-grid-2">
 
                 <div class="form-group">
 
@@ -126,30 +126,6 @@
 
                 </div>
 
-
-                <div class="form-group">
-
-                    <label for="ordenDominio">
-                        Ordenar candidatos
-                    </label>
-
-                    <select
-                        id="ordenDominio"
-                        class="w3-select w3-border"
-                    >
-
-                        <option value="desc">
-                            Mayor dominio → menor dominio
-                        </option>
-
-                        <option value="asc">
-                            Menor dominio → mayor dominio
-                        </option>
-
-                    </select>
-
-                </div>
-
             </div>
 
         </section>
@@ -161,7 +137,7 @@
 
         <section class="card">
 
-            <h3>Información del curso</h3>
+            <h3>Información de la materia</h3>
 
             <p>
                 <strong>Materia:</strong>
@@ -184,262 +160,9 @@
             </p>
 
             <p>
-                <strong>Docentes asignados a la materia:</strong>
+                <strong>Docentes asignados:</strong>
                 <span id="detalleDocentesAsignados">—</span>
             </p>
-
-        </section>
-
-
-        <!-- ==================================================
-             DISTRIBUCIÓN SEMANAL DE LA ASIGNACIÓN
-             ================================================== -->
-
-        <section class="card">
-
-            <h3>Distribución semanal de la asignación</h3>
-
-            <p class="w3-small">
-                Seleccione una plantilla como punto de partida o
-                configure manualmente las horas de cada día.
-                Esta distribución pertenece a la asignación del docente,
-                no a la materia en general.
-            </p>
-
-
-            <div class="form-group">
-
-                <label for="plantillaAsignacion">
-                    Plantilla de distribución
-                </label>
-
-                <select
-                    id="plantillaAsignacion"
-                    class="w3-select w3-border"
-                    disabled
-                >
-
-                    <option value="">
-                        Distribución manual
-                    </option>
-
-                </select>
-
-                <p class="w3-small">
-                    La plantilla es opcional. Al seleccionarla,
-                    se copiará su distribución. Puedes modificar
-                    los valores manualmente sin alterar la plantilla.
-                </p>
-
-            </div>
-
-
-            <h4>Horas por día</h4>
-
-            <p class="w3-small">
-                Cada día puede tener 0, 1 o 2 horas.
-                Solo se permite una sesión diaria.
-            </p>
-
-
-            <div class="form-grid-2">
-
-                <div class="form-group">
-
-                    <label for="horasLunesAsignacion">
-                        Lunes
-                    </label>
-
-                    <input
-                        id="horasLunesAsignacion"
-                        class="w3-input w3-border"
-                        type="number"
-                        min="0"
-                        max="2"
-                        step="1"
-                        value="0"
-                        disabled
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="horasMartesAsignacion">
-                        Martes
-                    </label>
-
-                    <input
-                        id="horasMartesAsignacion"
-                        class="w3-input w3-border"
-                        type="number"
-                        min="0"
-                        max="2"
-                        step="1"
-                        value="0"
-                        disabled
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="horasMiercolesAsignacion">
-                        Miércoles
-                    </label>
-
-                    <input
-                        id="horasMiercolesAsignacion"
-                        class="w3-input w3-border"
-                        type="number"
-                        min="0"
-                        max="2"
-                        step="1"
-                        value="0"
-                        disabled
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="horasJuevesAsignacion">
-                        Jueves
-                    </label>
-
-                    <input
-                        id="horasJuevesAsignacion"
-                        class="w3-input w3-border"
-                        type="number"
-                        min="0"
-                        max="2"
-                        step="1"
-                        value="0"
-                        disabled
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="horasViernesAsignacion">
-                        Viernes
-                    </label>
-
-                    <input
-                        id="horasViernesAsignacion"
-                        class="w3-input w3-border"
-                        type="number"
-                        min="0"
-                        max="2"
-                        step="1"
-                        value="0"
-                        disabled
-                    >
-
-                </div>
-
-            </div>
-
-
-            <p
-                id="resumenDistribucionAsignacion"
-                class="w3-small w3-margin-top"
-            >
-                Seleccione una materia para configurar su distribución.
-            </p>
-
-        </section>
-
-
-        <!-- ==================================================
-             SELECCIÓN DE BLOQUES HORARIOS
-             ================================================== -->
-
-        <section class="card">
-
-            <h3>Horarios de la asignación</h3>
-
-            <p class="w3-small">
-                Seleccione un bloque horario para cada día
-                que tenga horas asignadas en la distribución semanal.
-                El bloque debe tener exactamente la duración requerida
-                para ese día.
-            </p>
-
-
-            <div class="form-grid-2">
-
-                <div class="form-group">
-
-                    <label for="diaAsignacion">
-                        Día
-                    </label>
-
-                    <select
-                        id="diaAsignacion"
-                        class="w3-select w3-border"
-                        disabled
-                    >
-
-                        <option value="">
-                            Seleccionar día...
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="horaAsignacion">
-                        Bloque horario
-                    </label>
-
-                    <select
-                        id="horaAsignacion"
-                        class="w3-select w3-border"
-                        disabled
-                    >
-
-                        <option value="">
-                            Seleccionar hora...
-                        </option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-
-            <button
-                type="button"
-                id="agregarHorarioAsignacion"
-                class="w3-button w3-border w3-margin-top"
-                disabled
-            >
-                Agregar horario
-            </button>
-
-
-            <h4>Horarios seleccionados</h4>
-
-            <div
-                id="horariosSeleccionadosAsignacion"
-                class="w3-margin-top"
-            >
-
-                <p class="w3-small">
-                    No se han agregado horarios.
-                </p>
-
-            </div>
 
         </section>
 
@@ -453,11 +176,9 @@
             <h3>Docentes candidatos</h3>
 
             <p class="w3-small">
-                Seleccione el docente que impartirá la materia.
-                Antes de asignarlo, el horario seleccionado deberá
-                cumplir con todas las horas semanales requeridas.
+                Los docentes se presentan de mayor a menor nivel de dominio
+                registrado para la materia. La asignación es manual.
             </p>
-
 
             <div class="table-wrap">
 
@@ -489,7 +210,7 @@
 
                             <th>Estado</th>
 
-                            <th>Acción</th>
+                            <th>Acciones</th>
 
                         </tr>
 
@@ -516,6 +237,325 @@
 
 
         <!-- ==================================================
+             CONFIGURAR HORARIO DEL DOCENTE
+             ================================================== -->
+
+        <section
+            id="configuracionHorario"
+            class="card"
+            hidden
+        >
+
+            <h3>Configuración del horario</h3>
+
+            <p class="w3-small">
+                Configure la distribución semanal del docente seleccionado.
+                Puede utilizar una plantilla o modificar manualmente
+                las horas y los bloques de cada día.
+            </p>
+
+
+            <!-- INFORMACIÓN DE LA ASIGNACIÓN -->
+
+            <div class="w3-padding w3-light-grey w3-round w3-margin-bottom">
+
+                <p>
+                    <strong>Materia:</strong>
+                    <span id="detalleMateriaHorario">—</span>
+                </p>
+
+                <p>
+                    <strong>Docente:</strong>
+                    <span id="detalleDocenteHorario">—</span>
+                </p>
+
+                <p>
+                    <strong>Horas semanales requeridas:</strong>
+                    <span id="detalleHorasHorario">—</span>
+                </p>
+
+            </div>
+
+
+            <!-- PLANTILLA -->
+
+            <div class="form-group">
+
+                <label for="plantillaAsignacion">
+                    Plantilla de distribución
+                </label>
+
+                <select
+                    id="plantillaAsignacion"
+                    class="w3-select w3-border"
+                >
+
+                    <option value="">
+                        Distribución manual
+                    </option>
+
+                </select>
+
+                <p class="w3-small">
+                    La plantilla es opcional. Al seleccionarla,
+                    se copiará su distribución. Los cambios manuales
+                    no modificarán la plantilla original.
+                </p>
+
+            </div>
+
+
+            <!-- DISTRIBUCIÓN Y BLOQUES -->
+
+            <h4>Distribución y selección de horarios</h4>
+
+            <p class="w3-small">
+                Seleccione entre cero y dos horas por día.
+                Cuando indique una o dos horas, podrá elegir un bloque
+                de la duración correspondiente.
+                Solo se permite una sesión diaria.
+            </p>
+
+
+            <div class="table-wrap">
+
+                <table class="w3-table-all">
+
+                    <thead>
+
+                        <tr>
+                            <th>Día</th>
+                            <th>Duración</th>
+                            <th>Bloque horario</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        <tr>
+
+                            <th>Lunes</th>
+
+                            <td>
+
+                                <select
+                                    id="horasLunesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="0">0 horas</option>
+                                    <option value="1">1 hora</option>
+                                    <option value="2">2 horas</option>
+                                </select>
+
+                            </td>
+
+                            <td>
+
+                                <select
+                                    id="bloqueLunesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="">
+                                        No aplica
+                                    </option>
+                                </select>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <th>Martes</th>
+
+                            <td>
+
+                                <select
+                                    id="horasMartesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="0">0 horas</option>
+                                    <option value="1">1 hora</option>
+                                    <option value="2">2 horas</option>
+                                </select>
+
+                            </td>
+
+                            <td>
+
+                                <select
+                                    id="bloqueMartesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="">
+                                        No aplica
+                                    </option>
+                                </select>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <th>Miércoles</th>
+
+                            <td>
+
+                                <select
+                                    id="horasMiercolesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="0">0 horas</option>
+                                    <option value="1">1 hora</option>
+                                    <option value="2">2 horas</option>
+                                </select>
+
+                            </td>
+
+                            <td>
+
+                                <select
+                                    id="bloqueMiercolesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="">
+                                        No aplica
+                                    </option>
+                                </select>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <th>Jueves</th>
+
+                            <td>
+
+                                <select
+                                    id="horasJuevesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="0">0 horas</option>
+                                    <option value="1">1 hora</option>
+                                    <option value="2">2 horas</option>
+                                </select>
+
+                            </td>
+
+                            <td>
+
+                                <select
+                                    id="bloqueJuevesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="">
+                                        No aplica
+                                    </option>
+                                </select>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <th>Viernes</th>
+
+                            <td>
+
+                                <select
+                                    id="horasViernesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="0">0 horas</option>
+                                    <option value="1">1 hora</option>
+                                    <option value="2">2 horas</option>
+                                </select>
+
+                            </td>
+
+                            <td>
+
+                                <select
+                                    id="bloqueViernesAsignacion"
+                                    class="w3-select w3-border"
+                                    disabled
+                                >
+                                    <option value="">
+                                        No aplica
+                                    </option>
+                                </select>
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- RESUMEN -->
+
+            <div class="w3-margin-top">
+
+                <p
+                    id="resumenDistribucionAsignacion"
+                    class="w3-small"
+                >
+                    Configure las horas de cada día.
+                </p>
+
+            </div>
+
+
+            <!-- ACCIONES -->
+
+            <div class="action-row w3-margin-top">
+
+                <button
+                    type="button"
+                    id="confirmarHorarioAsignacion"
+                    class="w3-button w3-blue"
+                    disabled
+                >
+                    Confirmar horario
+                </button>
+
+                <button
+                    type="button"
+                    id="cancelarConfiguracionHorario"
+                    class="w3-button w3-light-grey"
+                >
+                    Cancelar
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
              HORARIO SEMANAL DE ASIGNACIONES
              ================================================== -->
 
@@ -524,8 +564,8 @@
             <h3>Horario semanal de asignaciones</h3>
 
             <p class="w3-small">
-                La tabla muestra los docentes asignados a la materia
-                seleccionada y los bloques horarios que ocupan.
+                La tabla muestra las sesiones confirmadas de los docentes
+                asignados a la materia seleccionada.
             </p>
 
             <div class="table-wrap">
@@ -545,6 +585,7 @@
 
                     </thead>
 
+
                     <tbody id="tbodyAsignados">
 
                         <tr>
@@ -563,102 +604,9 @@
             </div>
 
             <p class="w3-small">
-                Los bloques ocupados mostrarán el nombre del docente.
-                Los horarios superpuestos deberán señalarse de forma visible.
+                Las asignaciones pendientes de horario no ocuparán
+                bloques en esta tabla.
             </p>
-
-        </section>
-
-
-        <!-- ==================================================
-             REGISTRAR / MODIFICAR DOMINIO
-             ================================================== -->
-
-        <section class="card">
-
-            <h3>
-                Registrar o modificar nivel de dominio
-            </h3>
-
-            <p class="w3-small">
-                El nivel de dominio debe ser un número entero entre 1 y 10.
-            </p>
-
-
-            <form id="formDominio">
-
-                <div class="form-grid-2">
-
-                    <div class="form-group">
-
-                        <label for="docenteDominio">
-                            Docente *
-                        </label>
-
-                        <select
-                            id="docenteDominio"
-                            class="w3-select w3-border"
-                            required
-                        ></select>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label for="cursoDominio">
-                            Curso *
-                        </label>
-
-                        <select
-                            id="cursoDominio"
-                            class="w3-select w3-border"
-                            required
-                        ></select>
-
-                    </div>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="nivelDominio">
-                        Nivel de dominio (1-10) *
-                    </label>
-
-                    <input
-                        id="nivelDominio"
-                        class="w3-input w3-border"
-                        type="number"
-                        min="1"
-                        max="10"
-                        step="1"
-                        required
-                    >
-
-                </div>
-
-
-                <div class="action-row">
-
-                    <button
-                        type="submit"
-                        class="w3-button w3-blue"
-                    >
-                        Guardar nivel
-                    </button>
-
-                    <button
-                        type="reset"
-                        class="w3-button w3-light-grey"
-                    >
-                        Limpiar
-                    </button>
-
-                </div>
-
-            </form>
 
         </section>
 

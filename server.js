@@ -2051,6 +2051,7 @@ app.get(
     }
 );
 
+
 app.post(
     "/asignaciones",
     (req, res) => {
@@ -2058,27 +2059,15 @@ app.post(
         try {
 
             const cursoId =
-                Number(
-                    req.body.cursoId
-                );
+                Number(req.body.cursoId);
 
             const docenteId =
-                Number(
-                    req.body.docenteId
-                );
-
-            const horarioIds =
-                Array.isArray(
-                    req.body.horarioIds
-                )
-                    ? req.body.horarioIds
-                    : [];
+                Number(req.body.docenteId);
 
             const assignment =
                 modelAsignaciones.create(
                     cursoId,
-                    docenteId,
-                    horarioIds
+                    docenteId
                 );
 
             res.status(201).json(
@@ -2088,86 +2077,32 @@ app.post(
         } catch (error) {
 
             if (
-                error.code === "COURSE_HOURS_NOT_CONFIGURED" ||
-                error.code === "INVALID_SCHEDULE_DAY" ||
-                error.code === "INVALID_SCHEDULE_TIME" ||
-                error.code === "INVALID_SESSION_DURATION" ||
-                error.code === "DAILY_SESSION_LIMIT" ||
-                error.code === "WEEKLY_HOURS_MISMATCH"
+                error.code === "COURSE_HOURS_NOT_CONFIGURED"
             ) {
+
                 return res.status(400).json({
                     error: error.message
                 });
-            }
-
-            if (
-                error.code ===
-                "NO_SCHEDULE"
-            ) {
-
-                return res.status(400).json({
-                    error:
-                        error.message
-                });
 
             }
 
             if (
-                error.code ===
-                "NOT_FOUND"
+                error.code === "NOT_FOUND"
             ) {
 
                 return res.status(404).json({
-                    error:
-                        error.message
+                    error: error.message
                 });
 
             }
 
             if (
-                error.code ===
-                "ACADEMY_MISMATCH"
+                error.code === "ACADEMY_MISMATCH" ||
+                error.code === "DUPLICATE_ASSIGNMENT"
             ) {
 
                 return res.status(409).json({
-                    error:
-                        error.message
-                });
-
-            }
-
-            if (
-                error.code ===
-                "INVALID_SCHEDULE"
-            ) {
-
-                return res.status(400).json({
-                    error:
-                        error.message
-                });
-
-            }
-
-            if (
-                error.code ===
-                "DUPLICATE_ASSIGNMENT"
-            ) {
-
-                return res.status(409).json({
-                    error:
-                        error.message
-                });
-
-            }
-
-            if (
-                error.code ===
-                "SCHEDULE_CONFLICT"
-            ) {
-
-                return res.status(409).json({
-                    error:
-                        error.message
+                    error: error.message
                 });
 
             }
@@ -2178,8 +2113,100 @@ app.post(
             );
 
             res.status(500).json({
-                error:
-                    "No se pudo crear la asignación."
+                error: "No se pudo crear la asignación."
+            });
+
+        }
+
+    }
+);
+
+
+app.patch(
+    "/asignaciones/:id/horarios",
+    (req, res) => {
+
+        try {
+
+            const assignmentId =
+                Number(req.params.id);
+
+            const horarioIds =
+                req.body.horarioIds;
+
+            const assignment =
+                modelAsignaciones.updateSchedules(
+                    assignmentId,
+                    horarioIds
+                );
+
+            res.json(
+                assignment
+            );
+
+        } catch (error) {
+
+            // --------------------------------------------
+            // ERRORES DE VALIDACIÓN
+            // --------------------------------------------
+
+            const validationErrors = [
+                "NO_SCHEDULE",
+                "INVALID_SCHEDULE",
+                "INVALID_SCHEDULE_DAY",
+                "INVALID_SCHEDULE_TIME",
+                "INVALID_SESSION_DURATION",
+                "DAILY_SESSION_LIMIT",
+                "WEEKLY_HOURS_MISMATCH",
+                "COURSE_HOURS_NOT_CONFIGURED"
+            ];
+
+            if (
+                validationErrors.includes(error.code)
+            ) {
+
+                return res.status(400).json({
+                    error: error.message
+                });
+
+            }
+
+            // --------------------------------------------
+            // ASIGNACIÓN INEXISTENTE
+            // --------------------------------------------
+
+            if (
+                error.code === "ASSIGNMENT_NOT_FOUND"
+            ) {
+
+                return res.status(404).json({
+                    error: error.message
+                });
+
+            }
+
+            // --------------------------------------------
+            // CONFLICTOS DE HORARIO
+            // --------------------------------------------
+
+            if (
+                error.code === "SCHEDULE_CONFLICT" ||
+                error.code === "ACADEMY_MISMATCH"
+            ) {
+
+                return res.status(409).json({
+                    error: error.message
+                });
+
+            }
+
+            console.error(
+                "Error al confirmar horario de asignación:",
+                error
+            );
+
+            res.status(500).json({
+                error: "No se pudo confirmar el horario de la asignación."
             });
 
         }
